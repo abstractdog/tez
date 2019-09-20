@@ -18,16 +18,21 @@
 
 package org.apache.tez.dag.app.dag.impl;
 
+import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.tez.dag.api.EdgeManagerPluginContext;
 import org.apache.tez.dag.api.EdgeManagerPluginOnDemand;
+import org.apache.tez.dag.api.UserPayload;
 import org.apache.tez.runtime.api.events.DataMovementEvent;
 import org.apache.tez.runtime.api.events.InputReadErrorEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BroadcastEdgeManager extends EdgeManagerPluginOnDemand {
+  private static final Logger LOG = LoggerFactory.getLogger(BroadcastEdgeManager.class);
 
   EventRouteMetadata[] commonRouteMeta;
 
@@ -37,6 +42,8 @@ public class BroadcastEdgeManager extends EdgeManagerPluginOnDemand {
 
   @Override
   public void initialize() {
+    UserPayload payload = getContext().getUserPayload();
+    LOG.info("initialize: broadcast payload size: " + (payload == null ? "null" : payload.getPayload().position()));
   }
   
   @Override
@@ -53,6 +60,8 @@ public class BroadcastEdgeManager extends EdgeManagerPluginOnDemand {
   public void routeDataMovementEventToDestination(DataMovementEvent event,
       int sourceTaskIndex, int sourceOutputIndex, 
       Map<Integer, List<Integer>> destinationTaskAndInputIndices) {
+    ByteBuffer payload = event.getUserPayload();
+    LOG.info("routeDataMovementEventToDestination: broadcast payload size: " + (payload == null ? "null" : payload.position()));
     List<Integer> inputIndices = 
         Collections.unmodifiableList(Collections.singletonList(sourceTaskIndex));
     // for each task make the i-th source task as the i-th physical input
@@ -65,6 +74,7 @@ public class BroadcastEdgeManager extends EdgeManagerPluginOnDemand {
   public void prepareForRouting() throws Exception {
     int numSourceTasks = getContext().getSourceVertexNumTasks();
     commonRouteMeta = new EventRouteMetadata[numSourceTasks];
+    LOG.info(String.format("prepareForRouting source tasks (vertex: %s): %d", getContext().getSourceVertexName(), numSourceTasks));
     for (int i=0; i<numSourceTasks; ++i) {
       commonRouteMeta[i] = EventRouteMetadata.create(1, new int[]{i}, new int[]{0});
     }
@@ -74,6 +84,7 @@ public class BroadcastEdgeManager extends EdgeManagerPluginOnDemand {
   public EventRouteMetadata routeDataMovementEventToDestination(
       int sourceTaskIndex, int sourceOutputIndex, int destinationTaskIndex)
       throws Exception {
+    LOG.info(String.format("routeDataMovementEventToDestination source task: %d, source output: %d, destination task: %d", sourceTaskIndex, sourceOutputIndex, destinationTaskIndex));
     return commonRouteMeta[sourceTaskIndex];
   }
   
@@ -81,12 +92,17 @@ public class BroadcastEdgeManager extends EdgeManagerPluginOnDemand {
   public CompositeEventRouteMetadata routeCompositeDataMovementEventToDestination(
       int sourceTaskIndex, int destinationTaskIndex)
       throws Exception {
+    LOG.info(String.format("routeCompositeDataMovementEventToDestination source task: %d, destination task: %d", sourceTaskIndex, destinationTaskIndex));
+    //ByteBuffer payload = getContext().getUserPayload().getRawPayload();
+    //LOG.info("routeCompositeDataMovementEventToDestination: broadcast payload size: " + (payload == null ? "null" : payload.position()));
+
     return CompositeEventRouteMetadata.create(1, sourceTaskIndex, 0);
   }
 
   @Override
   public EventRouteMetadata routeInputSourceTaskFailedEventToDestination(
       int sourceTaskIndex, int destinationTaskIndex) throws Exception {
+    LOG.info(String.format("routeInputSourceTaskFailedEventToDestination source task: %d, destination task: %d", sourceTaskIndex, destinationTaskIndex));
     return commonRouteMeta[sourceTaskIndex];
   }
 

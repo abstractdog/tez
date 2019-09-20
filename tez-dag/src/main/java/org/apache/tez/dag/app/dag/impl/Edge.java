@@ -18,6 +18,7 @@
 
 package org.apache.tez.dag.app.dag.impl;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -600,6 +601,9 @@ public class Edge {
               TezEvent tezEventToSend = new TezEvent(edme, tezEvent.getSourceInfo(), tezEvent.getEventReceivedTime());
               tezEventToSend.setDestinationInfo(destinationMetaInfo);
               listToAdd.add(tezEventToSend);
+
+              ByteBuffer buffer = compEvent.getUserPayload();
+              LOG.info("maybeAddTezEventForDestinationTask: broadcast payload size: " + (buffer == null ? "null" : buffer.remaining()));
             }
           }
           break;

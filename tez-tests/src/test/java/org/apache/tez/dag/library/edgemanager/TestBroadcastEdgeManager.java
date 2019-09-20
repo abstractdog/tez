@@ -18,6 +18,8 @@
 
 package org.apache.tez.dag.library.edgemanager;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Random;
@@ -38,6 +40,8 @@ import org.apache.tez.dag.api.UserPayload;
 import org.apache.tez.dag.api.Vertex;
 import org.apache.tez.dag.api.client.DAGClient;
 import org.apache.tez.dag.api.client.DAGStatus;
+import org.apache.tez.examples.HashJoinExample;
+import org.apache.tez.examples.JoinDataGen;
 import org.apache.tez.runtime.api.LogicalOutput;
 import org.apache.tez.runtime.api.ProcessorContext;
 import org.apache.tez.runtime.library.api.KeyValueReader;
@@ -46,6 +50,7 @@ import org.apache.tez.runtime.library.conf.UnorderedKVEdgeConfig;
 import org.apache.tez.runtime.library.output.UnorderedKVOutput;
 import org.apache.tez.runtime.library.processor.SimpleProcessor;
 import org.apache.tez.test.MiniTezCluster;
+import org.apache.tez.test.TestTezJobs;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -57,137 +62,85 @@ import com.google.common.base.Preconditions;
 public class TestBroadcastEdgeManager {
   private static final Logger LOG = LoggerFactory.getLogger(TestBroadcastEdgeManager.class);
 
-  private static Configuration conf = new Configuration();
-  private static MiniTezCluster miniTezCluster;
-  private static String TEST_ROOT_DIR =
-      "target" + Path.SEPARATOR + TestBroadcastEdgeManager.class.getName() + "-tmpDir";
+  protected static MiniTezCluster mrrTezCluster;
   protected static MiniDFSCluster dfsCluster;
 
-  private static TezClient tezSession = null;
-  private static TezConfiguration tezConf;
+  private static Configuration conf = new Configuration();
+  private static FileSystem remoteFs;
+
+  private static String TEST_ROOT_DIR = "target" + Path.SEPARATOR + TestBroadcastEdgeManager.class.getName()
+      + "-tmpDir";
 
   @BeforeClass
-  public static void beforeClass() throws Exception {
-    LOG.info("Starting mini clusters");
-    FileSystem remoteFs = null;
+  public static void setup() throws IOException {
     try {
       conf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, TEST_ROOT_DIR);
-      dfsCluster =
-          new MiniDFSCluster.Builder(conf).numDataNodes(1).format(true).racks(null).build();
+      dfsCluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).format(true).racks(null)
+          .build();
       remoteFs = dfsCluster.getFileSystem();
     } catch (IOException io) {
       throw new RuntimeException("problem starting mini dfs cluster", io);
     }
-    if (miniTezCluster == null) {
-      miniTezCluster = new MiniTezCluster(TestBroadcastEdgeManager.class.getName(), 3, 1, 1);
-      Configuration miniTezconf = new Configuration(conf);
-      miniTezconf.set("fs.defaultFS", remoteFs.getUri().toString()); // use HDFS
-      miniTezCluster.init(miniTezconf);
-      miniTezCluster.start();
 
-      Path remoteStagingDir = remoteFs
-          .makeQualified(new Path(TEST_ROOT_DIR, String.valueOf(new Random().nextInt(100000))));
-      TezClientUtils.ensureStagingDirExists(conf, remoteStagingDir);
-
-      tezConf = new TezConfiguration(miniTezCluster.getConfig());
-      tezConf.set(TezConfiguration.TEZ_AM_STAGING_DIR, remoteStagingDir.toString());
-
-      tezSession = TezClient.create("TestBroadcastEdgeManager", tezConf, true);
-      tezSession.start();
+    if (mrrTezCluster == null) {
+      mrrTezCluster = new MiniTezCluster(TestTezJobs.class.getName(), 1, 1, 1);
+      Configuration conf = new Configuration();
+      conf.set("fs.defaultFS", remoteFs.getUri().toString()); // use HDFS
+      conf.setLong(TezConfiguration.TEZ_AM_SLEEP_TIME_BEFORE_EXIT_MILLIS, 500);
+      mrrTezCluster.init(conf);
+      mrrTezCluster.start();
     }
+
   }
 
   @AfterClass
-  public static void afterClass() throws Exception {
-    LOG.info("Stopping mini clusters");
-    if (tezSession != null) {
-      tezSession.stop();
-    }
-    if (miniTezCluster != null) {
-      miniTezCluster.stop();
-      miniTezCluster = null;
+  public static void tearDown() {
+    if (mrrTezCluster != null) {
+      mrrTezCluster.stop();
+      mrrTezCluster = null;
     }
     if (dfsCluster != null) {
       dfsCluster.shutdown();
       dfsCluster = null;
     }
+    // TODO Add cleanup code.
   }
-
-  public static class InputGenProcessor extends SimpleProcessor {
-
-    final int bytesToGenerate;
-
-    public InputGenProcessor(ProcessorContext context) {
-      super(context);
-      bytesToGenerate = context.getUserPayload().getPayload().getInt(0);
-    }
-
-    @Override
-    public void run() throws Exception {
-      Random random = new Random();
-      Preconditions.checkArgument(getOutputs().size() == 1);
-      LogicalOutput out = getOutputs().values().iterator().next();
-      if (out instanceof UnorderedKVOutput) {
-        UnorderedKVOutput output = (UnorderedKVOutput) out;
-        KeyValueWriter kvWriter = output.getWriter();
-        int approxNumInts = bytesToGenerate / 6;
-        for (int i = 0; i < approxNumInts; i++) {
-          kvWriter.write(NullWritable.get(), new IntWritable(random.nextInt()));
-        }
-      }
-    }
-  }
-
-  public static class InputFetchProcessor extends SimpleProcessor {
-    public InputFetchProcessor(ProcessorContext context) {
-      super(context);
-    }
-
-    @Override
-    public void run() throws Exception {
-      Preconditions.checkArgument(inputs.size() == 1);
-      KeyValueReader broadcastKvReader =
-          (KeyValueReader) getInputs().values().iterator().next().getReader();
-      long sum = 0;
-      int count = 0;
-      while (broadcastKvReader.next()) {
-        count++;
-        sum += ((IntWritable) broadcastKvReader.getCurrentValue()).get();
-      }
-      System.err.println("Count = " + getContext().getTaskIndex() + " * " + count + ", Sum=" + sum);
-    }
-  }
-
+  
   @Test
   public void testDAGWithBroadcastEdgeDataLimit() throws Exception {
-    ByteBuffer payload = ByteBuffer.allocate(4);
-    payload.putInt(0, 4);
 
-    Vertex broadcastVertex = Vertex.create("DataGen", ProcessorDescriptor
-        .create(InputGenProcessor.class.getName()).setUserPayload(UserPayload.create(payload)), 1);
-    Vertex fetchVertex = Vertex.create("FetchVertex",
-        ProcessorDescriptor.create(InputFetchProcessor.class.getName()), 1);
-    UnorderedKVEdgeConfig edgeConf =
-        UnorderedKVEdgeConfig.newBuilder(NullWritable.class.getName(), IntWritable.class.getName())
-            .setCompression(false, null, null).build();
+    Path testDir = new Path("/tmp/testDAGWithBroadcastEdgeDataLimit");
+    Path stagingDirPath = new Path("/tmp/tez-staging-dir");
+    remoteFs.mkdirs(stagingDirPath);
+    remoteFs.mkdirs(testDir);
 
-    DAG dag = DAG.create("BroadcastLoadGen");
-    dag.addVertex(broadcastVertex).addVertex(fetchVertex).addEdge(
-        Edge.create(broadcastVertex, fetchVertex, edgeConf.createDefaultBroadcastEdgeProperty()));
+    Path dataPath1 = new Path(testDir, "inPath1");
+    Path dataPath2 = new Path(testDir, "inPath2");
+    Path expectedOutputPath = new Path(testDir, "expectedOutputPath");
+    Path outPath = new Path(testDir, "outPath");
 
-    runDag(dag);
-  }
+    TezConfiguration tezConf = new TezConfiguration(mrrTezCluster.getConfig());
+    tezConf.set(TezConfiguration.TEZ_AM_STAGING_DIR, stagingDirPath.toString());
 
-  private void runDag(DAG dag) throws Exception {
-    tezSession.waitTillReady();
-    DAGClient dagClient = tezSession.submitDAG(dag);
-    DAGStatus dagStatus = dagClient.getDAGStatus(null);
-    while (!dagStatus.isCompleted()) {
-      LOG.info("Waiting for dag to complete. Sleeping for 500ms." + " DAG name: " + dag.getName()
-          + " DAG appContext: " + dagClient.getExecutionContext() + " Current state: "
-          + dagStatus.getState());
-      Thread.sleep(100);
-      dagStatus = dagClient.getDAGStatus(null);
+    TezClient tezSession = null;
+    try {
+      tezSession = TezClient.create("HashJoinExampleSession", tezConf, true);
+      tezSession.start();
+
+      JoinDataGen dataGen = new JoinDataGen();
+      String[] dataGenArgs = new String[] { "-counter", dataPath1.toString(), "1048576",
+          dataPath2.toString(), "32", expectedOutputPath.toString(), "2" };
+      assertEquals(0, dataGen.run(tezConf, dataGenArgs, tezSession));
+
+      HashJoinExample joinExample = new HashJoinExample();
+      String[] args = new String[] { dataPath1.toString(), dataPath2.toString(), "1",
+          outPath.toString(), "doBroadcast" };
+
+      assertEquals(0, joinExample.run(tezConf, args, tezSession));
+    } finally {
+      if (tezSession != null) {
+        tezSession.stop();
+      }
     }
   }
 }
