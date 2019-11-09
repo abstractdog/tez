@@ -23,6 +23,13 @@ APPID=$1
 YARN=$(which yarn);
 TMP=$(mktemp)
 
-echo "Fetching yarn logs for $APPID"
-$YARN logs -applicationId $APPID | grep HISTORY > $TMP 
+if [[ -f $APPID ]]; then
+    echo "Reading yarn logs from local file: $APPID"
+    cat $APPID | grep HISTORY > $TMP
+else
+    echo "Fetching yarn logs for $APPID"
+    $YARN logs -applicationId $APPID | grep HISTORY > $TMP
+fi
+echo "History was written into $TMP"
+
 python swimlane.py -o $APPID.svg $TMP
