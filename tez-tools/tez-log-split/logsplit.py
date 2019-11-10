@@ -20,7 +20,6 @@
 import sys
 import os
 import re
-import time
 from gzip import GzipFile as GZFile
 from getopt import getopt
 
@@ -38,8 +37,6 @@ def open_file(f):
 
 class AggregatedLog(object):
     def __init__(self):
-        self.output_folder = "application_" + str(int(round(time.time() * 1000)))
-        os.mkdir(self.output_folder)
         self.in_container = False
         self.in_logfile = False
         self.current_container_name = None
@@ -48,6 +45,13 @@ class AggregatedLog(object):
         self.HEADER_LAST_ROW_RE = re.compile("^LogContents:$")
         self.HEADER_LOG_TYPE_RE = re.compile("^LogType:(.*)")
         self.LAST_LOG_LINE_RE = re.compile("^End of LogType:.*")
+
+    def process(self, input_file):
+        self.output_folder = input_file.name + "_splitlogs"
+        os.mkdir(self.output_folder)
+
+        for line in input_file:
+            self.parse(line)
 
     def parse(self, line):
         if (self.in_container):
@@ -86,15 +90,14 @@ class AggregatedLog(object):
         self.current_file = file
 
     def write_to_current_file(self, line):
-        self.current_file.write(line + "\n")
+        self.current_file.write(line)
 
 def main(argv):
     (opts, args) = getopt(argv, "")
     input_file = args[0]
     fp = open_file(input_file)
     aggregated_log = AggregatedLog()
-    for line in fp:
-        aggregated_log.parse(line.strip())
+    aggregated_log.process(fp)
     print("Split application logs was written into folder " + aggregated_log.output_folder)
     fp.close()
 
