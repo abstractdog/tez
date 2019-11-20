@@ -20,6 +20,7 @@ import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
@@ -221,8 +222,8 @@ public class TezTaskCommunicatorImpl extends TaskCommunicator {
                                          int priority) {
 
     ContainerInfo containerInfo = registeredContainers.get(containerId);
-    Preconditions.checkNotNull(containerInfo, "Cannot register task attempt %s to unknown container %s",
-        taskSpec.getTaskAttemptID(), containerId);
+    Objects.requireNonNull(containerInfo, String.format("Cannot register task attempt %s to unknown container %s",
+      taskSpec.getTaskAttemptID(), containerId));
     synchronized (containerInfo) {
       if (containerInfo.taskSpec != null) {
         throw new TezUncheckedException(

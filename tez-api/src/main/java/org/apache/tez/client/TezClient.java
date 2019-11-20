@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.TimeUnit;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -325,7 +326,7 @@ public class TezClient {
    * @param localFiles the files to be made available in the AM
    */
   public synchronized void addAppMasterLocalFiles(Map<String, LocalResource> localFiles) {
-    Preconditions.checkNotNull(localFiles);
+    Objects.requireNonNull(localFiles);
     if (isSession && sessionStarted.get()) {
       additionalLocalResources.putAll(localFiles);
     }

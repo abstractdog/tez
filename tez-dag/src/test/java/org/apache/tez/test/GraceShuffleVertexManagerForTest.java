@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.Objects;
 
 /**
  * A shuffle vertex manager that will set the vertex's parallelism upon
@@ -149,7 +150,7 @@ public final class GraceShuffleVertexManagerForTest extends ShuffleVertexManager
     }
 
     private GraceConf build() {
-      Preconditions.checkNotNull(grandparentVertex,
+      Objects.requireNonNull(grandparentVertex,
           "Grandparent vertex is required");
       Preconditions.checkArgument(desiredParallelism > 0,
           "Desired parallelism must be greater than 0");
