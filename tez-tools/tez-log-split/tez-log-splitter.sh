@@ -19,14 +19,13 @@
 #set -e
 
 APPID=$1
-
-YARN=$(which yarn);
 TMP=$(mktemp)
 
 if [[ -f $APPID ]]; then
     echo "Reading yarn logs from local file: $APPID"
     TMP=$APPID
 else
+    YARN=$(which yarn);
     echo "Fetching yarn logs for $APPID"
     $YARN logs -applicationId $APPID > $TMP
     echo "Application log was written into $TMP"
