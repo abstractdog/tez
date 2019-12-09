@@ -40,8 +40,9 @@ class AggregatedLog(object):
         self.in_container = False
         self.in_logfile = False
         self.current_container_name = None
+        self.curent_host_name = None # as read from log line: "hello.my.host.com_8041"
         self.current_file = None
-        self.HEADER_CONTAINER_RE = re.compile("Container: (container_[a-z0-9_]+) on")
+        self.HEADER_CONTAINER_RE = re.compile("Container: (container_[a-z0-9_]+) on (.*)")
         self.HEADER_LAST_ROW_RE = re.compile("^LogContents:$")
         self.HEADER_LOG_TYPE_RE = re.compile("^LogType:(.*)")
         self.LAST_LOG_LINE_RE = re.compile("^End of LogType:.*")
@@ -77,20 +78,24 @@ class AggregatedLog(object):
             if (m):
                 self.in_container = True
                 self.current_container_name = m.group(1)
+                self.current_host_name = m.group(2)
                 self.start_container_folder()
 
     def start_container_folder(self):
-        container_dir = os.path.join(self.output_folder, self.current_container_name)
+        container_dir = os.path.join(self.output_folder, self.get_current_container_dir_name())
         if not os.path.exists(container_dir):
             os.mkdir(container_dir)
 
     def create_file_in_current_container(self, file_name):
-        file_to_be_created = os.path.join(self.output_folder, self.current_container_name, file_name)
+        file_to_be_created = os.path.join(self.output_folder, self.get_current_container_dir_name(), file_name)
         file = open(file_to_be_created, "w+")
         self.current_file = file
 
     def write_to_current_file(self, line):
         self.current_file.write(line)
+
+    def get_current_container_dir_name(self):
+        return self.current_container_name + "_" + self.current_host_name
 
 def main(argv):
     (opts, args) = getopt(argv, "")

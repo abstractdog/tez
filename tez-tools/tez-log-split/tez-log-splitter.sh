@@ -20,6 +20,7 @@
 
 APPID=$1
 TMP=$(mktemp)
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 if [[ -f $APPID ]]; then
     echo "Reading yarn logs from local file: $APPID"
@@ -31,4 +32,4 @@ else
     echo "Application log was written into $TMP"
 fi
 
-python logsplit.py $TMP
+python $DIR/logsplit.py $TMP

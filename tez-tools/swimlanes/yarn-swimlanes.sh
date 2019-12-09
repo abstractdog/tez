@@ -20,6 +20,7 @@ set -e
 
 APPID=$1
 TMP=$(mktemp)
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 if [[ -f $APPID ]]; then
     echo "Reading yarn logs from local file: $APPID"
@@ -31,4 +32,4 @@ else
 fi
 echo "History was written into $TMP"
 
-python swimlane.py -o $APPID.svg $TMP
+python $DIR/swimlane.py -o $APPID.svg $TMP
