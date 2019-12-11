@@ -24,21 +24,22 @@ from gzip import GzipFile as GZFile
 from getopt import getopt
 
 def usage():
-	sys.stderr.write("""
+    sys.stderr.write("""
 usage: logsplit.py <log-file>
 
 Input files for this tool can be prepared by "yarn logs -applicationId <application_...>".
 """)
 
 def open_file(f):
-	if(f.endswith(".gz")):
-		return GZFile(f)
-	return open(f)
+    if f.endswith(".gz"):
+        return GZFile(f)
+    return open(f)
 
 class AggregatedLog(object):
     def __init__(self):
         self.in_container = False
         self.in_logfile = False
+        self.current_container_header = None
         self.current_container_name = None
         self.curent_host_name = None # as read from log line: "hello.my.host.com_8041"
         self.current_file = None
@@ -55,10 +56,10 @@ class AggregatedLog(object):
             self.parse(line)
 
     def parse(self, line):
-        if (self.in_container):
-            if (self.in_logfile):
+        if self.in_container:
+            if self.in_logfile:
                 m = self.LAST_LOG_LINE_RE.match(line)
-                if (m):
+                if m:
                     self.in_container = False
                     self.in_logfile = False
                     self.current_file.close()
@@ -66,16 +67,16 @@ class AggregatedLog(object):
                     self.write_to_current_file(line)
             else:
                 m = self.HEADER_LOG_TYPE_RE.match(line)
-                if (m):
+                if m:
                     file_name = m.group(1)
                     self.create_file_in_current_container(file_name)
-                elif (self.HEADER_LAST_ROW_RE.match(line)):
+                elif self.HEADER_LAST_ROW_RE.match(line):
                     self.in_logfile = True
                     self.write_to_current_file(self.current_container_header) #for host reference
         else:
             m = self.HEADER_CONTAINER_RE.match(line)
             self.current_container_header = line
-            if (m):
+            if m:
                 self.in_container = True
                 self.current_container_name = m.group(1)
                 self.current_host_name = m.group(2)
@@ -103,8 +104,8 @@ def main(argv):
     fp = open_file(input_file)
     aggregated_log = AggregatedLog()
     aggregated_log.process(fp)
-    print("Split application logs was written into folder " + aggregated_log.output_folder)
+    print "Split application logs was written into folder " + aggregated_log.output_folder
     fp.close()
 
 if __name__ == "__main__":
-	sys.exit(main(sys.argv[1:]))
+    sys.exit(main(sys.argv[1:]))

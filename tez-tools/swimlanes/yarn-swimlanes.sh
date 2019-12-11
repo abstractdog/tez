@@ -24,12 +24,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 if [[ -f $APPID ]]; then
     echo "Reading yarn logs from local file: $APPID"
-    cat $APPID | grep HISTORY > $TMP
+    cat "$APPID" | grep HISTORY > "$TMP"
 else
     YARN=$(which yarn);
     echo "Fetching yarn logs for $APPID"
-    $YARN logs -applicationId $APPID | grep HISTORY > $TMP
+    $YARN logs -applicationId "$APPID" | grep HISTORY > "$TMP"
 fi
 echo "History was written into $TMP"
 
-python $DIR/swimlane.py -o $APPID.svg $TMP
+python "$DIR/swimlane.py" -o "$APPID.svg" "$TMP"

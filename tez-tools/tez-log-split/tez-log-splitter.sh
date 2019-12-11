@@ -28,8 +28,8 @@ if [[ -f $APPID ]]; then
 else
     YARN=$(which yarn);
     echo "Fetching yarn logs for $APPID"
-    $YARN logs -applicationId $APPID > $TMP
+    $YARN logs -applicationId "$APPID" > "$TMP"
     echo "Application log was written into $TMP"
 fi
 
-python $DIR/logsplit.py $TMP
+python "$DIR/logsplit.py" "$TMP"
