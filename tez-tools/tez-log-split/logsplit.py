@@ -41,7 +41,7 @@ class AggregatedLog(object):
         self.in_logfile = False
         self.current_container_header = None
         self.current_container_name = None
-        self.curent_host_name = None # as read from log line: "hello.my.host.com_8041"
+        self.current_host_name = None # as read from log line: "hello.my.host.com_8041"
         self.current_file = None
         self.HEADER_CONTAINER_RE = re.compile("Container: (container_[a-z0-9_]+) on (.*)")
         self.HEADER_LAST_ROW_RE = re.compile("^LogContents:$")
@@ -85,7 +85,7 @@ class AggregatedLog(object):
     def start_container_folder(self):
         container_dir = os.path.join(self.output_folder, self.get_current_container_dir_name())
         if not os.path.exists(container_dir):
-            os.mkdir(container_dir)
+            os.makedirs(container_dir)
 
     def create_file_in_current_container(self, file_name):
         file_to_be_created = os.path.join(self.output_folder, self.get_current_container_dir_name(), file_name)
@@ -96,7 +96,7 @@ class AggregatedLog(object):
         self.current_file.write(line)
 
     def get_current_container_dir_name(self):
-        return self.current_container_name + "_" + self.current_host_name
+        return os.path.join(self.current_host_name, self.current_container_name)
 
 def main(argv):
     (opts, args) = getopt(argv, "")
@@ -104,7 +104,7 @@ def main(argv):
     fp = open_file(input_file)
     aggregated_log = AggregatedLog()
     aggregated_log.process(fp)
-    print "Split application logs was written into folder " + aggregated_log.output_folder
+    print ("Split application logs was written into folder " + aggregated_log.output_folder)
     fp.close()
 
 if __name__ == "__main__":
