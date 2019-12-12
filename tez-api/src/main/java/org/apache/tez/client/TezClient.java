@@ -471,11 +471,7 @@ public class TezClient {
             amConfig.getTezConfiguration());
 
     // merge some tokens (e.g. HDFS_DELEGATION_TOKEN), that was obtained previously
-    if (amConfig.getCredentials() != null) {
-      LOG.debug("credentials found in AM config, trying to pre-merge them...");
-      TezCommonUtils.logCredentials(LOG, amConfig.getCredentials(), "amconfig");
-      sessionCredentials.mergeAll(amConfig.getCredentials());
-    }
+    sessionCredentials.mergeAll(amConfig.getCredentials());
 
     Map<String, LocalResource> tezJarResources = getTezJarResources(sessionCredentials);
     // Add session token for shuffle
