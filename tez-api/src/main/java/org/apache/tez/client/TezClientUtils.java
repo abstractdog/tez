@@ -472,9 +472,6 @@ public class TezClientUtils {
     ByteBuffer securityTokens = null;
     // Setup security tokens
     Credentials amLaunchCredentials = new Credentials();
-    if (amConfig.getCredentials() != null) {
-      amLaunchCredentials.addAll(amConfig.getCredentials());
-    }
 
     // Add Staging dir creds to the list of session credentials.
     TokenCache.obtainTokensForFileSystems(sessionCreds, new Path[]{binaryConfPath}, conf);
@@ -483,6 +480,10 @@ public class TezClientUtils {
 
     // Add session specific credentials to the AM credentials.
     amLaunchCredentials.mergeAll(sessionCreds);
+
+    if (amConfig.getCredentials() != null) {
+      amLaunchCredentials.mergeAll(amConfig.getCredentials());
+    }
 
     DataOutputBuffer dob = new DataOutputBuffer();
     amLaunchCredentials.writeTokenStorageToStream(dob);
