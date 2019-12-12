@@ -470,9 +470,6 @@ public class TezClient {
     TezClientUtils.processTezLocalCredentialsFile(sessionCredentials,
             amConfig.getTezConfiguration());
 
-    // merge some tokens (e.g. HDFS_DELEGATION_TOKEN), that was obtained previously
-    sessionCredentials.mergeAll(amConfig.getCredentials());
-
     Map<String, LocalResource> tezJarResources = getTezJarResources(sessionCredentials);
     // Add session token for shuffle
     TezClientUtils.createSessionToken(sessionAppId.toString(),
