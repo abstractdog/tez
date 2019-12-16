@@ -25,9 +25,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.Deflater;
+import java.util.zip.InflaterInputStream;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.tez.common.TezCommonUtils;
+import org.apache.tez.common.TezUtils;
 import org.apache.tez.dag.api.TezConfiguration;
 import org.apache.tez.runtime.api.impl.GroupInputSpec;
 import org.apache.tez.runtime.library.common.shuffle.ShuffleUtils;
@@ -45,6 +47,7 @@ import org.apache.tez.dag.api.TezUncheckedException;
 import org.apache.tez.dag.api.UserPayload;
 import org.apache.tez.dag.api.EdgeManagerPluginOnDemand.CompositeEventRouteMetadata;
 import org.apache.tez.dag.api.EdgeManagerPluginOnDemand.EventRouteMetadata;
+import org.apache.tez.dag.api.records.DAGProtos;
 import org.apache.tez.dag.app.dag.Task;
 import org.apache.tez.dag.app.dag.Vertex;
 import org.apache.tez.dag.app.dag.event.TaskAttemptEventOutputFailed;
@@ -68,6 +71,7 @@ import org.apache.tez.runtime.api.impl.EventMetaData.EventProducerConsumerType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import com.google.protobuf.ByteString;
 
 public class Edge {
 
@@ -435,8 +439,18 @@ public class Edge {
     CompositeDataMovementEvent compEvent = (CompositeDataMovementEvent) tezEvent.getEvent();
     EventMetaData srcInfo = tezEvent.getSourceInfo();
     
+
+    ByteBuffer buffer = compEvent.getUserPayload();
+    if (buffer != null){
+      LOG.info("handleCompositeDataMovementEvent: broadcast event payload: " + buffer);
+    }
+
     for (DataMovementEvent dmEvent : compEvent.getEvents()) {
       TezEvent newEvent = new TezEvent(dmEvent, srcInfo, tezEvent.getEventReceivedTime());
+      ByteBuffer buffer2 = dmEvent.getUserPayload();
+      if (buffer2 != null){
+        LOG.info("handleCompositeDataMovementEvent: broadcast data movement event payload: " + buffer2);
+      }
       sendTezEventToDestinationTasks(newEvent);
     }
   }
@@ -603,7 +617,9 @@ public class Edge {
               listToAdd.add(tezEventToSend);
 
               ByteBuffer buffer = compEvent.getUserPayload();
-              LOG.info("maybeAddTezEventForDestinationTask: broadcast payload size: " + (buffer == null ? "null" : buffer.remaining()));
+              if (buffer != null){
+                LOG.info("maybeAddTezEventForDestinationTask: broadcast event payload: " + buffer);
+              }
             }
           }
           break;

@@ -93,8 +93,8 @@ public class BroadcastEdgeManager extends EdgeManagerPluginOnDemand {
       int sourceTaskIndex, int destinationTaskIndex)
       throws Exception {
     LOG.info(String.format("routeCompositeDataMovementEventToDestination source task: %d, destination task: %d", sourceTaskIndex, destinationTaskIndex));
-    //ByteBuffer payload = getContext().getUserPayload().getRawPayload();
-    //LOG.info("routeCompositeDataMovementEventToDestination: broadcast payload size: " + (payload == null ? "null" : payload.position()));
+    UserPayload payload = getContext().getUserPayload();
+    LOG.info("routeCompositeDataMovementEventToDestination: broadcast payload: " + (payload == null ? "null" : payload.getPayload().position()));
 
     return CompositeEventRouteMetadata.create(1, sourceTaskIndex, 0);
   }
