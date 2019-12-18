@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.NumberFormat;
-import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -1126,7 +1125,7 @@ public class TezClient {
           + ", applicationId=" + appId
           + ", dagName=" + dag.getName()
           + callerContextStr);
-      
+      TezCommonUtils.logCredentials(LOG, credentials, "appContext");
       frameworkClient.submitApplication(appContext);
       ApplicationReport appReport = frameworkClient.getApplicationReport(appId);
       LOG.info("The url to track the Tez AM: " + appReport.getTrackingUrl());

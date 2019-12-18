@@ -381,7 +381,6 @@ public class TezClientUtils {
 
     Preconditions.checkNotNull(sessionCredentials);
     TezCommonUtils.logCredentials(LOG, sessionCredentials, "session");
-
     Credentials dagCredentials = new Credentials();
     // All session creds are required for the DAG.
     dagCredentials.mergeAll(sessionCredentials);
@@ -474,6 +473,7 @@ public class TezClientUtils {
     Credentials amLaunchCredentials = new Credentials();
     if (amConfig.getCredentials() != null) {
       amLaunchCredentials.addAll(amConfig.getCredentials());
+      TezCommonUtils.logCredentials(LOG, amConfig.getCredentials(), "amConfig");
     }
 
     // Add Staging dir creds to the list of session credentials.
@@ -483,6 +483,7 @@ public class TezClientUtils {
 
     // Add session specific credentials to the AM credentials.
     amLaunchCredentials.mergeAll(sessionCreds);
+    TezCommonUtils.logCredentials(LOG, amLaunchCredentials, "amLaunch");
 
     DataOutputBuffer dob = new DataOutputBuffer();
     amLaunchCredentials.writeTokenStorageToStream(dob);
@@ -725,6 +726,7 @@ public class TezClientUtils {
       JavaOptsChecker javaOptsChecker) throws IOException {
     Credentials dagCredentials = setupDAGCredentials(dag, credentials,
         amConfig.getTezConfiguration());
+    TezCommonUtils.logCredentials(LOG, dagCredentials, "dagPlan");
     return dag.createDag(amConfig.getTezConfiguration(), dagCredentials, tezJarResources,
         amConfig.getBinaryConfLR(), tezLrsAsArchive, servicePluginsDescriptor, javaOptsChecker);
   }
