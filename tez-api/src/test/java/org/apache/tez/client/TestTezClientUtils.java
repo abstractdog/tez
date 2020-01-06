@@ -913,7 +913,7 @@ public class TestTezClientUtils {
     Credentials amLaunchCredentials =
         TezClientUtils.prepareAmLaunchCredentials(amConfig, sessionCredentials, conf, null);
 
-    // if there is an token in am conf creds of the same token type,
+    // if there is another token in am conf creds of the same token type,
     // session token should be applied while creating ContainerLaunchContext
     Assert.assertEquals(sessionToken, amLaunchCredentials.getToken(tokenType));
   }

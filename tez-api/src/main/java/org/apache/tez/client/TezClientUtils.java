@@ -698,7 +698,7 @@ public class TezClientUtils {
     Credentials amLaunchCredentials = new Credentials();
 
     // Add Staging dir creds to the list of session credentials.
-    TokenCache.obtainTokensForFileSystems(sessionCreds, new Path[] { binaryConfPath }, conf);
+    TokenCache.obtainTokensForFileSystems(sessionCreds, new Path[] {binaryConfPath }, conf);
 
     populateTokenCache(conf, sessionCreds);
 
