@@ -26,7 +26,7 @@ import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.classification.InterfaceStability.Evolving;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 
-import com.google.common.base.Preconditions;
+import org.apache.tez.common.Preconditions;
 
 /**
  * Describes the placements hints for tasks.

@@ -44,7 +44,7 @@ import org.apache.tez.runtime.api.TaskContext;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
+import org.apache.tez.common.Preconditions;
 import com.google.common.collect.Iterables;
 
 // Not calling this a MemoryManager explicitly. Not yet anyway.

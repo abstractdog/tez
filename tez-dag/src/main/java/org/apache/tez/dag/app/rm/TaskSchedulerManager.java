@@ -93,7 +93,7 @@ import org.apache.tez.dag.records.TaskAttemptTerminationCause;
 import org.apache.tez.hadoop.shim.HadoopShim;
 import org.apache.tez.hadoop.shim.HadoopShimsLoader;
 
-import com.google.common.base.Preconditions;
+import org.apache.tez.common.Preconditions;
 
 
 public class TaskSchedulerManager extends AbstractService implements

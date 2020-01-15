@@ -47,7 +47,7 @@ import org.apache.tez.runtime.api.ObjectRegistry;
 import org.apache.tez.runtime.api.TaskContext;
 import org.apache.tez.runtime.common.resources.MemoryDistributor;
 
-import com.google.common.base.Preconditions;
+import org.apache.tez.common.Preconditions;
 
 public abstract class TezTaskContextImpl implements TaskContext, Closeable {
 

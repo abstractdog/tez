@@ -18,7 +18,7 @@
 
 package org.apache.tez.test;
 
-import com.google.common.base.Preconditions;
+import org.apache.tez.common.Preconditions;
 import com.google.protobuf.ByteString;
 
 import org.apache.hadoop.conf.Configuration;
