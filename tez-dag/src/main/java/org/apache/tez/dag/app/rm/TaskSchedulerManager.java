@@ -484,7 +484,7 @@ public class TaskSchedulerManager extends AbstractService implements
       TaskBasedLocationAffinity taskAffinity = locationHint.getAffinitizedTask();
       if (taskAffinity != null) {
         Vertex vertex = appContext.getCurrentDAG().getVertex(taskAffinity.getVertexName());
-        Objects.requireNonNull(vertex, "Invalid vertex in task based affinity " + taskAffinity 
+        Objects.requireNonNull(vertex, "Invalid vertex in task based affinity " + taskAffinity
             + " for attempt: " + taskAttempt.getID());
         int taskIndex = taskAffinity.getTaskIndex(); 
         Preconditions.checkState(taskIndex >=0 && taskIndex < vertex.getTotalTasks(), 

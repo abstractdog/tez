@@ -24,6 +24,9 @@ import javax.annotation.Nullable;
  */
 public class Preconditions {
 
+  private Preconditions() {
+  }
+
   public static void checkArgument(boolean expression) {
     com.google.common.base.Preconditions.checkArgument(expression);
   }
@@ -100,7 +103,8 @@ public class Preconditions {
     try {
       return String.valueOf(o);
     } catch (Exception e) {
-      String objectToString = o.getClass().getName() + '@' + Integer.toHexString(System.identityHashCode(o));
+      String objectToString =
+          o.getClass().getName() + '@' + Integer.toHexString(System.identityHashCode(o));
       return "<" + objectToString + " threw " + e.getClass().getName() + ">";
     }
   }

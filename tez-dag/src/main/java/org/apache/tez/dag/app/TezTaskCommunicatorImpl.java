@@ -22,7 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.Objects;
 
-import org.apache.tez.common.Preconditions;
 import com.google.common.collect.Maps;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
@@ -222,8 +221,9 @@ public class TezTaskCommunicatorImpl extends TaskCommunicator {
                                          int priority) {
 
     ContainerInfo containerInfo = registeredContainers.get(containerId);
-    Objects.requireNonNull(containerInfo, String.format("Cannot register task attempt %s to unknown container %s",
-      taskSpec.getTaskAttemptID(), containerId));
+    Objects.requireNonNull(containerInfo,
+        String.format("Cannot register task attempt %s to unknown container %s",
+            taskSpec.getTaskAttemptID(), containerId));
     synchronized (containerInfo) {
       if (containerInfo.taskSpec != null) {
         throw new TezUncheckedException(

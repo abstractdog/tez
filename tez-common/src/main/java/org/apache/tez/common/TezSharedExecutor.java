@@ -40,7 +40,6 @@ import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.tez.dag.api.TezConfiguration;
 
-import org.apache.tez.common.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**

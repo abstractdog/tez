@@ -16,7 +16,6 @@ package org.apache.tez.mapreduce.grouper;
 
 import java.io.IOException;
 import java.util.Objects;
-import java.util.Objects;
 
 import org.apache.hadoop.mapred.InputSplit;
 
