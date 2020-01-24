@@ -492,7 +492,8 @@ public class TaskSchedulerManager extends AbstractService implements
             + " for attempt: " + taskAttempt.getID());
         TaskAttempt affinityAttempt = vertex.getTask(taskIndex).getSuccessfulAttempt();
         if (affinityAttempt != null) {
-          Objects.requireNonNull(affinityAttempt.getAssignedContainerID(), affinityAttempt.getID().toString());
+          Objects.requireNonNull(affinityAttempt.getAssignedContainerID(),
+              affinityAttempt.getID() == null ? null : affinityAttempt.getID().toString());
           try {
             taskSchedulers[event.getSchedulerId()].allocateTask(taskAttempt,
                 event.getCapability(),

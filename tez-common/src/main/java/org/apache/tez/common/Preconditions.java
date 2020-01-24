@@ -20,7 +20,7 @@ package org.apache.tez.common;
 import javax.annotation.Nullable;
 
 /**
- * A wrapper class for guava's Preconditions for making it easy to handle its usage in Tez project.
+ * A simplified version of Guava's Preconditions for making it easy to handle its usage in Tez project.
  */
 public class Preconditions {
 
@@ -28,38 +28,44 @@ public class Preconditions {
   }
 
   public static void checkArgument(boolean expression) {
-    com.google.common.base.Preconditions.checkArgument(expression);
+    if (!expression) {
+      throw new IllegalArgumentException();
+    }
   }
 
-  public static void checkArgument(boolean expression, @Nullable Object errorMessage) {
-    com.google.common.base.Preconditions.checkArgument(expression, errorMessage);
+  public static void checkArgument(boolean expression, @Nullable Object message) {
+    if (!expression) {
+      throw new IllegalArgumentException(String.valueOf(message));
+    }
   }
 
-  public static void checkArgument(boolean expression, @Nullable String errorMessageTemplate,
-      @Nullable Object... errorMessageArgs) {
-    if (!expression) { // prevent unnecessary preformatting here
-      com.google.common.base.Preconditions.checkArgument(expression,
-          lenientFormat(errorMessageTemplate, errorMessageArgs));
+  public static void checkArgument(boolean expression, @Nullable String template,
+      @Nullable Object... args) {
+    if (!expression) {
+      throw new IllegalArgumentException(format(template, args));
     }
   }
 
   public static void checkState(boolean expression) {
-    com.google.common.base.Preconditions.checkState(expression);
-  }
-
-  public static void checkState(boolean expression, @Nullable Object errorMessage) {
-    com.google.common.base.Preconditions.checkState(expression, errorMessage);
-  }
-
-  public static void checkState(boolean expression, @Nullable String errorMessageTemplate,
-      @Nullable Object... errorMessageArgs) {
-    if (!expression) { // prevent unnecessary preformatting here
-      com.google.common.base.Preconditions.checkState(expression,
-          lenientFormat(errorMessageTemplate, errorMessageArgs));
+    if (!expression) {
+      throw new IllegalStateException();
     }
   }
 
-  private static String lenientFormat(@Nullable String template, @Nullable Object... args) {
+  public static void checkState(boolean expression, @Nullable Object message) {
+    if (!expression) {
+      throw new IllegalStateException(String.valueOf(message));
+    }
+  }
+
+  public static void checkState(boolean expression, @Nullable String template,
+      @Nullable Object... args) {
+    if (!expression) {
+      throw new IllegalStateException(format(template, args));
+    }
+  }
+
+  private static String format(@Nullable String template, @Nullable Object... args) {
     template = String.valueOf(template); // null -> "null"
 
     if (args == null) {
@@ -103,8 +109,7 @@ public class Preconditions {
     try {
       return String.valueOf(o);
     } catch (Exception e) {
-      String objectToString =
-          o.getClass().getName() + '@' + Integer.toHexString(System.identityHashCode(o));
+      String objectToString = o.getClass().getName() + '@' + Integer.toHexString(System.identityHashCode(o));
       return "<" + objectToString + " threw " + e.getClass().getName() + ">";
     }
   }
