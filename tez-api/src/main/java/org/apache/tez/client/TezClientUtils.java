@@ -469,21 +469,8 @@ public class TezClientUtils {
     // Setup required Credentials for the AM launch. DAG specific credentials
     // are handled separately.
     ByteBuffer securityTokens = null;
-    // Setup security tokens
-    Credentials amLaunchCredentials = new Credentials();
-    if (amConfig.getCredentials() != null) {
-      amLaunchCredentials.addAll(amConfig.getCredentials());
-      TezCommonUtils.logCredentials(LOG, amConfig.getCredentials(), "amConfig");
-    }
-
-    // Add Staging dir creds to the list of session credentials.
-    TokenCache.obtainTokensForFileSystems(sessionCreds, new Path[]{binaryConfPath}, conf);
-
-    populateTokenCache(conf, sessionCreds);
-
-    // Add session specific credentials to the AM credentials.
-    amLaunchCredentials.mergeAll(sessionCreds);
-    TezCommonUtils.logCredentials(LOG, amLaunchCredentials, "amLaunch");
+    Credentials amLaunchCredentials =
+        prepareAmLaunchCredentials(amConfig, sessionCreds, conf, binaryConfPath);
 
     DataOutputBuffer dob = new DataOutputBuffer();
     amLaunchCredentials.writeTokenStorageToStream(dob);
@@ -702,6 +689,26 @@ public class TezClientUtils {
 
     return appContext;
 
+  }
+
+  static Credentials prepareAmLaunchCredentials(AMConfiguration amConfig, Credentials sessionCreds,
+      TezConfiguration conf, Path binaryConfPath) throws IOException {
+    // Setup security tokens
+    Credentials amLaunchCredentials = new Credentials();
+
+    // Add Staging dir creds to the list of session credentials.
+    TokenCache.obtainTokensForFileSystems(sessionCreds, new Path[] {binaryConfPath }, conf);
+
+    populateTokenCache(conf, sessionCreds);
+
+    // Add session specific credentials to the AM credentials.
+    amLaunchCredentials.mergeAll(sessionCreds);
+
+    if (amConfig.getCredentials() != null) {
+      amLaunchCredentials.mergeAll(amConfig.getCredentials());
+    }
+    TezCommonUtils.logCredentials(LOG, amLaunchCredentials, "amLaunch");
+    return amLaunchCredentials;
   }
 
   //get secret keys and tokens and store them into TokenCache
