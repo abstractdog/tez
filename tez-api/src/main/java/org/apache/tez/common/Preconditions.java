@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 /**
  * A simplified version of Guava's Preconditions for making it easy to handle its usage in Tez project.
  */
+//TODO remove this and make Preconditions class in common module available everywhere
 public class Preconditions {
 
   private Preconditions() {
