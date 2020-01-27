@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
@@ -114,7 +115,6 @@ import org.apache.tez.dag.api.records.DAGProtos.PlanKeyValuePair;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
@@ -166,7 +166,7 @@ public class TezClientUtils {
   static boolean setupTezJarsLocalResources(TezConfiguration conf,
       Credentials credentials, Map<String, LocalResource> tezJarResources)
       throws IOException {
-    Preconditions.checkNotNull(credentials, "A non-null credentials object should be specified");
+    Objects.requireNonNull(credentials, "A non-null credentials object should be specified");
     boolean usingTezArchive = false;
 
     if (conf.getBoolean(TezConfiguration.TEZ_IGNORE_LIB_URIS, false)){
@@ -411,7 +411,7 @@ public class TezClientUtils {
   static Credentials setupDAGCredentials(DAG dag, Credentials sessionCredentials,
       Configuration conf) throws IOException {
 
-    Preconditions.checkNotNull(sessionCredentials);
+    Objects.requireNonNull(sessionCredentials);
     TezCommonUtils.logCredentials(LOG, sessionCredentials, "session");
 
     Credentials dagCredentials = new Credentials();
@@ -477,7 +477,7 @@ public class TezClientUtils {
       ServicePluginsDescriptor servicePluginsDescriptor, JavaOptsChecker javaOptsChecker)
       throws IOException, YarnException {
 
-    Preconditions.checkNotNull(sessionCreds);
+    Objects.requireNonNull(sessionCreds);
     TezConfiguration conf = amConfig.getTezConfiguration();
 
     FileSystem fs = TezClientUtils.ensureStagingDirExists(conf,
@@ -770,7 +770,7 @@ public class TezClientUtils {
   }
 
   static void maybeAddDefaultLoggingJavaOpts(String logLevel, List<String> vargs) {
-    Preconditions.checkNotNull(vargs);
+    Objects.requireNonNull(vargs);
     if (!vargs.isEmpty()) {
       for (String arg : vargs) {
         if (arg.contains(TezConstants.TEZ_ROOT_LOGGER_NAME)) {

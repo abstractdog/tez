@@ -18,7 +18,7 @@ import java.util.Arrays;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.base.Preconditions;
+import org.apache.tez.common.Preconditions;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.tez.dag.api.TezConfiguration;
