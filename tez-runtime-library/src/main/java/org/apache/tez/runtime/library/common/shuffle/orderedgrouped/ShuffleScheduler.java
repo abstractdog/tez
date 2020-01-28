@@ -1440,7 +1440,7 @@ class ShuffleScheduler {
                 FetcherOrderedGrouped fetcherOrderedGrouped = constructFetcherForHost(mapHost);
                 runningFetchers.add(fetcherOrderedGrouped);
                 ListenableFuture<Void> future = fetcherExecutor.submit(fetcherOrderedGrouped);
-                Futures.addCallback(future, new FetchFutureCallback(fetcherOrderedGrouped));
+                Futures.addCallback(future, new FetchFutureCallback(fetcherOrderedGrouped), MoreExecutors.directExecutor());
               }
             }
           }

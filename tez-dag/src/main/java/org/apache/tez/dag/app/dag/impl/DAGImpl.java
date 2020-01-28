@@ -144,6 +144,7 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 
 /** Implementation of Job interface. Maintains the state machines of Job.
  * The read and write calls use ReadWriteLock for concurrency.
@@ -1142,7 +1143,7 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
       }
       for (Map.Entry<OutputKey,CallableEvent> entry : commitEvents.entrySet()) {
         ListenableFuture<Void> commitFuture = appContext.getExecService().submit(entry.getValue());
-        Futures.addCallback(commitFuture, entry.getValue().getCallback());
+        Futures.addCallback(commitFuture, entry.getValue().getCallback(), MoreExecutors.directExecutor());
         commitFutures.put(entry.getKey(), commitFuture);
       }
     }
@@ -2156,7 +2157,7 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
                 };
               };
               ListenableFuture<Void> groupCommitFuture = appContext.getExecService().submit(groupCommitCallableEvent);
-              Futures.addCallback(groupCommitFuture, groupCommitCallableEvent.getCallback());
+              Futures.addCallback(groupCommitFuture, groupCommitCallableEvent.getCallback(), MoreExecutors.directExecutor());
               commitFutures.put(outputKey, groupCommitFuture);
             }
           }

@@ -203,6 +203,7 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 
 /** Implementation of Vertex interface. Maintains the state machines of Vertex.
  * The read and write calls use ReadWriteLock for concurrency.
@@ -2259,7 +2260,7 @@ public class VertexImpl implements org.apache.tez.dag.app.dag.Vertex, EventHandl
         };
         ListenableFuture<Void> commitFuture = 
             vertex.getAppContext().getExecService().submit(commitCallableEvent);
-        Futures.addCallback(commitFuture, commitCallableEvent.getCallback());
+        Futures.addCallback(commitFuture, commitCallableEvent.getCallback(), MoreExecutors.directExecutor());
         vertex.commitFutures.put(outputName, commitFuture);
       }
     }
