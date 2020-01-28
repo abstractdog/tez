@@ -25,11 +25,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.zip.Deflater;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.InflaterInputStream;
+import java.util.Objects;
 
-import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 
 import org.slf4j.Logger;
@@ -42,6 +39,8 @@ import org.apache.tez.dag.api.UserPayload;
 import org.apache.tez.dag.api.records.DAGProtos;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.xerial.snappy.SnappyInputStream;
+import org.xerial.snappy.SnappyOutputStream;
 
 /**
  * Utility methods for setting up a DAG. Has helpers for setting up log4j configuration, converting
@@ -75,10 +74,9 @@ public class TezUtils {
    * @throws java.io.IOException
    */
   public static ByteString createByteStringFromConf(Configuration conf) throws IOException {
-    Preconditions.checkNotNull(conf, "Configuration must be specified");
+    Objects.requireNonNull(conf, "Configuration must be specified");
     ByteString.Output os = ByteString.newOutput();
-    DeflaterOutputStream compressOs = new DeflaterOutputStream(os,
-        new Deflater(Deflater.BEST_SPEED));
+    SnappyOutputStream compressOs = new SnappyOutputStream(os);
     try {
       writeConfInPB(compressOs, conf);
     } finally {
@@ -110,10 +108,8 @@ public class TezUtils {
    * @throws java.io.IOException
    */
   public static Configuration createConfFromByteString(ByteString byteString) throws IOException {
-    Preconditions.checkNotNull(byteString, "ByteString must be specified");
-    // SnappyInputStream uncompressIs = new
-    // SnappyInputStream(byteString.newInput());
-    try(InflaterInputStream uncompressIs = new InflaterInputStream(byteString.newInput())) {
+    Objects.requireNonNull(byteString, "ByteString must be specified");
+    try(SnappyInputStream uncompressIs = new SnappyInputStream(byteString.newInput());) {
       DAGProtos.ConfigurationProto confProto = DAGProtos.ConfigurationProto.parseFrom(uncompressIs);
       Configuration conf = new Configuration(false);
       readConfFromPB(confProto, conf);
