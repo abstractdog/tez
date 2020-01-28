@@ -32,7 +32,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import com.google.common.base.Preconditions;
+import org.apache.tez.common.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Maps;
 
@@ -1029,7 +1029,9 @@ public class TaskImpl implements Task, EventHandler<TaskEvent> {
         // find the oldest running attempt
         if (!ta.isFinished()) {
           earliestUnfinishedAttempt = ta;
-          task.nodesWithRunningAttempts.add(ta.getNodeId());
+          if (ta.getNodeId() != null) {
+            task.nodesWithRunningAttempts.add(ta.getNodeId());
+          }
         } else {
           if (TaskAttemptState.SUCCEEDED.equals(ta.getState())) {
             LOG.info("Ignore speculation scheduling for task {} since it has succeeded with attempt {}.",

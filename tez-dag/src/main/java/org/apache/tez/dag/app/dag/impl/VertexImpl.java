@@ -49,6 +49,9 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.service.AbstractService;
+import org.apache.hadoop.service.ServiceOperations;
+import org.apache.hadoop.service.ServiceStateException;
 import org.apache.hadoop.util.StringInterner;
 import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.Resource;
@@ -61,6 +64,7 @@ import org.apache.hadoop.yarn.state.StateMachineFactory;
 import org.apache.hadoop.yarn.util.Clock;
 import org.apache.tez.client.TezClientUtils;
 import org.apache.tez.common.ATSConstants;
+import org.apache.tez.common.ProgressHelper;
 import org.apache.tez.common.ReflectionUtils;
 import org.apache.tez.common.TezUtilsInternal;
 import org.apache.tez.common.counters.AggregateTezCounters;
@@ -189,7 +193,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
+import org.apache.tez.common.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
@@ -306,8 +310,10 @@ public class VertexImpl implements org.apache.tez.dag.app.dag.Vertex, EventHandl
 
   @VisibleForTesting
   final List<VertexManagerEvent> pendingVmEvents = new LinkedList<>();
-  
-  LegacySpeculator speculator;
+
+  private final AtomicBoolean servicesInited;
+  private LegacySpeculator speculator;
+  private List<AbstractService> services;
 
   @VisibleForTesting
   Map<String, ListenableFuture<Void>> commitFutures = new ConcurrentHashMap<String, ListenableFuture<Void>>();
@@ -869,6 +875,94 @@ public class VertexImpl implements org.apache.tez.dag.app.dag.Vertex, EventHandl
     }
   }
 
+  @Override
+  public void initServices() {
+    if (servicesInited.get()) {
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Skipping Initing services for vertex because already"
+            + " Initialized, name=" + this.vertexName);
+      }
+      return;
+    }
+    writeLock.lock();
+    try {
+      List<AbstractService> servicesToAdd = new ArrayList<>();
+      if (isSpeculationEnabled()) {
+        // Initialize the speculator
+        if (LOG.isDebugEnabled()) {
+          LOG.debug(
+              "Initing service vertex speculator, name=" + this.vertexName);
+        }
+        speculator = new LegacySpeculator(vertexConf, getAppContext(), this);
+        speculator.init(vertexConf);
+        servicesToAdd.add(speculator);
+      }
+      services = Collections.synchronizedList(servicesToAdd);
+      servicesInited.set(true);
+    } finally {
+      writeLock.unlock();
+    }
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Initing service vertex, name=" + this.vertexName);
+    }
+  }
+
+  @Override
+  public void startServices() {
+    writeLock.lock();
+    try {
+      if (!servicesInited.get()) {
+        initServices();
+      }
+      for (AbstractService srvc : services) {
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("starting service : " + srvc.getName()
+              + ", for vertex: " + getName());
+        }
+        srvc.start();
+      }
+    } finally {
+      writeLock.unlock();
+    }
+  }
+
+  @Override
+  public void stopServices() {
+    Exception firstException = null;
+    List<AbstractService> stoppedServices = new ArrayList<>();
+    writeLock.lock();
+    try {
+      if (servicesInited.get()) {
+        for (AbstractService srvc : services) {
+          if (LOG.isDebugEnabled()) {
+            LOG.debug("Stopping service : " + srvc);
+          }
+          Exception ex = ServiceOperations.stopQuietly(srvc);
+          if (ex != null && firstException == null) {
+            LOG.warn(String.format(
+                "Failed to stop service=(%s) for vertex name=(%s)",
+                srvc.getName(), getName()), ex);
+            firstException = ex;
+          } else {
+            stoppedServices.add(srvc);
+          }
+        }
+        services.clear();
+      }
+      servicesInited.set(false);
+    } finally {
+      writeLock.unlock();
+    }
+    // wait for services to stop
+    for (AbstractService srvc : stoppedServices) {
+      srvc.waitForServiceToStop(60000L);
+    }
+    // After stopping all services, rethrow the first exception raised
+    if (firstException != null) {
+      throw ServiceStateException.convert(firstException);
+    }
+  }
+
   public VertexImpl(TezVertexID vertexId, VertexPlan vertexPlan,
       String vertexName, Configuration dagConf, EventHandler eventHandler,
       TaskCommunicatorManagerInterface taskCommunicatorManagerInterface, Clock clock,
@@ -972,11 +1066,11 @@ public class VertexImpl implements org.apache.tez.dag.app.dag.Vertex, EventHandl
 
     this.dagVertexGroups = dagVertexGroups;
     
-    isSpeculationEnabled = vertexConf.getBoolean(TezConfiguration.TEZ_AM_SPECULATION_ENABLED,
-        TezConfiguration.TEZ_AM_SPECULATION_ENABLED_DEFAULT);
-    if (isSpeculationEnabled()) {
-      speculator = new LegacySpeculator(vertexConf, getAppContext(), this);
-    }
+    isSpeculationEnabled =
+        vertexConf.getBoolean(TezConfiguration.TEZ_AM_SPECULATION_ENABLED,
+            TezConfiguration.TEZ_AM_SPECULATION_ENABLED_DEFAULT);
+    servicesInited = new AtomicBoolean(false);
+    initServices();
 
     maxFailuresPercent = vertexConf.getFloat(TezConfiguration.TEZ_VERTEX_FAILURES_MAXPERCENT,
             TezConfiguration.TEZ_VERTEX_FAILURES_MAXPERCENT_DEFAULT);
@@ -1479,20 +1573,31 @@ public class VertexImpl implements org.apache.tez.dag.app.dag.Vertex, EventHandl
   List<EventInfo> getOnDemandRouteEvents() {
     return onDemandRouteEvents;
   }
-  
+
+  /**
+   * Updates the progress value in the vertex.
+   * This should be called only when the vertex is running state.
+   * No need to acquire the lock since this is nested inside
+   * {@link #getProgress() getProgress} method.
+   */
   private void computeProgress() {
-    this.readLock.lock();
-    try {
-      float progress = 0f;
-      for (Task task : this.tasks.values()) {
-        progress += (task.getProgress());
+
+    float accProg = 0.0f;
+    int tasksCount = this.tasks.size();
+    for (Task task : this.tasks.values()) {
+      float taskProg = task.getProgress();
+      if (LOG.isDebugEnabled()) {
+        if (!ProgressHelper.isProgressWithinRange(taskProg)) {
+          LOG.debug("progress update: vertex={}, task={} incorrect; range={}",
+              getName(), task.getTaskId().toString(), taskProg);
+        }
       }
-      if (this.numTasks != 0) {
-        progress /= this.numTasks;
-      }
-      this.progress = progress;
-    } finally {
-      this.readLock.unlock();
+      accProg += ProgressHelper.processProgress(taskProg);
+    }
+    // tasksCount is 0, do not reset the current progress.
+    if (tasksCount > 0) {
+      // force the progress to be below within the range
+      progress = ProgressHelper.processProgress(accProg / tasksCount);
     }
   }
 
@@ -2329,6 +2434,11 @@ public class VertexImpl implements org.apache.tez.dag.app.dag.Vertex, EventHandl
         abortVertex(VertexStatus.State.valueOf(finalState.name()));
         eventHandler.handle(new DAGEvent(getDAGId(),
             DAGEventType.INTERNAL_ERROR));
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("stopping services attached to the succeeded Vertex,"
+              + "name=" + getName());
+        }
+        stopServices();
         try {
           logJobHistoryVertexFailedEvent(finalState);
         } catch (IOException e) {
@@ -2344,6 +2454,11 @@ public class VertexImpl implements org.apache.tez.dag.app.dag.Vertex, EventHandl
         abortVertex(VertexStatus.State.valueOf(finalState.name()));
         eventHandler.handle(new DAGEventVertexCompleted(getVertexId(),
             finalState, terminationCause));
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("stopping services attached to the succeeded Vertex,"
+              + "name=" + getName());
+        }
+        stopServices();
         try {
           logJobHistoryVertexFailedEvent(finalState);
         } catch (IOException e) {
@@ -2356,6 +2471,12 @@ public class VertexImpl implements org.apache.tez.dag.app.dag.Vertex, EventHandl
             logJobHistoryVertexFinishedEvent();
             eventHandler.handle(new DAGEventVertexCompleted(getVertexId(),
                 finalState));
+            // Stop related services
+            if (LOG.isDebugEnabled()) {
+              LOG.debug("stopping services attached to the succeeded Vertex,"
+                  + "name=" + getName());
+            }
+            stopServices();
           } catch (LimitExceededException e) {
             LOG.error("Counter limits exceeded for vertex: " + getLogIdentifier(), e);
             finalState = VertexState.FAILED;
@@ -2374,6 +2495,12 @@ public class VertexImpl implements org.apache.tez.dag.app.dag.Vertex, EventHandl
         }
         break;
       default:
+        // Stop related services
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("stopping services attached with Unexpected State,"
+              + "name=" + getName());
+        }
+        stopServices();
         throw new TezUncheckedException("Unexpected VertexState: " + finalState);
     }
     return finalState;
@@ -2458,6 +2585,8 @@ public class VertexImpl implements org.apache.tez.dag.app.dag.Vertex, EventHandl
     } else {
       initedTime = clock.getTime();
     }
+    // set the vertex services to be initialized.
+    initServices();
     // Only initialize committer when it is in non-recovery mode or vertex is not recovered to completed 
     // state in recovery mode
     if (recoveryData == null || recoveryData.getVertexFinishedEvent() == null) {
@@ -3316,6 +3445,12 @@ public class VertexImpl implements org.apache.tez.dag.app.dag.Vertex, EventHandl
     if (finishTime == 0) {
       setFinishTime();
     }
+    // Stop related services
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("stopping services attached to the aborted Vertex, name="
+          + getName());
+    }
+    stopServices();
   }
 
   private void mayBeConstructFinalFullCounters() {
@@ -4763,6 +4898,6 @@ public class VertexImpl implements org.apache.tez.dag.app.dag.Vertex, EventHandl
     }
   }
 
-  @VisibleForTesting
-  public LegacySpeculator getSpeculator() { return speculator; }
+  @Override
+  public AbstractService getSpeculator() { return speculator; }
 }
