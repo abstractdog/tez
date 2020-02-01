@@ -33,6 +33,7 @@ import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.api.records.NodeReport;
 import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.Resource;
+import org.apache.hadoop.yarn.api.resource.PlacementConstraint;
 import org.apache.hadoop.yarn.client.api.async.AMRMClientAsync;
 import org.apache.hadoop.yarn.client.api.impl.AMRMClientImpl;
 import org.apache.hadoop.yarn.proto.YarnServiceProtos.SchedulerResourceTypes;
@@ -1565,10 +1566,9 @@ public class TestDagAwareYarnTaskScheduler {
     protected void serviceStop() {
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public RegisterApplicationMasterResponse registerApplicationMaster(
-        String appHostName, int appHostPort, String appTrackingUrl) {
+    public RegisterApplicationMasterResponse registerApplicationMaster(String appHostName, int appHostPort,
+        String appTrackingUrl, Map<Set<String>, PlacementConstraint> placementConstraintsMap) {
       mockRegResponse = mock(RegisterApplicationMasterResponse.class);
       Resource mockMaxResource = Resources.createResource(1024*1024, 1024);
       Map<ApplicationAccessType, String> mockAcls = Collections.emptyMap();
