@@ -33,8 +33,6 @@ import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.api.records.NodeReport;
 import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.Resource;
-import org.apache.hadoop.yarn.api.records.impl.pb.ContainerPBImpl;
-import org.apache.hadoop.yarn.api.records.impl.pb.NodeIdPBImpl;
 import org.apache.hadoop.yarn.client.api.async.AMRMClientAsync;
 import org.apache.hadoop.yarn.client.api.impl.AMRMClientImpl;
 import org.apache.hadoop.yarn.proto.YarnServiceProtos.SchedulerResourceTypes;
@@ -54,7 +52,6 @@ import org.apache.tez.serviceplugins.api.TaskSchedulerContext;
 import org.apache.tez.serviceplugins.api.TaskSchedulerContext.AppFinalStatus;
 import org.apache.tez.test.ControlledScheduledExecutorService;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -1535,7 +1532,7 @@ public class TestDagAwareYarnTaskScheduler {
 
   @Test
   public void testMinMaxContainerIdleMillisAreEqual() throws Exception {
-    AMRMClientAsyncWrapperForTest mockRMClient = spy(new AMRMClientAsyncWrapperForTest());
+    AMRMClientAsyncWrapperForTest mockRMClient = new AMRMClientAsyncWrapperForTest();
     Configuration conf = new Configuration();
     conf.setLong(TezConfiguration.TEZ_AM_CONTAINER_IDLE_RELEASE_TIMEOUT_MIN_MILLIS, 10000);
     conf.setLong(TezConfiguration.TEZ_AM_CONTAINER_IDLE_RELEASE_TIMEOUT_MAX_MILLIS, 10000);
@@ -1546,12 +1543,11 @@ public class TestDagAwareYarnTaskScheduler {
     NewTaskSchedulerForTest scheduler = new NewTaskSchedulerForTest(drainableAppCallback, mockRMClient, clock);
     scheduler.initialize();
 
-    ContainerPBImpl c = mock(ContainerPBImpl.class);
-    NodeIdPBImpl n = mock(NodeIdPBImpl.class);
-    when(c.getNodeId()).thenReturn(n);
-    HeldContainer heldContainer = scheduler.new HeldContainer(c);
+    NodeId host1 = NodeId.newInstance("host1", 1);
+    Container container1 = Container.newInstance(null, host1, null, null, null, null);
+    HeldContainer heldContainer = scheduler.new HeldContainer(container1);
     long now = clock.getTime();
-    Assert.assertEquals(now + 10000, heldContainer.getIdleExpirationTimestamp(now));
+    assertEquals(now + 10000, heldContainer.getIdleExpirationTimestamp(now));
   }
 
   static class AMRMClientAsyncWrapperForTest extends AMRMClientAsyncWrapper {
