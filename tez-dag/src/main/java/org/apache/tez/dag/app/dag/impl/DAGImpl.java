@@ -2157,7 +2157,8 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
                 };
               };
               ListenableFuture<Void> groupCommitFuture = appContext.getExecService().submit(groupCommitCallableEvent);
-              Futures.addCallback(groupCommitFuture, groupCommitCallableEvent.getCallback(), GuavaShim.directExecutor());
+              Futures.addCallback(groupCommitFuture, groupCommitCallableEvent.getCallback(),
+                  GuavaShim.directExecutor());
               commitFutures.put(outputKey, groupCommitFuture);
             }
           }
