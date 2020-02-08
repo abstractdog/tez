@@ -43,6 +43,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.tez.Utils;
+import org.apache.tez.common.GuavaShim;
 import org.apache.tez.common.ProgressHelper;
 import org.apache.tez.common.TezUtilsInternal;
 import org.apache.tez.common.counters.LimitExceededException;
@@ -144,7 +145,6 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 
 /** Implementation of Job interface. Maintains the state machines of Job.
  * The read and write calls use ReadWriteLock for concurrency.
@@ -1143,7 +1143,7 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
       }
       for (Map.Entry<OutputKey,CallableEvent> entry : commitEvents.entrySet()) {
         ListenableFuture<Void> commitFuture = appContext.getExecService().submit(entry.getValue());
-        Futures.addCallback(commitFuture, entry.getValue().getCallback(), MoreExecutors.directExecutor());
+        Futures.addCallback(commitFuture, entry.getValue().getCallback(), GuavaShim.directExecutor());
         commitFutures.put(entry.getKey(), commitFuture);
       }
     }
@@ -2157,7 +2157,7 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
                 };
               };
               ListenableFuture<Void> groupCommitFuture = appContext.getExecService().submit(groupCommitCallableEvent);
-              Futures.addCallback(groupCommitFuture, groupCommitCallableEvent.getCallback(), MoreExecutors.directExecutor());
+              Futures.addCallback(groupCommitFuture, groupCommitCallableEvent.getCallback(), GuavaShim.directExecutor());
               commitFutures.put(outputKey, groupCommitFuture);
             }
           }

@@ -78,6 +78,7 @@ import org.apache.tez.runtime.api.impl.TezEvent;
 import org.apache.tez.runtime.api.impl.EventMetaData.EventProducerConsumerType;
 
 import com.google.common.base.Function;
+import org.apache.tez.common.GuavaShim;
 import org.apache.tez.common.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
@@ -86,7 +87,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
 @SuppressWarnings({"unchecked", "deprecation"})
 public class VertexManager {
@@ -489,7 +489,7 @@ public class VertexManager {
       VertexManagerEvent e = eventQueue.poll();
       if (e != null) {
         ListenableFuture<Void> future = execService.submit(e);
-        Futures.addCallback(future, e.getCallback(), MoreExecutors.directExecutor());
+        Futures.addCallback(future, e.getCallback(), GuavaShim.directExecutor());
       } else {
         // This may happen. Lets say Callback succeeded on threadA. It set eventInFlight to false 
         // and called tryScheduleNextEvent() and found queue not empty but got paused before it 
