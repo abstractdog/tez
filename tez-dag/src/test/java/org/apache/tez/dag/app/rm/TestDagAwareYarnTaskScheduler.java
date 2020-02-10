@@ -21,6 +21,7 @@ package org.apache.tez.dag.app.rm;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.yarn.api.ApplicationMasterProtocol;
 import org.apache.hadoop.yarn.api.protocolrecords.RegisterApplicationMasterResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationAccessType;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
@@ -33,9 +34,9 @@ import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.api.records.NodeReport;
 import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.Resource;
-import org.apache.hadoop.yarn.api.resource.PlacementConstraint;
 import org.apache.hadoop.yarn.client.api.async.AMRMClientAsync;
 import org.apache.hadoop.yarn.client.api.impl.AMRMClientImpl;
+import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.proto.YarnServiceProtos.SchedulerResourceTypes;
 import org.apache.hadoop.yarn.util.resource.Resources;
 import org.apache.tez.common.MockDNSToSwitchMapping;
@@ -1561,6 +1562,12 @@ public class TestDagAwareYarnTaskScheduler {
     }
 
     @Override
+    public RegisterApplicationMasterResponse registerApplicationMaster(String appHostName, int appHostPort,
+        String appTrackingUrl) throws YarnException, IOException {
+      return client.registerApplicationMaster(appHostName, appHostPort, appTrackingUrl);
+    }
+
+    @Override
     protected void serviceStart() {
     }
 
@@ -1588,7 +1595,7 @@ public class TestDagAwareYarnTaskScheduler {
 
     @Override
     public RegisterApplicationMasterResponse registerApplicationMaster(String appHostName, int appHostPort,
-        String appTrackingUrl, Map<Set<String>, PlacementConstraint> placementConstraintsMap) {
+        String appTrackingUrl) {
       mockRegResponse = mock(RegisterApplicationMasterResponse.class);
       Resource mockMaxResource = Resources.createResource(1024*1024, 1024);
       Map<ApplicationAccessType, String> mockAcls = Collections.emptyMap();
