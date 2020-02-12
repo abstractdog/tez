@@ -45,6 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.Resource;
+import org.apache.tez.common.GuavaShim;
 import org.apache.tez.common.ReflectionUtils;
 import org.apache.tez.dag.api.EdgeManagerPluginDescriptor;
 import org.apache.tez.dag.api.EdgeProperty;
@@ -488,7 +489,7 @@ public class VertexManager {
       VertexManagerEvent e = eventQueue.poll();
       if (e != null) {
         ListenableFuture<Void> future = execService.submit(e);
-        Futures.addCallback(future, e.getCallback(), MoreExecutors.directExecutor());
+        Futures.addCallback(future, e.getCallback(), GuavaShim.directExecutor());
       } else {
         // This may happen. Lets say Callback succeeded on threadA. It set eventInFlight to false 
         // and called tryScheduleNextEvent() and found queue not empty but got paused before it 

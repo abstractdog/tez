@@ -52,6 +52,7 @@ import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.util.AuxiliaryServiceHelper;
+import org.apache.tez.common.GuavaShim;
 import org.apache.tez.common.TezCommonUtils;
 import org.apache.tez.common.TezExecutors;
 import org.apache.tez.common.TezTaskUmbilicalProtocol;
@@ -210,7 +211,7 @@ public class ContainerRunnerImpl extends AbstractService implements ContainerRun
         workingDir, credentials, memoryPerExecutor);
     ListenableFuture<ContainerExecutionResult> future = executorService
         .submit(callable);
-    Futures.addCallback(future, new ContainerRunnerCallback(request, callable), MoreExecutors.directExecutor());
+    Futures.addCallback(future, new ContainerRunnerCallback(request, callable), GuavaShim.directExecutor());
   }
 
   /**
@@ -269,7 +270,7 @@ public class ContainerRunnerImpl extends AbstractService implements ContainerRun
         new ExecutionContextImpl(localAddress.get().getHostName()), env, localDirs,
         workingDir, credentials, memoryPerExecutor, sharedExecutor);
     ListenableFuture<ContainerExecutionResult> future = executorService.submit(callable);
-    Futures.addCallback(future, new TaskRunnerCallback(request, callable), MoreExecutors.directExecutor());
+    Futures.addCallback(future, new TaskRunnerCallback(request, callable), GuavaShim.directExecutor());
   }
 
 
