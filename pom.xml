@@ -37,7 +37,8 @@
   <properties>
     <maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
     <clover.license>${user.home}/clover.license</clover.license>
-    <hadoop.version>3.0.3</hadoop.version>
+    <guava.version>27.0-jre</guava.version>
+    <hadoop.version>3.1.3</hadoop.version>
     <netty.version>3.10.5.Final</netty.version>
     <pig.version>0.13.0</pig.version>
     <jersey.version>1.19</jersey.version>
@@ -683,7 +684,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>11.0.2</version>
+        <version>${guava.version}</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.jettison</groupId>
