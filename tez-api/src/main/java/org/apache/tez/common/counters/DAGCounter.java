@@ -40,5 +40,10 @@ public enum DAGCounter {
   AM_CPU_MILLISECONDS,
   /** Wall clock time taken by all the tasks. */
   WALL_CLOCK_MILLIS,
-  AM_GC_TIME_MILLIS
+  AM_GC_TIME_MILLIS,
+  INITIAL_HELD_CONTAINERS, //both allocated and launched containers before dag start
+  TOTAL_ALLOCATED_CONTAINERS,
+  TOTAL_LAUNCHED_CONTAINERS,
+  TOTAL_USED_CONTAINERS,
+  TOTAL_REUSED_CONTAINERS
 }
