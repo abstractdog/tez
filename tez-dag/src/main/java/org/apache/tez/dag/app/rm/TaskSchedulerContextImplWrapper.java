@@ -70,6 +70,22 @@ class TaskSchedulerContextImplWrapper implements TaskSchedulerContext {
         container));
   }
 
+
+  @Override
+  public void containerBeingAllocated(ContainerId containerId) {
+    throw new RuntimeException("TODO: implement");
+  }
+
+  @Override
+  public void containerBeingLaunched(ContainerId containerId) {
+    throw new RuntimeException("TODO: implement");
+  }
+
+  @Override
+  public void containerBeingReused(ContainerId containerId) {
+    throw new RuntimeException("TODO: implement");
+  }
+
   @Override
   public void containerCompleted(Object taskLastAllocated,
       ContainerStatus containerStatus) {

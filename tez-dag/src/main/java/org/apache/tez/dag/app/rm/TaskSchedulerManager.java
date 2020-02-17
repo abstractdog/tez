@@ -768,6 +768,11 @@ public class TaskSchedulerManager extends AbstractService implements
             .getContainerContext().getCredentials(), event.getPriority()));
   }
 
+
+  public void containerBeingAllocated(ContainerId containerId) {
+    
+  }
+
   public synchronized void containerCompleted(int schedulerId, Object task, ContainerStatus containerStatus) {
     // SchedulerId isn't used here since no node updates are sent out
     // Inform the Containers about completion.
@@ -1079,5 +1084,4 @@ public class TaskSchedulerManager extends AbstractService implements
   public String getTaskSchedulerClassName(int taskSchedulerIndex) {
     return taskSchedulers[taskSchedulerIndex].getTaskScheduler().getClass().getName();
   }
-
 }
