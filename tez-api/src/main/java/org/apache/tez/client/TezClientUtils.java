@@ -413,7 +413,6 @@ public class TezClientUtils {
 
     Preconditions.checkNotNull(sessionCredentials);
     TezCommonUtils.logCredentials(LOG, sessionCredentials, "session");
-
     Credentials dagCredentials = new Credentials();
     // All session creds are required for the DAG.
     dagCredentials.mergeAll(sessionCredentials);
@@ -740,6 +739,7 @@ public class TezClientUtils {
     if (amConfig.getCredentials() != null) {
       amLaunchCredentials.mergeAll(amConfig.getCredentials());
     }
+    TezCommonUtils.logCredentials(LOG, amLaunchCredentials, "amLaunch");
     return amLaunchCredentials;
   }
 
@@ -765,6 +765,7 @@ public class TezClientUtils {
       JavaOptsChecker javaOptsChecker) throws IOException {
     Credentials dagCredentials = setupDAGCredentials(dag, credentials,
         amConfig.getTezConfiguration());
+    TezCommonUtils.logCredentials(LOG, dagCredentials, "dagPlan");
     return dag.createDag(amConfig.getTezConfiguration(), dagCredentials, tezJarResources,
         amConfig.getBinaryConfLR(), tezLrsAsArchive, servicePluginsDescriptor, javaOptsChecker);
   }

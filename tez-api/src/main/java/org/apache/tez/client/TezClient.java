@@ -1133,7 +1133,7 @@ public class TezClient {
           + ", applicationId=" + appId
           + ", dagName=" + dag.getName()
           + callerContextStr);
-
+      TezCommonUtils.logCredentials(LOG, credentials, "appContext");
       frameworkClient.submitApplication(appContext);
       ApplicationReport appReport = frameworkClient.getApplicationReport(appId);
       LOG.info("The url to track the Tez AM: " + appReport.getTrackingUrl());
