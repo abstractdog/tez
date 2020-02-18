@@ -85,28 +85,6 @@ public interface TaskSchedulerContext extends ServicePluginContextBase {
                      Container container);
 
   /**
-   * Indicates to the framework that a container is being allocated.
-   * In case of pre-warm, this is supposed to be the same as container launch.
-   *
-   * @param containerId the id of the container being allocated
-   */
-  void containerBeingAllocated(ContainerId containerId);
-
-  /**
-   * Indicates to the framework that a container is being launched.
-   *
-   * @param containerId the id of the container being launched
-   */
-  void containerBeingLaunched(ContainerId containerId);
-
-  /**
-   * Indicates to the framework that a container is being reused.
-   *
-   * @param containerId the id of the container being reused
-   */
-  void containerBeingReused(ContainerId containerId);
-
-  /**
    * Indicate to the framework that a container has completed. This is typically used by sources
    * which have
    * a means to indicate a container failure to the scheduler (typically centrally managed

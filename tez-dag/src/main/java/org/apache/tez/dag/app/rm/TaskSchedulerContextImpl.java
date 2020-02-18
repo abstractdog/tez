@@ -70,21 +70,6 @@ public class TaskSchedulerContextImpl implements TaskSchedulerContext {
   }
 
   @Override
-  public void containerBeingAllocated(ContainerId containerId) {
-    taskSchedulerManager.containerBeingAllocated(containerId);
-  }
-
-  @Override
-  public void containerBeingLaunched(ContainerId containerId) {
-    
-  }
-
-  @Override
-  public void containerBeingReused(ContainerId containerId) {
-    
-  }
-
-  @Override
   public void containerCompleted(Object taskLastAllocated, ContainerStatus containerStatus) {
     taskSchedulerManager.containerCompleted(schedulerId, taskLastAllocated, containerStatus);
   }

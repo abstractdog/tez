@@ -262,24 +262,6 @@ class TestTaskSchedulerHelpers {
     }
 
     @Override
-    public void containerBeingAllocated(ContainerId containerId) {
-      invocations++;
-      real.containerBeingAllocated(containerId);
-    }
-
-    @Override
-    public void containerBeingLaunched(ContainerId containerId) {
-      invocations++;
-      real.containerBeingLaunched(containerId);
-    }
-
-    @Override
-    public void containerBeingReused(ContainerId containerId) {
-      invocations++;
-      real.containerBeingReused(containerId);
-    }
-
-    @Override
     public void containerCompleted(Object taskLastAllocated,
         ContainerStatus containerStatus) {
       invocations++;
