@@ -27,6 +27,7 @@ import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.event.EventHandler;
+import org.apache.tez.common.counters.DAGCounter;
 import org.apache.tez.common.counters.TezCounters;
 import org.apache.tez.dag.api.TezException;
 import org.apache.tez.dag.api.client.DAGStatusBuilder;
@@ -105,5 +106,7 @@ public interface DAG extends DagInfo {
    * this DAG, null if it doesn't exist
    */
   @Nullable DAGScheduler getDAGScheduler();
+
+  void incrementDagCounter(DAGCounter counter, int incrValue);
 
 }

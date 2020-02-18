@@ -1410,6 +1410,11 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
     dagCounters.findCounter(DAGCounter.AM_GC_TIME_MILLIS).setValue(totalDAGGCTime);
   }
   
+  @Override
+  public void incrementDagCounter(DAGCounter counter, int incrValue) {
+    dagCounters.findCounter(counter).increment(incrValue);
+  }
+
   private DAGState finished(DAGState finalState) {
     boolean dagError = false;
     try {

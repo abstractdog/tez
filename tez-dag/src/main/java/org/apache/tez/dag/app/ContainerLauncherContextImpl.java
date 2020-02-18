@@ -21,6 +21,7 @@ import java.util.Objects;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.tez.common.TezUtilsInternal;
+import org.apache.tez.common.counters.DAGCounter;
 import org.apache.tez.dag.api.UserPayload;
 import org.apache.tez.dag.app.dag.event.DAGAppMasterEventType;
 import org.apache.tez.dag.app.dag.event.DAGAppMasterEventUserServiceFatalError;
@@ -65,6 +66,7 @@ public class ContainerLauncherContextImpl implements ContainerLauncherContext {
 
   @Override
   public void containerLaunched(ContainerId containerId) {
+    context.getCurrentDAG().incrementDagCounter(DAGCounter.TOTAL_LAUNCHED_CONTAINERS, 1);
     context.getEventHandler().handle(
         new AMContainerEventLaunched(containerId));
     ContainerLaunchedEvent lEvt = new ContainerLaunchedEvent(
