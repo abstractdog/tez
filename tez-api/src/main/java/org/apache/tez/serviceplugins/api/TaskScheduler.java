@@ -263,4 +263,10 @@ public abstract class TaskScheduler implements ServicePluginLifecycle {
    */
   public abstract void dagComplete() throws ServicePluginException;
 
+  /**
+   * Get the number of held containers
+   * @throws ServicePluginException when the service runs into a fatal error which it cannot handle.
+   *                               This will cause the app to shutdown.
+   */
+  public abstract int getHeldContainersCount();
 }

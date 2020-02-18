@@ -121,6 +121,7 @@ import org.apache.tez.common.TezCommonUtils;
 import org.apache.tez.common.TezConverterUtils;
 import org.apache.tez.common.TezUtilsInternal;
 import org.apache.tez.common.VersionInfo;
+import org.apache.tez.common.counters.DAGCounter;
 import org.apache.tez.common.counters.Limits;
 import org.apache.tez.common.security.ACLManager;
 import org.apache.tez.common.security.JobTokenIdentifier;
@@ -2546,9 +2547,15 @@ public class DAGAppMaster extends AbstractService {
       throw new TezUncheckedException(e);
     }
 
+    countAlreadyHeldContainers(newDAG);
     startDAGExecution(newDAG, lrDiff);
     // set state after curDag is set
     this.state = DAGAppMasterState.RUNNING;
+  }
+
+  private void countAlreadyHeldContainers(DAG newDAG) {
+    newDAG.incrementDagCounter(DAGCounter.INITIAL_HELD_CONTAINERS,
+        taskSchedulerManager.getAlreadyHeldContainersCount());
   }
 
   private void startVertexServices(DAG dag) {

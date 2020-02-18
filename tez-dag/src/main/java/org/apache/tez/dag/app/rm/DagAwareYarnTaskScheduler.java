@@ -2089,4 +2089,9 @@ public class DagAwareYarnTaskScheduler extends TaskScheduler
       }
     }
   }
+
+  @Override
+  public int getHeldContainersCount() {
+    return heldContainers.size();
+  }
 }

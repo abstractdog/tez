@@ -2413,4 +2413,9 @@ public class YarnTaskSchedulerService extends TaskScheduler
             : "null");
     }
   }
+
+  @Override
+  public int getHeldContainersCount() {
+    return heldContainers.size();
+  }
 }

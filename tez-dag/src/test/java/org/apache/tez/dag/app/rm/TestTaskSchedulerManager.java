@@ -1027,6 +1027,11 @@ public class TestTaskSchedulerManager {
     public boolean hasUnregistered() {
       return false;
     }
+
+    @Override
+    public int getHeldContainersCount() {
+      return 0;
+    }
   }
 
   private static final String DAG_NAME = "dagName";
@@ -1105,6 +1110,11 @@ public class TestTaskSchedulerManager {
 
     @Override
     public void dagComplete() throws ServicePluginException {
+    }
+
+    @Override
+    public int getHeldContainersCount() {
+      return 0;
     }
   }
 }
