@@ -2427,9 +2427,4 @@ public class YarnTaskSchedulerService extends TaskScheduler
   public int getHeldContainersCount() {
     return heldContainers.size();
   }
-
-  @Override
-  public int getIdleContainersCount() {
-    throw new RuntimeException("FIXME implement");
-  }
 }

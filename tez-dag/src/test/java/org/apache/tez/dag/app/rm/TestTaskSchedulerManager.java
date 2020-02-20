@@ -1116,15 +1116,5 @@ public class TestTaskSchedulerManager {
     public int getHeldContainersCount() {
       return 0;
     }
-
-    @Override
-    public int getIdleContainersCount() {
-      return 0;
-    }
-
-    @Override
-    public int getIdleContainersCount() {
-      return 0;
-    }
   }
 }

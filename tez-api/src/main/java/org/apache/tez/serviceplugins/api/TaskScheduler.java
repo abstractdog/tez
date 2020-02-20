@@ -269,6 +269,4 @@ public abstract class TaskScheduler implements ServicePluginLifecycle {
    *                               This will cause the app to shutdown.
    */
   public abstract int getHeldContainersCount();
-
-  public abstract int getIdleContainersCount();
 }
