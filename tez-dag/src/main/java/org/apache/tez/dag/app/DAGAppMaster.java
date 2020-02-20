@@ -2548,6 +2548,7 @@ public class DAGAppMaster extends AbstractService {
     }
 
     countAlreadyHeldContainers(newDAG);
+    countIdleContainers(newDAG);
     startDAGExecution(newDAG, lrDiff);
     // set state after curDag is set
     this.state = DAGAppMasterState.RUNNING;
@@ -2556,6 +2557,11 @@ public class DAGAppMaster extends AbstractService {
   private void countAlreadyHeldContainers(DAG newDAG) {
     newDAG.incrementDagCounter(DAGCounter.INITIAL_HELD_CONTAINERS,
         taskSchedulerManager.getAlreadyHeldContainersCount());
+  }
+
+  private void countIdleContainers(DAG newDAG) {
+    newDAG.incrementDagCounter(DAGCounter.INITIAL_IDLE_CONTAINERS,
+        taskSchedulerManager.getIdleContainersCount());
   }
 
   private void startVertexServices(DAG dag) {

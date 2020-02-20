@@ -2102,4 +2102,9 @@ public class DagAwareYarnTaskScheduler extends TaskScheduler
   public int getHeldContainersCount() {
     return heldContainers.size();
   }
+
+  @Override
+  public int getIdleContainersCount() {
+    return idleTracker.numContainers;
+  }
 }

@@ -256,4 +256,9 @@ public class TezTestServiceTaskSchedulerService extends TaskScheduler {
   public int getHeldContainersCount() {
     return 0;
   }
+
+  @Override
+  public int getIdleContainersCount() {
+    return 0;
+  }
 }

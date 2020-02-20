@@ -965,6 +965,14 @@ public class TaskSchedulerManager extends AbstractService implements
     return count;
   }
 
+  public int getIdleContainersCount() {
+    int count = 0;
+    for (int i = 0; i < taskSchedulers.length; i++) {
+      count += taskSchedulers[i].getTaskScheduler().getIdleContainersCount();
+    }
+    return count;
+  }
+
   public void dagSubmitted() {
     // Nothing to do right now. Indicates that a new DAG has been submitted and
     // the context has updated information.
