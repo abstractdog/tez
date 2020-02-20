@@ -493,6 +493,8 @@ public class YarnTaskSchedulerService extends TaskScheduler
 
   @Override
   public void onContainersAllocated(List<Container> containers) {
+    informAppAboutContainerAllocations(containers);
+
     if (isStopStarted.get()) {
       LOG.info("Ignoring container allocations because application is shutting down. Num " + 
           containers.size());
@@ -1813,6 +1815,13 @@ public class YarnTaskSchedulerService extends TaskScheduler
       } else {
         informAppAboutAssignment(entry.getKey(), container);
       }
+    }
+  }
+
+
+  private void informAppAboutContainerAllocations(List<Container> containers) {
+    for (Container container : containers) {
+      getContext().containerAllocated(container);
     }
   }
 

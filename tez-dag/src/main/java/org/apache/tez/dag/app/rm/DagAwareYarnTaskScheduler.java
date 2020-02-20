@@ -329,6 +329,8 @@ public class DagAwareYarnTaskScheduler extends TaskScheduler
 
   @Override
   public void onContainersAllocated(List<Container> containers) {
+    informAppAboutContainerAllocations(containers);
+
     AMState appState = getContext().getAMState();
     if (stopRequested || appState == AMState.COMPLETED) {
       LOG.info("Ignoring {} allocations since app is terminating", containers.size());
@@ -339,6 +341,12 @@ public class DagAwareYarnTaskScheduler extends TaskScheduler
     }
     List<Assignment> assignments = assignNewContainers(containers, getContext().getAMState(), getContext().isSession());
     informAppAboutAssignments(assignments);
+  }
+
+  private void informAppAboutContainerAllocations(List<Container> containers) {
+    for (Container container : containers) {
+      getContext().containerAllocated(container);
+    }
   }
 
   private synchronized List<Assignment> assignNewContainers(List<Container> newContainers,

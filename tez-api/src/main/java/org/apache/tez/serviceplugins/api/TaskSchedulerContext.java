@@ -85,6 +85,13 @@ public interface TaskSchedulerContext extends ServicePluginContextBase {
                      Container container);
 
   /**
+   * Indicate to the framework that a container is being allocated.
+   *
+   * @param the actual container
+   */
+  void containerAllocated(Container container);
+
+  /**
    * Indicate to the framework that a container has completed. This is typically used by sources
    * which have
    * a means to indicate a container failure to the scheduler (typically centrally managed
