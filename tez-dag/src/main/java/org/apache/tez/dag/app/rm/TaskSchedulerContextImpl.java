@@ -82,6 +82,7 @@ public class TaskSchedulerContextImpl implements TaskSchedulerContext {
 
   @Override
   public void containerBeingReleased(ContainerId containerId) {
+    appContext.getCurrentDAG().incrementDagCounter(DAGCounter.TOTAL_RELEASED_CONTAINERS, 1);
     taskSchedulerManager.containerBeingReleased(schedulerId, containerId);
   }
 
