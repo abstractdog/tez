@@ -66,6 +66,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.tez.common.GuavaShim;
 import org.apache.tez.common.TezUtilsInternal;
 import org.apache.tez.common.counters.TaskCounter;
 import org.apache.tez.common.counters.TezCounter;
@@ -1432,7 +1433,7 @@ class ShuffleScheduler {
                 FetcherOrderedGrouped fetcherOrderedGrouped = constructFetcherForHost(mapHost);
                 runningFetchers.add(fetcherOrderedGrouped);
                 ListenableFuture<Void> future = fetcherExecutor.submit(fetcherOrderedGrouped);
-                Futures.addCallback(future, new FetchFutureCallback(fetcherOrderedGrouped), MoreExecutors.directExecutor());
+                Futures.addCallback(future, new FetchFutureCallback(fetcherOrderedGrouped), GuavaShim.directExecutor());
               }
             }
           }
