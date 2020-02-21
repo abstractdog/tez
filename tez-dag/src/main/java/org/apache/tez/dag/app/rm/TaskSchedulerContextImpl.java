@@ -67,6 +67,7 @@ public class TaskSchedulerContextImpl implements TaskSchedulerContext {
   // taskAllocated() upcall and deallocateTask() downcall
   @Override
   public void taskAllocated(Object task, Object appCookie, Container container) {
+    appContext.getCurrentDAG().incrementDagCounter(DAGCounter.TOTAL_USED_CONTAINERS, 1);
     taskSchedulerManager.taskAllocated(schedulerId, task, appCookie, container);
   }
 
