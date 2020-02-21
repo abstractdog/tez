@@ -954,6 +954,9 @@ public class DagAwareYarnTaskScheduler extends TaskScheduler
       assignedVertices.set(vertexIndex);
     }
     cset.add(hc);
+    if (!hc.isNew()) {
+      getContext().containerReused(hc.getContainer());
+    }
     hc.assignTask(request);
   }
 
@@ -1495,6 +1498,10 @@ public class DagAwareYarnTaskScheduler extends TaskScheduler
     @Nullable
     Object getLastTask() {
       return lastRequest != null ? lastRequest.getTask() : null;
+    }
+
+    boolean isNew() {
+      return lastRequest == null;
     }
 
     String getMatchingLocation() {

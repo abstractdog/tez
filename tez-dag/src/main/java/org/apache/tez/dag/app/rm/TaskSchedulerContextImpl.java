@@ -76,6 +76,11 @@ public class TaskSchedulerContextImpl implements TaskSchedulerContext {
   }
 
   @Override
+  public void containerReused(Container container) {
+    appContext.getCurrentDAG().incrementDagCounter(DAGCounter.TOTAL_REUSED_CONTAINERS, 1);
+  }
+
+  @Override
   public void containerCompleted(Object taskLastAllocated, ContainerStatus containerStatus) {
     taskSchedulerManager.containerCompleted(schedulerId, taskLastAllocated, containerStatus);
   }

@@ -1616,6 +1616,8 @@ public class YarnTaskSchedulerService extends TaskScheduler
         heldContainers.put(container.getId(),
             new HeldContainer(container, heldContainer.getNextScheduleTime(),
                 heldContainer.getContainerExpiryTime(), assigned, this.containerSignatureMatcher));
+      } else { // if a held container is not new, it's most probably reused
+        getContext().containerReused(container);
       }
       heldContainer.setLastTaskInfo(assigned);
     }

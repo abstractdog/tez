@@ -92,6 +92,14 @@ public interface TaskSchedulerContext extends ServicePluginContextBase {
   void containerAllocated(Container container);
 
   /**
+   * Indicate to the framework that a container is being reused:
+   * there is a task assigned to an already used container.
+   *
+   * @param the actual container
+   */
+  void containerReused(Container container);
+
+  /**
    * Indicate to the framework that a container has completed. This is typically used by sources
    * which have
    * a means to indicate a container failure to the scheduler (typically centrally managed

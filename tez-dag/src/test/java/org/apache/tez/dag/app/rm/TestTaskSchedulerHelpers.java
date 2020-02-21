@@ -269,6 +269,13 @@ class TestTaskSchedulerHelpers {
     }
 
     @Override
+    public void containerReused(Container container) {
+      count.incrementAndGet();
+      invocations++;
+      real.containerReused(container);
+    }
+
+    @Override
     public void containerCompleted(Object taskLastAllocated,
         ContainerStatus containerStatus) {
       invocations++;
