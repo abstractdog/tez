@@ -46,6 +46,8 @@ public abstract class TezID implements WritableComparable<TezID> {
     private final WeakHashMap<T, WeakReference<T>> cache = new WeakHashMap<>();
 
     synchronized T getInstance(final T id) {
+      System.out.println("****** thread id:" + Thread.currentThread().getId());
+      Thread.dumpStack();
       final WeakReference<T> cached = cache.get(id);
       if (cached != null) {
         final T value = cached.get();
