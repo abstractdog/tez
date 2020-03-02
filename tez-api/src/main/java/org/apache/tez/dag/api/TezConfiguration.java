@@ -2023,6 +2023,7 @@ public class TezConfiguration extends Configuration {
 	    + "curator.connection.timeout";
   public static final int TEZ_AM_CURATOR_CONNECTION_TIMEOUT_DEFAULT = 15000;
 
+  @ConfigurationScope(Scope.CLIENT)
   @ConfigurationProperty
   public static final String TEZ_FRAMEWORK_MODE =
       TEZ_PREFIX + ".framework.mode";
