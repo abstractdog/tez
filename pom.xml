@@ -496,12 +496,6 @@
         <version>${hadoop.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>com.sun.jersey.contribs</groupId>
-            <artifactId>jersey-guice</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
@@ -531,12 +525,6 @@
         <version>${hadoop.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>com.sun.jersey.contribs</groupId>
-            <artifactId>jersey-guice</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
