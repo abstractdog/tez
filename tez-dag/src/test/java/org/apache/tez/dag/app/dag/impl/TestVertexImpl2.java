@@ -372,13 +372,15 @@ public class TestVertexImpl2 {
       this.vertexName = "testvertex";
       this.vertexExecutionContext = vertexExecutionContext;
       this.defaultExecutionContext = defaultDagExecitionContext;
+
+      UserPayload defaultPayload;
+      try {
+        defaultPayload = TezUtils.createUserPayloadFromConf(new Configuration(false));
+      } catch (IOException e) {
+        throw new TezUncheckedException(e);
+      }
+
       if (numPlugins == 0) { // Add default container plugins only
-        UserPayload defaultPayload;
-        try {
-          defaultPayload = TezUtils.createUserPayloadFromConf(new Configuration(false));
-        } catch (IOException e) {
-          throw new TezUncheckedException(e);
-        }
         DAGAppMaster.parsePlugin(Lists.<NamedEntityDescriptor>newLinkedList(), taskSchedulers, null,
             true, false, defaultPayload);
         DAGAppMaster
@@ -406,12 +408,12 @@ public class TestVertexImpl2 {
                           .setClassName(append(TASK_COMM_NAME_BASE, i))).build());
         }
         DAGAppMaster.parsePlugin(Lists.<NamedEntityDescriptor>newLinkedList(), taskSchedulers,
-            schedulerList, false, false, null);
+            schedulerList, false, false, defaultPayload);
         DAGAppMaster.parsePlugin(Lists.<NamedEntityDescriptor>newLinkedList(), containerLaunchers,
-            launcherList, false, false, null);
+            launcherList, false, false, defaultPayload);
         DAGAppMaster
             .parsePlugin(Lists.<NamedEntityDescriptor>newLinkedList(), taskComms, taskCommList,
-                false, false, null);
+                false, false, defaultPayload);
       }
 
       this.appContext = createDefaultMockAppContext();
