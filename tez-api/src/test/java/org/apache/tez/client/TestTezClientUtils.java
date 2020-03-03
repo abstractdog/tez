@@ -655,7 +655,7 @@ public class TestTezClientUtils {
         javaOpts.contains("-Dlog4j.configuratorClass=org.apache.tez.common.TezLog4jConfigurator"));
   }
 
-  @Test (timeout = 5000)
+  @Test(timeout = 5000)
   public void testConfYarnZkWorkaround() {
     Configuration conf = new Configuration(false);
     String val = "localhost:2181";
@@ -667,8 +667,12 @@ public class TestTezClientUtils {
     ConfigurationProto confProto = TezClientUtils.createFinalConfProtoForApp(conf, null);
 
     for (PlanKeyValuePair kvPair : confProto.getConfKeyValuesList()) {
-      String v = expected.remove(kvPair.getKey());
-      assertEquals(v, kvPair.getValue());
+      if (expected.containsKey(kvPair.getKey())) { // fix for polluting keys
+        String v = expected.remove(kvPair.getKey());
+        // this way the test still validates that the original
+        // key/value pairs can be cound in the proto's conf
+        assertEquals(v, kvPair.getValue());
+      }
     }
     assertTrue(expected.isEmpty());
   }
