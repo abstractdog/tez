@@ -708,7 +708,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>28.1-jre</version>
+        <version>19.0</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.jettison</groupId>
