@@ -706,6 +706,7 @@ public class HistoryEventJsonConversion {
     jsonObject.put(ATSConstants.EVENTS, events);
 
     JSONObject otherInfo = new JSONObject();
+    otherInfo.put(ATSConstants.START_TIME, event.getStartTime());
     otherInfo.put(ATSConstants.FINISH_TIME, event.getFinishTime());
     otherInfo.put(ATSConstants.TIME_TAKEN, (event.getFinishTime() - event.getStartTime()));
     otherInfo.put(ATSConstants.STATUS, event.getState().name());
