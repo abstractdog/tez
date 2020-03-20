@@ -18,7 +18,6 @@
 
 package org.apache.tez.dag.history.logging.proto;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
 

@@ -19,7 +19,9 @@
 package org.apache.tez.analyzer.plugins;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -36,6 +38,7 @@ import org.apache.tez.analyzer.Result;
 import org.apache.tez.dag.api.TezException;
 import org.apache.tez.history.ATSImportTool;
 import org.apache.tez.history.parser.ATSFileParser;
+import org.apache.tez.history.parser.ProtoHistoryParser;
 import org.apache.tez.history.parser.SimpleHistoryParser;
 import org.apache.tez.history.parser.datamodel.DagInfo;
 
@@ -52,6 +55,7 @@ public abstract class TezAnalyzerBase extends Configured implements Tool, Analyz
   private static final String SAVE_RESULTS = "saveResults";
   private static final String DAG_ID = "dagId";
   private static final String FROM_SIMPLE_HISTORY = "fromSimpleHistory";
+  private static final String FROM_PROTO_HISTORY = "fromProtoHistory";
   private static final String HELP = "help";
 
   private static final int SEPARATOR_WIDTH = 80;
@@ -81,7 +85,12 @@ public abstract class TezAnalyzerBase extends Configured implements Tool, Analyz
         (FROM_SIMPLE_HISTORY)
         .withDescription("Event data from Simple History logging. Must also specify event file")
         .isRequired(false).create();
-    
+
+    Option fromProtoHistoryOption = OptionBuilder.withArgName(FROM_PROTO_HISTORY).withLongOpt
+        (FROM_PROTO_HISTORY)
+        .withDescription("Event data from Proto History logging. Must also specify event file")
+        .isRequired(false).create();
+
     Option help = OptionBuilder.withArgName(HELP).withLongOpt
         (HELP)
         .withDescription("print help")
@@ -93,6 +102,7 @@ public abstract class TezAnalyzerBase extends Configured implements Tool, Analyz
     opts.addOption(saveResults);
     opts.addOption(eventFileNameOption);
     opts.addOption(fromSimpleHistoryOption);
+    opts.addOption(fromProtoHistoryOption);
     opts.addOption(help);
     return opts;
   }
@@ -133,21 +143,29 @@ public abstract class TezAnalyzerBase extends Configured implements Tool, Analyz
       outputDir = System.getProperty("user.dir");
     }
 
-    File file = null;
+    List<File> files = new ArrayList<File>();
     if (cmdLine.hasOption(EVENT_FILE_NAME)) {
-      file = new File(cmdLine.getOptionValue(EVENT_FILE_NAME));
+      for (String file : cmdLine.getOptionValue(EVENT_FILE_NAME).split(",")){
+        files.add(new File(file));
+      }
     }
     
     String dagId = cmdLine.getOptionValue(DAG_ID);
     
     DagInfo dagInfo = null;
     
-    if (file == null) {
+    if (files.isEmpty()) {
       if (cmdLine.hasOption(FROM_SIMPLE_HISTORY)) {
         System.err.println("Event file name must be specified when using simple history");
         printUsage();
         return -2;
       }
+      if (cmdLine.hasOption(FROM_PROTO_HISTORY)) {
+        System.err.println("Proto file name must be specified when using proto history");
+        printUsage();
+        return -2;
+      }
+
       // using ATS - try to download directly
       String[] importArgs = { "--dagId=" + dagId, "--downloadDir=" + outputDir };
 
@@ -159,16 +177,19 @@ public abstract class TezAnalyzerBase extends Configured implements Tool, Analyz
 
       //Parse ATS data and verify results
       //Parse downloaded contents
-      file = new File(outputDir
-          + Path.SEPARATOR + dagId + ".zip");
+      files.add(new File(outputDir
+          + Path.SEPARATOR + dagId + ".zip"));
     }
     
-    Preconditions.checkState(file != null);
-    if (!cmdLine.hasOption(FROM_SIMPLE_HISTORY)) {
-      ATSFileParser parser = new ATSFileParser(file);
+    Preconditions.checkState(!files.isEmpty());
+    if (cmdLine.hasOption(FROM_SIMPLE_HISTORY)) {
+      SimpleHistoryParser parser = new SimpleHistoryParser(files);
+      dagInfo = parser.getDAGData(dagId);
+    } else if (cmdLine.hasOption(FROM_PROTO_HISTORY)) {
+      ProtoHistoryParser parser = new ProtoHistoryParser(files);
       dagInfo = parser.getDAGData(dagId);
     } else {
-      SimpleHistoryParser parser = new SimpleHistoryParser(file);
+      ATSFileParser parser = new ATSFileParser(files);
       dagInfo = parser.getDAGData(dagId);
     }
     Preconditions.checkState(dagInfo.getDagId().equals(dagId));

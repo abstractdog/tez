@@ -13,7 +13,6 @@ public class TestProtoMessageReader {
 
   @Test
   public void testReader() throws Exception {
-    final HistoryEventProtoConverter converter = new HistoryEventProtoConverter();
     ProtoMessageReader r = new ProtoMessageReader(new TezConfiguration(),
         new Path("src/test/resources/dag_1583980529217_0000_18_1_1"), HistoryEventProto.PARSER);
 

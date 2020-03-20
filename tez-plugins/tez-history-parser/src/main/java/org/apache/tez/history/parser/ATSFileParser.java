@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -60,10 +61,10 @@ public class ATSFileParser extends BaseParser implements ATSData {
 
   private final File atsZipFile;
 
-  public ATSFileParser(File atsZipFile) throws TezException {
+  public ATSFileParser(List<File> files) throws TezException {
     super();
-    Preconditions.checkArgument(atsZipFile.exists(), "Zipfile " + atsZipFile + " does not exist");
-    this.atsZipFile = atsZipFile;
+    Preconditions.checkArgument(checkFiles(files), "Zipfile " + files + " are empty or they don't exist");
+    this.atsZipFile = files.get(0); //doesn't support multiple files at the moment
   }
 
   @Override

@@ -320,7 +320,7 @@ public class DagInfo extends BaseInfo {
     BasicVertexInfo basicVertexInfo = basicVertexInfoMap.get(vertexInfo.getVertexName());
 
     Preconditions.checkArgument(basicVertexInfo != null,
-        "VerteName " + vertexInfo.getVertexName()
+        "VertexName " + vertexInfo.getVertexName()
             + " not present in DAG's vertices " + basicVertexInfoMap.entrySet());
 
     //populate additional information in VertexInfo
