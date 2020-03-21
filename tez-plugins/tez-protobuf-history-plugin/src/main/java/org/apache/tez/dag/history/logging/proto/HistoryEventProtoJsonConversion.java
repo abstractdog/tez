@@ -340,11 +340,10 @@ public class HistoryEventProtoJsonConversion {
     JSONObject otherInfo = new JSONObject();
 
     long startTime = getLongDataValueByKey(event, ATSConstants.START_TIME);
-    long finishTime = getLongDataValueByKey(event, ATSConstants.FINISH_TIME);
 
     otherInfo.put(ATSConstants.START_TIME, startTime);
-    otherInfo.put(ATSConstants.FINISH_TIME, finishTime);
-    otherInfo.put(ATSConstants.TIME_TAKEN, finishTime - startTime);
+    otherInfo.put(ATSConstants.FINISH_TIME, event.getEventTime());
+    otherInfo.put(ATSConstants.TIME_TAKEN, event.getEventTime() - startTime);
     otherInfo.put(ATSConstants.STATUS, getDataValueByKey(event, ATSConstants.STATUS));
     otherInfo.put(ATSConstants.DIAGNOSTICS, getDataValueByKey(event, ATSConstants.DIAGNOSTICS));
     otherInfo.put(ATSConstants.COUNTERS, getJSONDataValueByKey(event, ATSConstants.COUNTERS));
@@ -511,14 +510,13 @@ public class HistoryEventProtoJsonConversion {
 
     JSONObject otherInfo = new JSONObject();
     long startTime = getLongDataValueByKey(event, ATSConstants.START_TIME);
-    long finishTime = getLongDataValueByKey(event, ATSConstants.FINISH_TIME);
 
     otherInfo.put(ATSConstants.CREATION_TIME, getDataValueByKey(event, ATSConstants.CREATION_TIME));
     otherInfo.put(ATSConstants.ALLOCATION_TIME,
         getDataValueByKey(event, ATSConstants.ALLOCATION_TIME));
     otherInfo.put(ATSConstants.START_TIME, startTime);
-    otherInfo.put(ATSConstants.FINISH_TIME, finishTime);
-    otherInfo.put(ATSConstants.TIME_TAKEN, finishTime - startTime);
+    otherInfo.put(ATSConstants.FINISH_TIME, event.getEventTime());
+    otherInfo.put(ATSConstants.TIME_TAKEN, event.getEventTime() - startTime);
 
     otherInfo.put(ATSConstants.CREATION_CAUSAL_ATTEMPT,
         getDataValueByKey(event, ATSConstants.CREATION_CAUSAL_ATTEMPT));
@@ -611,12 +609,11 @@ public class HistoryEventProtoJsonConversion {
     jsonObject.put(ATSConstants.EVENTS, events);
 
     long startTime = getLongDataValueByKey(event, ATSConstants.START_TIME);
-    long finishTime = getLongDataValueByKey(event, ATSConstants.FINISH_TIME);
 
     JSONObject otherInfo = new JSONObject();
     otherInfo.put(ATSConstants.START_TIME, startTime);
-    otherInfo.put(ATSConstants.FINISH_TIME, finishTime);
-    otherInfo.put(ATSConstants.TIME_TAKEN, finishTime - startTime);
+    otherInfo.put(ATSConstants.FINISH_TIME, event.getEventTime());
+    otherInfo.put(ATSConstants.TIME_TAKEN, event.getEventTime() - startTime);
 
     otherInfo.put(ATSConstants.STATUS, getDataValueByKey(event, ATSConstants.STATUS));
     otherInfo.put(ATSConstants.DIAGNOSTICS, getDataValueByKey(event, ATSConstants.DIAGNOSTICS));
