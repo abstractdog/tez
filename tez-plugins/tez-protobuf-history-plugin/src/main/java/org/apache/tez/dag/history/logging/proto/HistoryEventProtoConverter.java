@@ -306,7 +306,6 @@ public class HistoryEventProtoConverter {
       }
     }
     addEventData(builder, ATSConstants.START_TIME, event.getStartTime());
-    addEventData(builder, ATSConstants.FINISH_TIME, event.getFinishTime());
     addEventData(builder, ATSConstants.TIME_TAKEN, (event.getFinishTime() - event.getStartTime()));
     addEventData(builder, ATSConstants.STATUS, event.getState().name());
     addEventData(builder, ATSConstants.DIAGNOSTICS, event.getDiagnostics());
@@ -352,7 +351,6 @@ public class HistoryEventProtoConverter {
     addEventData(builder, ATSConstants.CREATION_TIME, event.getCreationTime());
     addEventData(builder, ATSConstants.ALLOCATION_TIME, event.getAllocationTime());
     addEventData(builder, ATSConstants.START_TIME, event.getStartTime());
-    addEventData(builder, ATSConstants.FINISH_TIME, event.getFinishTime());
 
     if (event.getCreationCausalTA() != null) {
       addEventData(builder, ATSConstants.CREATION_CAUSAL_ATTEMPT,
@@ -424,7 +422,6 @@ public class HistoryEventProtoConverter {
     HistoryEventProto.Builder builder = makeBuilderForEvent(event, event.getFinishTime(),
         null, null, null, event.getVertexID(), null, null, null);
 
-    addEventData(builder, ATSConstants.START_TIME, event.getStartTime());
     addEventData(builder, ATSConstants.STATUS, event.getState().name());
     addEventData(builder, ATSConstants.VERTEX_NAME, event.getVertexName());
     addEventData(builder, ATSConstants.TIME_TAKEN, (event.getFinishTime() - event.getStartTime()));
