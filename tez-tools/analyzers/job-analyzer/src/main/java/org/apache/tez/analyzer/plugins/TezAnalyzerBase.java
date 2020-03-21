@@ -19,9 +19,12 @@
 package org.apache.tez.analyzer.plugins;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -143,15 +146,22 @@ public abstract class TezAnalyzerBase extends Configured implements Tool, Analyz
       outputDir = System.getProperty("user.dir");
     }
 
+    String dagId = cmdLine.getOptionValue(DAG_ID);
+
     List<File> files = new ArrayList<File>();
     if (cmdLine.hasOption(EVENT_FILE_NAME)) {
-      for (String file : cmdLine.getOptionValue(EVENT_FILE_NAME).split(",")){
-        files.add(new File(file));
+      for (String file : cmdLine.getOptionValue(EVENT_FILE_NAME).split(",")) {
+        File fileOrDir = new File(file);
+        if (fileOrDir.exists()) {
+          if (fileOrDir.isFile()) {
+            files.add(fileOrDir);
+          } else {
+            files.addAll(collectFilesForDagId(fileOrDir, dagId));
+          }
+        }
       }
     }
-    
-    String dagId = cmdLine.getOptionValue(DAG_ID);
-    
+
     DagInfo dagInfo = null;
     
     if (files.isEmpty()) {
@@ -202,6 +212,18 @@ public abstract class TezAnalyzerBase extends Configured implements Tool, Analyz
       LOG.info("Saved results in " + fileName);
     }
     return 0;
+  }
+
+  private List<File> collectFilesForDagId(File parentDir, String dagId) {
+    List<File> files = Arrays.asList(parentDir.listFiles(new FilenameFilter() {
+      @Override
+      public boolean accept(File dir, String name) {
+        return name.contains(dagId);
+      }
+    }));
+    LOG.info("collected files for dag: \n"
+        + files.stream().map(f -> "\n" + f.getAbsolutePath()).collect(Collectors.toList()));
+    return (files);
   }
 
   public void printResults() throws TezException {
