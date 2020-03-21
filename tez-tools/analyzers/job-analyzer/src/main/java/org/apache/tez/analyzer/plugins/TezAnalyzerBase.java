@@ -32,6 +32,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Tool;
@@ -205,12 +206,21 @@ public abstract class TezAnalyzerBase extends Configured implements Tool, Analyz
     Preconditions.checkState(dagInfo.getDagId().equals(dagId));
     analyze(dagInfo);
     Result result = getResult();
-    if (saveResults && (result instanceof CSVResult)) {
-      String fileName = outputDir + File.separator
-          + this.getClass().getName() + "_" + dagInfo.getDagId() + ".csv";
-      ((CSVResult) result).dumpToFile(fileName);
-      LOG.info("Saved results in " + fileName);
+
+    if (saveResults) {
+      String dagInfoFileName = outputDir + File.separator + this.getClass().getName() + "_"
+          + dagInfo.getDagId() + ".dag";
+      FileUtils.writeStringToFile(new File(dagInfoFileName), dagInfo.toExtendedString());
+      LOG.info("Saved dag info in " + dagInfoFileName);
+
+      if (result instanceof CSVResult) {
+        String fileName = outputDir + File.separator + this.getClass().getName() + "_"
+            + dagInfo.getDagId() + ".csv";
+        ((CSVResult) result).dumpToFile(fileName);
+        LOG.info("Saved results in " + fileName);
+      }
     }
+
     return 0;
   }
 

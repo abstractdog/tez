@@ -61,12 +61,10 @@ public class ProtoHistoryParser extends SimpleHistoryParser {
       dagId = dagId.trim();
       parseContents(protoFiles, dagId);
       linkParsedContents();
+      addRawDataToDagInfo(dagInfo);
       return dagInfo;
-    } catch (IOException e) {
+    } catch (IOException | JSONException e) {
       LOG.error("Error in reading DAG ", e);
-      throw new TezException(e);
-    } catch (JSONException e) {
-      LOG.error("Error in parsing DAG ", e);
       throw new TezException(e);
     }
   }

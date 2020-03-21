@@ -58,6 +58,13 @@ public abstract class BaseParser {
     return true;
   }
 
+
+  protected void addRawDataToDagInfo(DagInfo dagInfo) {
+    dagInfo.addMeta("vertices", vertexList);
+    dagInfo.addMeta("tasks", taskList);
+    dagInfo.addMeta("taskAttempts", attemptList);
+  }
+
   /**
    * link the parsed contents, so that it becomes easier to iterate from DAG-->Task and Task--DAG.
    * e.g Link vertex to dag, task to vertex, attempt to task etc

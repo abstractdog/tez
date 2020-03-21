@@ -73,13 +73,11 @@ public class ATSFileParser extends BaseParser implements ATSData {
       parseATSZipFile(atsZipFile);
 
       linkParsedContents();
+      addRawDataToDagInfo(dagInfo);
 
       return dagInfo;
-    } catch (IOException e) {
+    } catch (IOException | JSONException e) {
       LOG.error("Error in reading DAG ", e);
-      throw new TezException(e);
-    } catch (JSONException e) {
-      LOG.error("Error in parsing DAG ", e);
       throw new TezException(e);
     } catch (InterruptedException e) {
       throw new TezException(e);

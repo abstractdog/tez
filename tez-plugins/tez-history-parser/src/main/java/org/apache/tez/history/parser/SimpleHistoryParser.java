@@ -86,12 +86,10 @@ public class SimpleHistoryParser extends BaseParser {
       dagId = dagId.trim();
       parseContents(historyFile, dagId);
       linkParsedContents();
+      addRawDataToDagInfo(dagInfo);
       return dagInfo;
-    } catch (IOException e) {
+    } catch (IOException | JSONException e) {
       LOG.error("Error in reading DAG ", e);
-      throw new TezException(e);
-    } catch (JSONException e) {
-      LOG.error("Error in parsing DAG ", e);
       throw new TezException(e);
     }
   }
