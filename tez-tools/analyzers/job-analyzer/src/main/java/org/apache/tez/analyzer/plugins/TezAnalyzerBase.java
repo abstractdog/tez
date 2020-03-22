@@ -233,7 +233,7 @@ public abstract class TezAnalyzerBase extends Configured implements Tool, Analyz
     });
     if (arrFiles == null || arrFiles.length == 0) {
       throw new RuntimeException(
-          String.format("cannot find relevant files for dag: '{}' in dir: {}", dagId, parentDir));
+          String.format("cannot find relevant files for dag: '%s' in dir: %s", dagId, parentDir));
     }
 
     List<File> files = Arrays.asList(arrFiles);
