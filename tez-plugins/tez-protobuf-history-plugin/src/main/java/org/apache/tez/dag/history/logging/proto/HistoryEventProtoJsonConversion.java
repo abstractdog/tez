@@ -38,6 +38,9 @@ import org.codehaus.jettison.json.JSONObject;
  */
 public class HistoryEventProtoJsonConversion {
 
+  private HistoryEventProtoJsonConversion() {
+  }
+
   public static JSONObject convertToJson(HistoryEventProto historyEvent) throws JSONException {
     JSONObject jsonObject = null;
 

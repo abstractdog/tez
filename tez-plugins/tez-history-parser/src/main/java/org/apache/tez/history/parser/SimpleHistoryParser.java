@@ -113,12 +113,12 @@ public class SimpleHistoryParser extends BaseParser {
 
   private void parseContents(File historyFile, String dagId)
       throws JSONException, FileNotFoundException, TezException, IOException {
-    JSONObjectSource source = getJsonSource(historyFile);
+    JSONObjectSource source = getJsonSource();
 
     parse(dagId, source);
   }
 
-  private JSONObjectSource getJsonSource(File historyFile) throws FileNotFoundException {
+  private JSONObjectSource getJsonSource() throws FileNotFoundException {
     final Scanner scanner = new Scanner(historyFile, UTF8);
     scanner.useDelimiter(SimpleHistoryLoggingService.RECORD_SEPARATOR);
 
