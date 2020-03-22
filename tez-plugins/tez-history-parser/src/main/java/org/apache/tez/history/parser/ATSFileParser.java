@@ -73,7 +73,7 @@ public class ATSFileParser extends BaseParser implements ATSData {
       parseATSZipFile(atsZipFile);
 
       linkParsedContents();
-      addRawDataToDagInfo(dagInfo);
+      addRawDataToDagInfo();
 
       return dagInfo;
     } catch (IOException | JSONException e) {

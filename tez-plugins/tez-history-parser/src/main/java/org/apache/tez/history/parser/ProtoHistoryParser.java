@@ -62,9 +62,9 @@ public class ProtoHistoryParser extends SimpleHistoryParser {
     try {
       Preconditions.checkArgument(!Strings.isNullOrEmpty(dagId), "Please provide valid dagId");
       dagId = dagId.trim();
-      parseContents(protoFiles, dagId);
+      parseContents(dagId);
       linkParsedContents();
-      addRawDataToDagInfo(dagInfo);
+      addRawDataToDagInfo();
       return dagInfo;
     } catch (IOException | JSONException e) {
       LOG.error("Error in reading DAG ", e);
@@ -72,8 +72,13 @@ public class ProtoHistoryParser extends SimpleHistoryParser {
     }
   }
 
-  private void parseContents(List<File> protoFiles, String dagId)
+  private void parseContents(String dagId)
       throws JSONException, FileNotFoundException, TezException, IOException {
+    JSONObjectSource source = getJsonSource();
+    parse(dagId, source);
+  }
+
+  private JSONObjectSource getJsonSource() throws IOException {
     final TezConfiguration conf = new TezConfiguration();
 
     Iterator<File> fileIt = protoFiles.iterator();
@@ -120,12 +125,6 @@ public class ProtoHistoryParser extends SimpleHistoryParser {
         }
       }
     };
-
-    Map<String, JSONObject> vertexJsonMap = Maps.newHashMap();
-    Map<String, JSONObject> taskJsonMap = Maps.newHashMap();
-    Map<String, JSONObject> attemptJsonMap = Maps.newHashMap();
-
-    readEventsFromSource(dagId, source, vertexJsonMap, taskJsonMap, attemptJsonMap);
-    postProcessMaps(vertexJsonMap, taskJsonMap, attemptJsonMap);
+    return source;
   }
 }

@@ -59,7 +59,7 @@ public abstract class BaseParser {
   }
 
 
-  protected void addRawDataToDagInfo(DagInfo dagInfo) {
+  protected void addRawDataToDagInfo() {
     dagInfo.addMeta("vertices", vertexList);
     dagInfo.addMeta("tasks", taskList);
     dagInfo.addMeta("taskAttempts", attemptList);
