@@ -61,7 +61,6 @@ public class SimpleHistoryParser extends BaseParser {
   protected static final String UTF8 = "UTF-8";
   private final File historyFile;
 
-
   public SimpleHistoryParser(List<File> files) {
     super();
     Preconditions.checkArgument(checkFiles(files), files + " are empty or they don't exist");
@@ -112,7 +111,7 @@ public class SimpleHistoryParser extends BaseParser {
     populateOtherInfo(source, destOtherInfo);
   }
 
-  protected void parseContents(File historyFile, String dagId)
+  private void parseContents(File historyFile, String dagId)
       throws JSONException, FileNotFoundException, TezException, IOException {
     final Scanner scanner = new Scanner(historyFile, UTF8);
     scanner.useDelimiter(SimpleHistoryLoggingService.RECORD_SEPARATOR);

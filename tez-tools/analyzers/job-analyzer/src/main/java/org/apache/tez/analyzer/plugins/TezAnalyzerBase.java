@@ -90,10 +90,10 @@ public abstract class TezAnalyzerBase extends Configured implements Tool, Analyz
         .withDescription("Event data from Simple History logging. Must also specify event file")
         .isRequired(false).create();
 
-    Option fromProtoHistoryOption = OptionBuilder.withArgName(FROM_PROTO_HISTORY).withLongOpt
-        (FROM_PROTO_HISTORY)
-        .withDescription("Event data from Proto History logging. Must also specify event file")
-        .isRequired(false).create();
+    Option fromProtoHistoryOption =
+        OptionBuilder.withArgName(FROM_PROTO_HISTORY).withLongOpt(FROM_PROTO_HISTORY)
+            .withDescription("Event data from Proto History logging. Must also specify event file")
+            .isRequired(false).create();
 
     Option help = OptionBuilder.withArgName(HELP).withLongOpt
         (HELP)
@@ -225,15 +225,21 @@ public abstract class TezAnalyzerBase extends Configured implements Tool, Analyz
   }
 
   private List<File> collectFilesForDagId(File parentDir, String dagId) {
-    List<File> files = Arrays.asList(parentDir.listFiles(new FilenameFilter() {
+    File[] arrFiles = parentDir.listFiles(new FilenameFilter() {
       @Override
       public boolean accept(File dir, String name) {
         return name.contains(dagId);
       }
-    }));
+    });
+    if (arrFiles == null || arrFiles.length == 0) {
+      throw new RuntimeException(
+          String.format("cannot find relevant files for dag: '{}' in dir: {}", dagId, parentDir));
+    }
+
+    List<File> files = Arrays.asList(arrFiles);
     LOG.info("collected files for dag: \n"
         + files.stream().map(f -> "\n" + f.getAbsolutePath()).collect(Collectors.toList()));
-    return (files);
+    return files;
   }
 
   public void printResults() throws TezException {
