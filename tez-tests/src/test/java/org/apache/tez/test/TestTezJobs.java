@@ -129,6 +129,8 @@ public class TestTezJobs {
   public static void setup() throws IOException {
     localFs = FileSystem.getLocal(conf);
     try {
+      conf.set("yarn.resourcemanager.scheduler.class",
+          "org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler");
       conf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, TEST_ROOT_DIR);
       dfsCluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).format(true).racks(null)
           .build();
