@@ -43,7 +43,7 @@ public abstract class TezSplitGrouper {
   /**
    * Specify the max number of splits to be created, hard limit.
    */
-  public static final String TEZ_GROUPING_MAX_SPLIT_COUNT = "tez.grouping.max.split-count";
+  public static final String TEZ_GROUPING_MAX_SPLIT_COUNT = "tez.grouping.split-count.max";
 
   /**
    * Limit the number of splits in a group by the total length of the splits in the group
@@ -273,6 +273,13 @@ public abstract class TezSplitGrouper {
       }
     }
 
+    int configMaxSplits = conf.getInt(TEZ_GROUPING_MAX_SPLIT_COUNT, Integer.MAX_VALUE);
+    if (configMaxSplits > 0 && desiredNumSplits > configMaxSplits) {
+      LOG.info("Desired numSplits overridden by MAX config: {} -> {}", desiredNumSplits,
+          configMaxSplits);
+      desiredNumSplits = configMaxSplits;
+    }
+
     if (desiredNumSplits == 0 ||
         originalSplits.size() == 0 ||
         desiredNumSplits >= originalSplits.size()) {
@@ -288,13 +295,6 @@ public abstract class TezSplitGrouper {
         groupedSplits.add(newSplit);
       }
       return groupedSplits;
-    }
-
-    int configMaxSplits = conf.getInt(TEZ_GROUPING_MAX_SPLIT_COUNT, Integer.MAX_VALUE);
-    if (desiredNumSplits > configMaxSplits) {
-      LOG.info("Desired numSplits overridden by MAX config: {} -> {}", desiredNumSplits,
-          configMaxSplits);
-      desiredNumSplits = configMaxSplits;
     }
 
     long lengthPerGroup = totalLength/desiredNumSplits;
