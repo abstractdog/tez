@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -824,7 +825,7 @@ public class IFile {
         decompressor = CodecPool.getDecompressor(codec);
         if (decompressor != null) {
           decompressor.reset();
-          in = codec.createInputStream(checksumIn, decompressor);
+          in = getDecompressedInputStreamWithBufferSize(codec, checksumIn, decompressor, compressedLength);
         } else {
           LOG.warn("Could not obtain decompressor from CodecPool");
           in = checksumIn;
@@ -858,6 +859,14 @@ public class IFile {
           CodecPool.returnDecompressor(decompressor);
         }
       }
+    }
+
+    private static InputStream getDecompressedInputStreamWithBufferSize(CompressionCodec codec,
+        IFileInputStream checksumIn, Decompressor decompressor, int compressedLength) throws IOException {
+      Configurable configurableCodec = (Configurable)codec;
+      Configuration conf = configurableCodec.getConf();
+      LOG.info("SHUFFLE_DEBUG", conf.get("io.compression.codec.snappy.buffersize"));
+      return codec.createInputStream(checksumIn, decompressor);
     }
 
     /**
