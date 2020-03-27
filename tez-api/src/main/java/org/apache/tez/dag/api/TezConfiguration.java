@@ -2012,7 +2012,7 @@ public class TezConfiguration extends Configuration {
   @ConfigurationProperty
   public static final String TEZ_AM_CURATOR_SESSION_TIMEOUT = TEZ_AM_PREFIX
       + "curator.session.timeout";
-  public static final int TEZ_AM_CURATOR_SESSION_TIMEOUT_DEFAULT = 60000;
+  public static final int TEZ_AM_CURATOR_SESSION_TIMEOUT_DEFAULT = 150000;
 
   /**
     * Integer value (milliseconds)

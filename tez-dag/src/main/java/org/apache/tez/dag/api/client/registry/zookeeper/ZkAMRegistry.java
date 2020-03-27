@@ -160,7 +160,7 @@ public class ZkAMRegistry extends AMRegistry {
 
   private void createNamespaceIfNotExists() throws Exception {
     try {
-      client.create().creatingParentContainersIfNeeded().forPath(namespace);
+      client.create().creatingParentContainersIfNeeded().withMode(CreateMode.CONTAINER).forPath(namespace, new byte[0]);
     } catch(KeeperException.NodeExistsException nodeExists) {
       LOG.info("Namespace already exists, will use existing: {}", namespace);
     }
