@@ -71,7 +71,10 @@ public class TaskAttemptResultStatisticsAnalyzer extends TezAnalyzerBase impleme
     csvResult.sort(new Comparator<String[]>() {
       public int compare(String[] first, String[] second) {
         int vertexNameOrder = first[0].compareTo(second[0]);
-        return vertexNameOrder == 0 ? first[1].compareTo(second[1]) : vertexNameOrder;
+        int nodeOrder = first[1].compareTo(second[1]);
+        int statusOrder = first[2].compareTo(second[2]);
+
+        return vertexNameOrder == 0 ? (nodeOrder == 0 ? statusOrder : nodeOrder) : vertexNameOrder;
       }
     });
   }
