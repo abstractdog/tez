@@ -34,7 +34,7 @@ import org.apache.tez.history.parser.datamodel.VertexInfo;
 
 /**
  * Get simple count of task attempt states on vertex:node:status level, like below.
- * 
+ *
  * vertex,node,status,numAttempts
  * Map 1,node1,KILLED:INTERNAL_PREEMPTION,1185
  * Map 1,node1,KILLED:TERMINATED_AT_SHUTDOWN,22
@@ -42,7 +42,7 @@ import org.apache.tez.history.parser.datamodel.VertexInfo;
  * Map 1,node1,SUCCEEDED,1
  */
 public class TaskAttemptResultStatisticsAnalyzer extends TezAnalyzerBase implements Analyzer {
-  private final String[] headers = { "vertex", "node", "status", "numAttempts" };
+  private final String[] headers = {"vertex", "node", "status", "numAttempts" };
   private final Configuration config;
   private final CSVResult csvResult;
 

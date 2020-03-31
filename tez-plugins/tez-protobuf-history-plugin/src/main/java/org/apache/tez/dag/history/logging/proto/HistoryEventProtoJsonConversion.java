@@ -36,7 +36,7 @@ import org.codehaus.jettison.json.JSONObject;
  * of the specific HistoryEvent calls were transformed info HistoryEventProto calls by taking the
  * corresponding HistoryEventProtoConverter methods into consideration.
  */
-public class HistoryEventProtoJsonConversion {
+public final class HistoryEventProtoJsonConversion {
 
   private HistoryEventProtoJsonConversion() {
   }
