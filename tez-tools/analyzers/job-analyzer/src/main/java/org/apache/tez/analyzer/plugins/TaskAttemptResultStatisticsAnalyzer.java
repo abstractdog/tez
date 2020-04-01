@@ -57,8 +57,9 @@ public class TaskAttemptResultStatisticsAnalyzer extends TezAnalyzerBase impleme
 
     for (VertexInfo vertex : dagInfo.getVertices()) {
       for (TaskAttemptInfo attempt : vertex.getTaskAttempts()) {
-        String key = String.format("%s#%s#%s", vertex.getVertexName(), attempt.getNodeId(),
-            attempt.getDetailedStatus());
+        String key = String.format("%s#%s#%s",
+            String.format("%s (%s)", vertex.getVertexName(), vertex.getVertexId()),
+            attempt.getNodeId(), attempt.getDetailedStatus());
         Integer previousValue = (Integer) map.get(key);
         map.put(key, previousValue == null ? 1 : previousValue + 1);
       }
