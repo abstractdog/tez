@@ -660,6 +660,11 @@ public abstract class TezSplitGrouper {
       return this;
     }
 
+    public TezMRSplitsGrouperConfigBuilder setGroupingMaxSplitCount(long limit) {
+      this.conf.setLong(TEZ_GROUPING_MAX_SPLIT_COUNT, limit);
+      return this;
+    }
+
     public Configuration build() {
       return this.conf;
     }

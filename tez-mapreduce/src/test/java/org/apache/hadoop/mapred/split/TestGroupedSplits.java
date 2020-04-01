@@ -303,7 +303,7 @@ public class TestGroupedSplits {
     }
     return first.length+start;
   }  
-  
+
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Test(timeout=10000)
   public void testGroupedSplitSize() throws IOException {
@@ -343,7 +343,32 @@ public class TestGroupedSplits {
     assertEquals(25, splits.length);
     
   }
-  
+
+  @SuppressWarnings({ "rawtypes", "unchecked" })
+  @Test
+  public void testMaxGroupedSplitCount() throws IOException {
+    JobConf job = new JobConf(defaultConf);
+    InputFormat mockWrappedFormat = mock(InputFormat.class);
+    TezGroupedSplitsInputFormat<LongWritable, Text> format =
+        new TezGroupedSplitsInputFormat<LongWritable, Text>();
+    format.setConf(job);
+    format.setInputFormat(mockWrappedFormat);
+
+    job = (JobConf) TezSplitGrouper.newConfigBuilder(job).setGroupingMaxSplitCount(4095l).build();
+    InputSplit mockSplit1 = mock(InputSplit.class);
+    when(mockSplit1.getLength()).thenReturn(10000000000l);
+    when(mockSplit1.getLocations()).thenReturn(null);
+    int numSplits = 10000;
+    InputSplit[] mockSplits = new InputSplit[numSplits];
+    for (int i = 0; i < numSplits; i++) {
+      mockSplits[i] = mockSplit1;
+    }
+    when(mockWrappedFormat.getSplits((JobConf) anyObject(), anyInt())).thenReturn(mockSplits);
+
+    InputSplit[] splits = format.getSplits(job, 0);
+    assertEquals(4095, splits.length);
+  }
+
   class TestInputSplit implements InputSplit {
     long length;
     String[] locations;
