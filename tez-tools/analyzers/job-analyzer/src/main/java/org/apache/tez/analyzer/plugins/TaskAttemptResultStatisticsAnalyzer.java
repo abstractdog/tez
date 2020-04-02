@@ -42,7 +42,8 @@ import org.apache.tez.history.parser.datamodel.VertexInfo;
  * Map 1,node1,SUCCEEDED,1
  */
 public class TaskAttemptResultStatisticsAnalyzer extends TezAnalyzerBase implements Analyzer {
-  private final String[] headers = {"vertex", "node", "status", "numAttempts" };
+  private final String[] headers =
+      { "vertex (+task stats: all/succeeded/failed/killed)", "node", "status", "numAttempts" };
   private final Configuration config;
   private final CSVResult csvResult;
 
@@ -56,9 +57,13 @@ public class TaskAttemptResultStatisticsAnalyzer extends TezAnalyzerBase impleme
     Map<String, Integer> map = new HashMap<>();
 
     for (VertexInfo vertex : dagInfo.getVertices()) {
+      String taskStatsInVertex =
+          String.format("%s/%s/%s/%s", vertex.getNumTasks(), vertex.getSucceededTasksCount(),
+              vertex.getFailedTasksCount(), vertex.getKilledTasksCount());
       for (TaskAttemptInfo attempt : vertex.getTaskAttempts()) {
         String key = String.format("%s#%s#%s",
-            String.format("%s (%s)", vertex.getVertexName(), vertex.getVertexId()),
+            String.format("%s (%s) (%s)", vertex.getVertexName(), vertex.getVertexId(),
+                taskStatsInVertex),
             attempt.getNodeId(), attempt.getDetailedStatus());
         Integer previousValue = (Integer) map.get(key);
         map.put(key, previousValue == null ? 1 : previousValue + 1);
@@ -71,18 +76,19 @@ public class TaskAttemptResultStatisticsAnalyzer extends TezAnalyzerBase impleme
 
     csvResult.sort(new Comparator<String[]>() {
       public int compare(String[] first, String[] second) {
-        int vertexNameOrder = first[0].compareTo(second[0]);
+        int vertexOrder = first[0].compareTo(second[0]);
         int nodeOrder = first[1].compareTo(second[1]);
         int statusOrder = first[2].compareTo(second[2]);
 
-        return vertexNameOrder == 0 ? (nodeOrder == 0 ? statusOrder : nodeOrder) : vertexNameOrder;
+        return vertexOrder == 0 ? (nodeOrder == 0 ? statusOrder : nodeOrder) : vertexOrder;
       }
     });
   }
 
-  private void addARecord(String vertexName, String node, String status, int numAttempts) {
+  private void addARecord(String vertexData, String node, String status,
+      int numAttempts) {
     String[] record = new String[4];
-    record[0] = vertexName;
+    record[0] = vertexData;
     record[1] = node;
     record[2] = status;
     record[3] = Integer.toString(numAttempts);
