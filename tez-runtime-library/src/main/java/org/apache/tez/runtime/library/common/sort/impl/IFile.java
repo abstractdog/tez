@@ -867,11 +867,12 @@ public class IFile {
     private static InputStream getDecompressedInputStreamWithBufferSize(CompressionCodec codec,
         IFileInputStream checksumIn, Decompressor decompressor, int compressedLength)
         throws IOException {
-      Configurable configurableCodec = (Configurable) codec;
-      Configuration conf = configurableCodec.getConf();
-
       String bufferSizeProp = TezRuntimeUtils.getBufferSizeProperty(codec);
+
       if (bufferSizeProp != null) {
+        Configurable configurableCodec = (Configurable) codec;
+        Configuration conf = configurableCodec.getConf();
+
         int bufSize = Math.min(compressedLength, DEFAULT_BUFFER_SIZE);
         LOG.trace("buffer size was set according to min(compressedLength, {}): {}={}",
             DEFAULT_BUFFER_SIZE, bufferSizeProp, bufSize);
