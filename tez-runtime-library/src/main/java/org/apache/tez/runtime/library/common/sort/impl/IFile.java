@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.common.annotations.VisibleForTesting;
 
 import org.apache.hadoop.io.BoundedByteArrayOutputStream;
+import org.apache.tez.runtime.library.common.TezRuntimeUtils;
 import org.apache.tez.runtime.library.common.task.local.output.TezTaskOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,7 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -50,6 +52,7 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionOutputStream;
 import org.apache.hadoop.io.compress.Compressor;
 import org.apache.hadoop.io.compress.Decompressor;
+import org.apache.hadoop.io.compress.DefaultCodec;
 import org.apache.hadoop.io.serializer.SerializationFactory;
 import org.apache.hadoop.io.serializer.Serializer;
 import org.apache.tez.common.counters.TezCounter;
@@ -682,7 +685,7 @@ public class IFile {
 
     public enum KeyState {NO_KEY, NEW_KEY, SAME_KEY}
 
-    private static final int DEFAULT_BUFFER_SIZE = 128*1024;
+    public static final int DEFAULT_BUFFER_SIZE = 128*1024;
     @VisibleForTesting
     // Not final for testing
     protected static int MAX_BUFFER_SIZE
@@ -862,10 +865,19 @@ public class IFile {
     }
 
     private static InputStream getDecompressedInputStreamWithBufferSize(CompressionCodec codec,
-        IFileInputStream checksumIn, Decompressor decompressor, int compressedLength) throws IOException {
-      Configurable configurableCodec = (Configurable)codec;
+        IFileInputStream checksumIn, Decompressor decompressor, int compressedLength)
+        throws IOException {
+      Configurable configurableCodec = (Configurable) codec;
       Configuration conf = configurableCodec.getConf();
-      LOG.info("SHUFFLE_DEBUG", conf.get("io.compression.codec.snappy.buffersize"));
+
+      String bufferSizeProp = TezRuntimeUtils.getBufferSizeProperty(codec);
+      if (bufferSizeProp != null) {
+        int bufSize = Math.min(compressedLength, DEFAULT_BUFFER_SIZE);
+        LOG.trace("buffer size was set according to min(compressedLength, {}): {}={}",
+            DEFAULT_BUFFER_SIZE, bufferSizeProp, bufSize);
+        conf.setInt(bufferSizeProp, bufSize);
+      }
+
       return codec.createInputStream(checksumIn, decompressor);
     }
 
