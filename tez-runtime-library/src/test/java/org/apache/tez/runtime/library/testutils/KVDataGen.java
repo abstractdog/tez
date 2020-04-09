@@ -34,7 +34,7 @@ public class KVDataGen {
   }
 
   /**
-   * Generate key value pair
+   * Generate key value pair.
    *
    * @param sorted whether data should be sorted by key
    * @param repeatCount number of keys to be repeated
@@ -45,7 +45,7 @@ public class KVDataGen {
   }
 
   /**
-   * Generate key value pair of given amount of keys
+   * Generate key value pair of given amount of keys.
    *
    * @param sorted whether data should be sorted by key
    * @param keys number of keys

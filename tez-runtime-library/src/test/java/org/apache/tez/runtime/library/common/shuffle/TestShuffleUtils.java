@@ -400,6 +400,9 @@ public class TestShuffleUtils {
     verify(aggregateLogger, times(1)).info(anyString(), Matchers.<Object[]>anyVararg());
   }
 
+  /**
+   * A codec class which implements CompressionCodec, Configurable for testing purposes.
+   */
   public static class ConfigurableCodecForTest implements CompressionCodec, Configurable {
 
     @Override
