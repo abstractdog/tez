@@ -264,6 +264,13 @@ public class VertexImpl implements org.apache.tez.dag.app.dag.Vertex, EventHandl
 
   final ServicePluginInfo servicePluginInfo;
 
+  /*
+   * For every upstream host (as map keys) contains every unique downstream hostnames that reported INPUT_READ_ERROR.
+   * This map helps to decide if there is a problem with the host that produced the map outputs. There is an assumption
+   * that if multiple downstream hosts report input errors for the same upstream host, then it's likely that the output
+   * has to be blamed and needs to rerun.
+   */
+  final Map<String, Set<String>> downstreamBlamingHosts = Maps.newHashMap();
 
   private final float maxFailuresPercent;
   private boolean logSuccessDiagnostics = false;

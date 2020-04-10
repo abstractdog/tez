@@ -884,7 +884,7 @@ class ShuffleScheduler {
                     srcAttempt.getInputIdentifier(), srcAttempt.getAttemptNumber())
                 + " to jobtracker.",
             srcAttempt.getInputIdentifier(), srcAttempt.getAttemptNumber(),
-            fetchFailure.isLocalFetch(), fetchFailure.isDiskErrorAtSource()));
+            fetchFailure.isLocalFetch(), fetchFailure.isDiskErrorAtSource(), localHostname));
 
     inputContext.sendEvents(failedEvents);
   }

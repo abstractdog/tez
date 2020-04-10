@@ -395,7 +395,7 @@ public class ShuffleManager implements FetcherCallback {
               for (InputReadErrorEvent key : failedEvents.keySet()) {
                 failedEventsToSend.add(InputReadErrorEvent.create(key.getDiagnostics(),
                     key.getIndex(), key.getVersion(), failedEvents.get(key), key.isLocalFetch(),
-                    key.isDiskErrorAtSource()));
+                    key.isDiskErrorAtSource(), localhostName));
               }
               inputContext.sendEvents(failedEventsToSend);
               failedEvents.clear();
@@ -960,7 +960,7 @@ public class ShuffleManager implements FetcherCallback {
           srcAttemptIdentifier.getInputIdentifier(),
           srcAttemptIdentifier.getAttemptNumber(),
           inputAttemptFetchFailure.isLocalFetch(),
-          inputAttemptFetchFailure.isDiskErrorAtSource());
+          inputAttemptFetchFailure.isDiskErrorAtSource(), localhostName);
       if (maxTimeToWaitForReportMillis > 0) {
         try {
           reportLock.lock();

@@ -2177,7 +2177,7 @@ public class TestTaskAttempt {
 
     // the original read error event, sent by reducer task
     InputReadErrorEvent inputReadErrorEvent =
-        InputReadErrorEvent.create("", 0, 1, 1, isLocalFetch, isDiskErrorAtSource);
+        InputReadErrorEvent.create("", 0, 1, 1, isLocalFetch, isDiskErrorAtSource, null);
     TezTaskAttemptID destTaskAttemptId = mock(TezTaskAttemptID.class);
     when(destTaskAttemptId.getTaskID()).thenReturn(mock(TezTaskID.class));
     when(destTaskAttemptId.getTaskID().getVertexID()).thenReturn(mock(TezVertexID.class));
