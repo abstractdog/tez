@@ -22,6 +22,7 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -222,7 +223,8 @@ public class TaskAttemptImpl implements TaskAttempt,
   Set<String> taskHosts = new HashSet<String>();
   Set<String> taskRacks = new HashSet<String>();
 
-  private Map<TezTaskAttemptID, Long> uniquefailedOutputReports = Maps.newHashMap();
+  // failure time of task attempts per host
+  private Map<String, Map<TezTaskAttemptID, Long>> uniquefailedOutputReports = Maps.newHashMap();
 
   protected final boolean isRescheduled;
   private final Resource taskResource;
@@ -1820,16 +1822,23 @@ public class TaskAttemptImpl implements TaskAttempt,
             + " at inputIndex " + failedInputIndexOnDestTa + " version"
             + readErrorEvent.getVersion());
       }
-      LOG.info(attempt.getID()
-            + " blamed for read error from " + failedDestTaId
-            + " at inputIndex " + failedInputIndexOnDestTa);
+      String sourceHost = attempt.getNodeId().getHost();
+
+      LOG.info("{} (on {}) blamed for read error from {} at inputIndex {}", attempt.getID(),
+          sourceHost, failedDestTaId, failedInputIndexOnDestTa);
       long time = attempt.clock.getTime();
-      Long firstErrReportTime = attempt.uniquefailedOutputReports.get(failedDestTaId);
-      if (firstErrReportTime == null) {
-        attempt.uniquefailedOutputReports.put(failedDestTaId, time);
-        firstErrReportTime = time;
+
+      if (attempt.uniquefailedOutputReports.get(sourceHost) == null){
+        attempt.uniquefailedOutputReports.put(sourceHost, new HashMap<>());
       }
 
+      Long firstErrReportTime =
+          attempt.uniquefailedOutputReports.get(sourceHost).get(failedDestTaId) == null ? null
+            : attempt.uniquefailedOutputReports.get(sourceHost).get(failedDestTaId);
+      if (firstErrReportTime == null) {
+        attempt.uniquefailedOutputReports.get(sourceHost).put(failedDestTaId, time);
+        firstErrReportTime = time;
+      }
       int maxAllowedOutputFailures = attempt.getVertex().getVertexConfig()
           .getMaxAllowedOutputFailures();
       int maxAllowedTimeForTaskReadErrorSec = attempt.getVertex()
@@ -1842,11 +1851,16 @@ public class TaskAttemptImpl implements TaskAttempt,
 
       int runningTasks = attempt.appContext.getCurrentDAG().getVertex(
           failedDestTaId.getTaskID().getVertexID()).getRunningTasks();
-      float failureFraction = runningTasks > 0 ? ((float) attempt.uniquefailedOutputReports.size()) / runningTasks : 0;
+      int totalUniqueReportsCount = getTotalUniqueReportsCount(attempt.uniquefailedOutputReports);
+
+      float failureFraction =
+          runningTasks > 0 ? ((float) totalUniqueReportsCount) / runningTasks : 0;
+
+      // check relative limit compared to currently running tasks in this vertex
       boolean withinFailureFractionLimits =
           (failureFraction <= maxAllowedOutputFailuresFraction);
-      boolean withinOutputFailureLimits =
-          (attempt.uniquefailedOutputReports.size() < maxAllowedOutputFailures);
+      // check absolute limit for task attempt failures in this vertex
+      boolean withinOutputFailureLimits = (totalUniqueReportsCount < maxAllowedOutputFailures);
 
       // If needed we can launch a background task without failing this task
       // to generate a copy of the output just in case.
@@ -1858,7 +1872,7 @@ public class TaskAttemptImpl implements TaskAttempt,
           + "failureFraction=" + failureFraction
           + ", MAX_ALLOWED_OUTPUT_FAILURES_FRACTION="
           + maxAllowedOutputFailuresFraction
-          + ", uniquefailedOutputReports=" + attempt.uniquefailedOutputReports.size()
+          + ", uniquefailedOutputReports=" + totalUniqueReportsCount
           + ", MAX_ALLOWED_OUTPUT_FAILURES=" + maxAllowedOutputFailures
           + ", MAX_ALLOWED_TIME_FOR_TASK_READ_ERROR_SEC="
           + maxAllowedTimeForTaskReadErrorSec
@@ -1879,6 +1893,12 @@ public class TaskAttemptImpl implements TaskAttempt,
       }
       // TODO at some point. Nodes may be interested in FetchFailure info.
       // Can be used to blacklist nodes.
+    }
+
+    private int getTotalUniqueReportsCount(
+        Map<String, Map<TezTaskAttemptID, Long>> uniquefailedOutputReports) {
+      return uniquefailedOutputReports.entrySet().stream().map(m -> m.getValue().size()).reduce(0,
+          (a, b) -> a + b);
     }
   }
   
