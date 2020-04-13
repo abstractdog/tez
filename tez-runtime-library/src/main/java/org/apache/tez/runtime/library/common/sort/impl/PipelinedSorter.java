@@ -737,7 +737,7 @@ public class PipelinedSorter extends ExternalSorter {
               + "finalIndexFile=" + finalIndexFile + ", filename=" + filename + ", indexFilename=" +
               indexFilename);
         }
-        TezSpillRecord spillRecord = new TezSpillRecord(finalIndexFile, conf);
+        TezSpillRecord spillRecord = new TezSpillRecord(finalIndexFile, localFs);
         if (reportPartitionStats()) {
           for (int i = 0; i < spillRecord.size(); i++) {
             partitionStats[i] += spillRecord.getIndex(i).getPartLength();

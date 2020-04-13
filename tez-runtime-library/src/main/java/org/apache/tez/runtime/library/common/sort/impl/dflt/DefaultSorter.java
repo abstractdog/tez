@@ -1193,7 +1193,7 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
       TezSpillRecord spillRecord = indexCacheList.get(i);
       if (spillRecord == null) {
         //File was already written and location is stored in spillFileIndexPaths
-        spillRecord = new TezSpillRecord(spillFileIndexPaths.get(i), conf);
+        spillRecord = new TezSpillRecord(spillFileIndexPaths.get(i), localFs);
       } else {
         //Double check if this file has to be written
         if (spillFileIndexPaths.get(i) == null) {
@@ -1228,7 +1228,7 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
         sameVolRename(filename[0], finalOutputFile);
         if (indexCacheList.size() == 0) {
           sameVolRename(spillFileIndexPaths.get(0), finalIndexFile);
-          spillRecord = new TezSpillRecord(finalIndexFile, conf);
+          spillRecord = new TezSpillRecord(finalIndexFile, localFs);
         } else {
           spillRecord = indexCacheList.get(0);
           spillRecord.writeToFile(finalIndexFile, conf);
@@ -1256,7 +1256,7 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
     // read in paged indices
     for (int i = indexCacheList.size(); i < numSpills; ++i) {
       Path indexFileName = spillFileIndexPaths.get(i);
-      indexCacheList.add(new TezSpillRecord(indexFileName, conf));
+      indexCacheList.add(new TezSpillRecord(indexFileName, localFs));
     }
 
     //Check if it is needed to do final merge. Or else, exit early.

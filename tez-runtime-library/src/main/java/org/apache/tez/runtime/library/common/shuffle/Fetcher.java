@@ -49,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocalDirAllocator;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RawLocalFileSystem;
@@ -234,6 +235,7 @@ public class Fetcher extends CallableWithNdc<FetchResult> {
       LOG.warn("Error initializing local dirs for shared transfer " + e);
     }
   }
+
 
   // helper method to populate the remaining map
   void populateRemainingMap(List<InputAttemptIdentifier> origlist) {
@@ -736,7 +738,7 @@ public class Fetcher extends CallableWithNdc<FetchResult> {
     Path indexFile = getShuffleInputFileName(srcAttemptId.getPathComponent(),
         Constants.TEZ_RUNTIME_TASK_OUTPUT_INDEX_SUFFIX_STRING);
 
-    TezSpillRecord spillRecord = new TezSpillRecord(indexFile, conf);
+    TezSpillRecord spillRecord = new TezSpillRecord(indexFile, localFs);
     idxRecord = spillRecord.getIndex(partition);
     return idxRecord;
   }
