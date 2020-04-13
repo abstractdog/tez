@@ -1038,7 +1038,10 @@ public class DAGAppMaster extends AbstractService {
       LOG.warn("Failed to generate json for DAG", e);
     }
 
-    Utils.generateDAGVizFile(newDag, dagPB, logDirs, newDag.getDAGScheduler());
+    if (newDag.getConf().getBoolean(TezConfiguration.TEZ_GENERATE_DEBUG_ARTIFACTS,
+        TezConfiguration.TEZ_GENERATE_DEBUG_ARTIFACTS_DEFAULT)) {
+      Utils.generateDAGVizFile(newDag, dagPB, logDirs, newDag.getDAGScheduler());
+    }
     writePBTextFile(newDag);
     return newDag;
   } // end createDag()
