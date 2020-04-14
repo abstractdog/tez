@@ -203,13 +203,6 @@
       </dependency>
       <dependency>
         <groupId>org.apache.tez</groupId>
-        <artifactId>tez-protobuf-history-plugin</artifactId>
-        <version>${project.version}</version>
-        <type>test-jar</type>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.tez</groupId>
         <artifactId>tez-yarn-timeline-history</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>

@@ -97,9 +97,8 @@ public class TezDAGID extends TezID {
 
   @Override
   public boolean equals(Object o) {
-    if (!super.equals(o)){
+    if (!super.equals(o))
       return false;
-    }
 
     TezDAGID that = (TezDAGID)o;
     return this.applicationId.equals(that.applicationId);
