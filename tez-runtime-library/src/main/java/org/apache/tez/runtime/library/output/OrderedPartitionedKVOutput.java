@@ -69,7 +69,7 @@ public class OrderedPartitionedKVOutput extends AbstractLogicalOutput {
 
   protected ExternalSorter sorter;
   protected Configuration conf;
-  protected RawLocalFileSystem localFs;
+  private RawLocalFileSystem localFs;
   protected MemoryUpdateCallbackHandler memoryUpdateCallbackHandler;
   private long startTime;
   private long endTime;

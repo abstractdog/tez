@@ -49,7 +49,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocalDirAllocator;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RawLocalFileSystem;
@@ -359,7 +358,7 @@ public class Fetcher extends CallableWithNdc<FetchResult> {
         }
 
         spillRec.putIndex(indexRec, 0);
-        spillRec.writeToFile(tmpIndex, conf);
+        spillRec.writeToFile(tmpIndex, conf, localFs);
         // everything went well so far - rename it
         boolean renamed = localFs.rename(tmpIndex, outputPath
             .suffix(Constants.TEZ_RUNTIME_TASK_OUTPUT_INDEX_SUFFIX_STRING));

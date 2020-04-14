@@ -120,14 +120,12 @@ public class TezSpillRecord {
   /**
    * Write this spill record to the location provided.
    */
-  public void writeToFile(Path loc, Configuration job)
-      throws IOException {
-    writeToFile(loc, job, new PureJavaCrc32());
+  public void writeToFile(Path loc, Configuration job, FileSystem fs) throws IOException {
+    writeToFile(loc, job, fs, new PureJavaCrc32());
   }
 
-  public void writeToFile(Path loc, Configuration job, Checksum crc)
+  public void writeToFile(Path loc, Configuration job, FileSystem rfs, Checksum crc)
       throws IOException {
-    final FileSystem rfs = FileSystem.getLocal(job).getRaw();
     CheckedOutputStream chk = null;
     final FSDataOutputStream out = rfs.create(loc);
     try {
