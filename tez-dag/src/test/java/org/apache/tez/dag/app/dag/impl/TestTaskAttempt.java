@@ -19,7 +19,6 @@
 package org.apache.tez.dag.app.dag.impl;
 
 import org.apache.tez.dag.app.MockClock;
-import org.apache.tez.dag.app.rm.AMSchedulerEventTAStateUpdated;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;

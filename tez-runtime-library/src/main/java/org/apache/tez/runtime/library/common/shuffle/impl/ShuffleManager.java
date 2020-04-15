@@ -380,7 +380,7 @@ public class ShuffleManager implements FetcherCallback {
               for (InputReadErrorEvent key : failedEvents.keySet()) {
                 failedEventsToSend.add(InputReadErrorEvent
                     .create(key.getDiagnostics(), key.getIndex(),
-                        key.getVersion(), failedEvents.get(key)));
+                        key.getVersion(), failedEvents.get(key), localhostName));
               }
               inputContext.sendEvents(failedEventsToSend);
               failedEvents.clear();
@@ -944,7 +944,7 @@ public class ShuffleManager implements FetcherCallback {
               srcAttemptIdentifier.getInputIdentifier(),
               srcAttemptIdentifier.getAttemptNumber()),
           srcAttemptIdentifier.getInputIdentifier(),
-          srcAttemptIdentifier.getAttemptNumber());
+          srcAttemptIdentifier.getAttemptNumber(), localhostName);
       if (maxTimeToWaitForReportMillis > 0) {
         try {
           reportLock.lock();

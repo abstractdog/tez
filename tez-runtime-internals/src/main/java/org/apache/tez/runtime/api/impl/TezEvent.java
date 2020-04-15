@@ -191,6 +191,7 @@ public class TezEvent implements Writable {
             .setIndex(ideEvt.getIndex())
             .setDiagnostics(ideEvt.getDiagnostics())
             .setVersion(ideEvt.getVersion())
+            .setDestinationLocalhostName(ideEvt.getDestinationLocalhostName())
             .build();
         break;
       case TASK_ATTEMPT_FAILED_EVENT:
@@ -297,7 +298,7 @@ public class TezEvent implements Writable {
         InputReadErrorEventProto ideProto =
             InputReadErrorEventProto.parseFrom(input);
         event = InputReadErrorEvent.create(ideProto.getDiagnostics(),
-            ideProto.getIndex(), ideProto.getVersion());
+            ideProto.getIndex(), ideProto.getVersion(), ideProto.getDestinationLocalhostName());
         break;
       case TASK_ATTEMPT_FAILED_EVENT:
         TaskAttemptFailedEventProto tfProto =

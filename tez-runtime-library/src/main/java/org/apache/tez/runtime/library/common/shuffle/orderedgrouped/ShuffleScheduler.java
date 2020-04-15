@@ -877,7 +877,7 @@ class ShuffleScheduler {
                 srcAttempt.getInputIdentifier(),
                 srcAttempt.getAttemptNumber()) + " to jobtracker.",
         srcAttempt.getInputIdentifier(),
-        srcAttempt.getAttemptNumber()));
+        srcAttempt.getAttemptNumber(), localHostname));
 
     inputContext.sendEvents(failedEvents);
   }

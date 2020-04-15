@@ -51,26 +51,36 @@ public final class InputReadErrorEvent extends Event {
    */
   private final int numFailures;
 
+  /**
+   * The localhostName of the destination task attempt
+   */
+  private final String destinationLocalhostName;
+
   private InputReadErrorEvent(final String diagnostics, final int index,
-                              final int version, final int numFailures) {
+                              final int version, final int numFailures, String destinationLocalhostName) {
     super();
     this.diagnostics = diagnostics;
     this.index = index;
     this.version = version;
     this.numFailures = numFailures;
+    this.destinationLocalhostName = destinationLocalhostName;
   }
 
-  public static InputReadErrorEvent create(String diagnostics, int index,
-                                           int version) {
-    return create(diagnostics, index, version, 1);
+  public static InputReadErrorEvent create(String diagnostics, int index, int version) {
+    return create(diagnostics, index, version, 1, null);
+  }
+
+  public static InputReadErrorEvent create(String diagnostics, int index, int version,
+      String destinationLocalhostName) {
+    return create(diagnostics, index, version, 1, destinationLocalhostName);
   }
 
   /**
    * Create an InputReadErrorEvent.
    */
   public static InputReadErrorEvent create(final String diagnostics, final int index,
-      final int version, final int numFailures) {
-    return new InputReadErrorEvent(diagnostics, index, version, numFailures);
+      final int version, final int numFailures, String destinationLocalhostName) {
+    return new InputReadErrorEvent(diagnostics, index, version, numFailures, destinationLocalhostName);
   }
 
   public String getDiagnostics() {
@@ -90,6 +100,10 @@ public final class InputReadErrorEvent extends Event {
    */
   public int getNumFailures() {
     return numFailures;
+  }
+
+  public String getDestinationLocalhostName(){
+    return destinationLocalhostName;
   }
 
   @Override
