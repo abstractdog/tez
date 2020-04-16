@@ -204,8 +204,8 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
   @VisibleForTesting
   TezCounters fullCounters = null;
   private TezCounters cachedCounters = null;
-  private final long COUNTER_CACHE_INTERVAL_THRESHOLD_SLOW_MS = 10000;
-  private final long COUNTER_CACHE_INTERVAL_THRESHOLD_FAST_MS = 1000;
+  private static final long COUNTER_CACHE_INTERVAL_THRESHOLD_SLOW_MS = 10000;
+  private static final long COUNTER_CACHE_INTERVAL_THRESHOLD_FAST_MS = 1000;
   private long cachedCountersTimestamp = 0;
   private Set<TezVertexID> reRunningVertices = new HashSet<TezVertexID>();
 
@@ -2474,7 +2474,7 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
 
   @VisibleForTesting
   class DagStatusHandler {
-    private final long DAG_STATUS_BUILD_INTERVAL_MS = 500;
+    private static final long DAG_STATUS_BUILD_INTERVAL_MS = 500;
     private ScheduledExecutorService cachedDagStatusBuilderExecutor;
 
     private DAGStatusBuilder cachedDagStatusBuilder = null;
@@ -2482,7 +2482,7 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
     private int countGetDagStatus = 0;
     private int countBuildDagStatus = 0;
 
-    public DagStatusHandler() {
+    DagStatusHandler() {
       cachedDagStatusBuilderExecutor = Executors.newScheduledThreadPool(1);
     }
 
