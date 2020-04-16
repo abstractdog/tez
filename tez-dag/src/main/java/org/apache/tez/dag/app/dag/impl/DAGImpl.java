@@ -33,6 +33,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -201,6 +204,8 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
   @VisibleForTesting
   TezCounters fullCounters = null;
   private TezCounters cachedCounters = null;
+  private final long COUNTER_CACHE_INTERVAL_THRESHOLD_SLOW_MS = 10000;
+  private final long COUNTER_CACHE_INTERVAL_THRESHOLD_FAST_MS = 1000;
   private long cachedCountersTimestamp = 0;
   private Set<TezVertexID> reRunningVertices = new HashSet<TezVertexID>();
 
@@ -463,6 +468,8 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
   Map<String, VertexGroupInfo> vertexGroups = Maps.newHashMap();
   Map<String, List<VertexGroupInfo>> vertexGroupInfo = Maps.newHashMap();
   private DAGRecoveryData recoveryData;
+  @VisibleForTesting
+  DagStatusHandler dagStatusHandler;
 
   static class VertexGroupInfo {
     String groupName;
@@ -565,6 +572,7 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
         stateMachineFactory.make(this), this);
     augmentStateMachine();
     this.entityUpdateTracker = new StateChangeNotifier(this);
+    this.dagStatusHandler = new DagStatusHandler().start();
   }
 
   private void augmentStateMachine() {
@@ -693,7 +701,6 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
 
   @Override
   public TezCounters getAllCounters() {
-
     readLock.lock();
 
     try {
@@ -717,16 +724,18 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
 
   @Override
   public TezCounters getCachedCounters() {
+    return getCachedCounters(COUNTER_CACHE_INTERVAL_THRESHOLD_SLOW_MS);
+  }
 
+  public TezCounters getCachedCounters(long cacheIntervalThreshold) {
     readLock.lock();
 
     try {
       // FIXME a better lightweight approach for counters is needed
       if (fullCounters == null && cachedCounters != null
-          && ((cachedCountersTimestamp+10000) > System.currentTimeMillis())) {
-        LOG.info("Asked for counters"
-            + ", cachedCountersTimestamp=" + cachedCountersTimestamp
-            + ", currentTime=" + System.currentTimeMillis());
+          && ((cachedCountersTimestamp + cacheIntervalThreshold) > System.currentTimeMillis())) {
+        LOG.debug("Asked for counters, cachedCountersTimestamp={}, currentTime={}",
+            cachedCountersTimestamp, System.currentTimeMillis());
         return cachedCounters;
       }
 
@@ -740,7 +749,8 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
       updateCpuCounters();
       TezCounters counters = new TezCounters();
       counters.incrAllCounters(dagCounters);
-      return aggrTaskCounters(counters, vertices.values());
+      cachedCounters = aggrTaskCounters(counters, vertices.values());
+      return cachedCounters;
 
     } finally {
       readLock.unlock();
@@ -888,46 +898,10 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
   // monitoring apis
   @Override
   public DAGStatusBuilder getDAGStatus(Set<StatusGetOpts> statusOptions) {
-    DAGStatusBuilder status = new DAGStatusBuilder();
-    int totalTaskCount = 0;
-    int totalSucceededTaskCount = 0;
-    int totalRunningTaskCount = 0;
-    int totalFailedTaskCount = 0;
-    int totalKilledTaskCount = 0;
-    int totalFailedTaskAttemptCount = 0;
-    int totalKilledTaskAttemptCount = 0;
-    int totalRejectedTaskAttemptCount = 0;
     readLock.lock();
-    try {
-      for(Map.Entry<String, Vertex> entry : vertexMap.entrySet()) {
-        ProgressBuilder progress = entry.getValue().getVertexProgress();
-        status.addVertexProgress(entry.getKey(), progress);
-        totalTaskCount += progress.getTotalTaskCount();
-        totalSucceededTaskCount += progress.getSucceededTaskCount();
-        totalRunningTaskCount += progress.getRunningTaskCount();
-        totalFailedTaskCount += progress.getFailedTaskCount();
-        totalKilledTaskCount += progress.getKilledTaskCount();
-        totalFailedTaskAttemptCount += progress.getFailedTaskAttemptCount();
-        totalKilledTaskAttemptCount += progress.getKilledTaskAttemptCount();
-        totalRejectedTaskAttemptCount += progress.getRejectedTaskAttemptCount();
-      }
-      ProgressBuilder dagProgress = new ProgressBuilder();
-      dagProgress.setTotalTaskCount(totalTaskCount);
-      dagProgress.setSucceededTaskCount(totalSucceededTaskCount);
-      dagProgress.setRunningTaskCount(totalRunningTaskCount);
-      dagProgress.setFailedTaskCount(totalFailedTaskCount);
-      dagProgress.setKilledTaskCount(totalKilledTaskCount);
-      dagProgress.setFailedTaskAttemptCount(totalFailedTaskAttemptCount);
-      dagProgress.setKilledTaskAttemptCount(totalKilledTaskAttemptCount);
-      dagProgress.setRejectedTaskAttemptCount(totalRejectedTaskAttemptCount);
-      status.setState(getState());
-      status.setDiagnostics(diagnostics);
-      status.setDAGProgress(dagProgress);
-      if (statusOptions.contains(StatusGetOpts.GET_COUNTERS)) {
-        status.setDAGCounters(getAllCounters());
-      }
-      return status;
-    } finally {
+    try{
+      return dagStatusHandler.getStatus();
+    }finally{
       readLock.unlock();
     }
   }
@@ -940,7 +914,7 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
       timeoutNanos = Long.MAX_VALUE;
     }
     if (timeoutMillis == 0 || isComplete()) {
-      return getDAGStatus(statusOptions);
+      return dagStatusHandler.buildDAGStatus();
     }
     while (true) {
       long nanosLeft;
@@ -1413,7 +1387,7 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
     dagCounters.findCounter(DAGCounter.AM_CPU_MILLISECONDS).setValue(totalDAGCpuTime);
     dagCounters.findCounter(DAGCounter.AM_GC_TIME_MILLIS).setValue(totalDAGGCTime);
   }
-  
+
   private DAGState finished(DAGState finalState) {
     boolean dagError = false;
     try {
@@ -1421,6 +1395,7 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
         setFinishTime();
       }
       entityUpdateTracker.stop();
+      dagStatusHandler.stop();
 
       // update cpu time counters before finishing the dag
       updateCpuCounters();
@@ -1848,8 +1823,6 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
       //dag.metrics.endPreparingJob(dag);
       dag.logJobHistoryInitedEvent();
       return DAGState.INITED;
-
-
     }
 
   } // end of InitTransition
@@ -2496,6 +2469,95 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
     @Override
     public void onFailure(Throwable t) {
       eventHandler.handle(new DAGEventCommitCompleted(dagId, outputKey, false, t));
+    }
+  }
+
+  @VisibleForTesting
+  class DagStatusHandler {
+    private final long DAG_STATUS_BUILD_INTERVAL_MS = 500;
+    private ScheduledExecutorService cachedDagStatusBuilderExecutor;
+
+    private DAGStatusBuilder cachedDagStatusBuilder = null;
+
+    private int countGetDagStatus = 0;
+    private int countBuildDagStatus = 0;
+
+    public DagStatusHandler() {
+      cachedDagStatusBuilderExecutor = Executors.newScheduledThreadPool(1);
+    }
+
+    public DagStatusHandler start() {
+      buildDAGStatus();
+
+      cachedDagStatusBuilderExecutor.scheduleAtFixedRate(new Runnable() {
+        @Override
+        public void run() {
+          buildDAGStatus();
+        }
+      }, DAG_STATUS_BUILD_INTERVAL_MS, DAG_STATUS_BUILD_INTERVAL_MS, TimeUnit.MILLISECONDS);
+
+      return this;
+    }
+
+    public void stop() {
+      LOG.info("Stopping dag status handler, counts: {get: {}, build: {}}", countGetDagStatus,
+          countBuildDagStatus);
+      cachedDagStatusBuilderExecutor.shutdownNow();
+    }
+
+    public DAGStatusBuilder getStatus() {
+      countGetDagStatus += 1;
+      return cachedDagStatusBuilder;
+    }
+
+    @VisibleForTesting
+    DAGStatusBuilder buildDAGStatus() {
+      LOG.debug("building dag status...");
+      countBuildDagStatus += 1;
+
+      DAGStatusBuilder status = new DAGStatusBuilder();
+      int totalTaskCount = 0;
+      int totalSucceededTaskCount = 0;
+      int totalRunningTaskCount = 0;
+      int totalFailedTaskCount = 0;
+      int totalKilledTaskCount = 0;
+      int totalFailedTaskAttemptCount = 0;
+      int totalKilledTaskAttemptCount = 0;
+      int totalRejectedTaskAttemptCount = 0;
+      for (Map.Entry<String, Vertex> entry : vertexMap.entrySet()) {
+        ProgressBuilder progress = entry.getValue().getVertexProgress();
+        status.addVertexProgress(entry.getKey(), progress);
+        totalTaskCount += progress.getTotalTaskCount();
+        totalSucceededTaskCount += progress.getSucceededTaskCount();
+        totalRunningTaskCount += progress.getRunningTaskCount();
+        totalFailedTaskCount += progress.getFailedTaskCount();
+        totalKilledTaskCount += progress.getKilledTaskCount();
+        totalFailedTaskAttemptCount += progress.getFailedTaskAttemptCount();
+        totalKilledTaskAttemptCount += progress.getKilledTaskAttemptCount();
+        totalRejectedTaskAttemptCount += progress.getRejectedTaskAttemptCount();
+      }
+      ProgressBuilder dagProgress = new ProgressBuilder();
+      dagProgress.setTotalTaskCount(totalTaskCount);
+      dagProgress.setSucceededTaskCount(totalSucceededTaskCount);
+      dagProgress.setRunningTaskCount(totalRunningTaskCount);
+      dagProgress.setFailedTaskCount(totalFailedTaskCount);
+      dagProgress.setKilledTaskCount(totalKilledTaskCount);
+      dagProgress.setFailedTaskAttemptCount(totalFailedTaskAttemptCount);
+      dagProgress.setKilledTaskAttemptCount(totalKilledTaskAttemptCount);
+      dagProgress.setRejectedTaskAttemptCount(totalRejectedTaskAttemptCount);
+      status.setState(getState());
+      status.setDiagnostics(diagnostics);
+      status.setDAGProgress(dagProgress);
+
+      status.setDAGCounters(getCachedCounters(COUNTER_CACHE_INTERVAL_THRESHOLD_FAST_MS));
+
+      writeLock.lock();
+      try {
+        cachedDagStatusBuilder = status;
+        return cachedDagStatusBuilder;
+      } finally {
+        writeLock.unlock();
+      }
     }
   }
 }

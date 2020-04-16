@@ -67,7 +67,7 @@ public class AsyncDispatcher extends CompositeService implements Dispatcher {
   private volatile boolean blockNewEvents = false;
   private EventHandler handlerInstance = new GenericEventHandler();
 
-  private Thread eventHandlingThread;
+  protected Thread eventHandlingThread;
   protected final Map<Class<? extends Enum>, EventHandler> eventHandlers = Maps.newHashMap();
   protected final Map<Class<? extends Enum>, AsyncDispatcher> eventDispatchers = Maps.newHashMap();
   protected final Map<Class<? extends Enum>, AsyncDispatcherConcurrent> concurrentEventDispatchers = 

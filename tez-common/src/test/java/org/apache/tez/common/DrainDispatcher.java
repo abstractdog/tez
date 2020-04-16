@@ -71,7 +71,7 @@ public class DrainDispatcher extends AsyncDispatcher {
    * Busy loop waiting for all queued events to drain.
    */
   public void await() {
-    while (!drained) {
+    while (!drained && (eventHandlingThread != null && eventHandlingThread.isAlive())) {
       Thread.yield();
     }
   }

@@ -878,6 +878,9 @@ public class TestDAGImpl {
     dag = new DAGImpl(dagId, conf, dagPlan,
         dispatcher.getEventHandler(), taskCommunicatorManagerInterface,
         fsTokens, clock, "user", thh, appContext);
+    if (dag.entityUpdateTracker != null){
+      dag.entityUpdateTracker.stop();
+    }
     dag.entityUpdateTracker = new StateChangeNotifierForTest(dag);
     doReturn(dag).when(appContext).getCurrentDAG();
     doReturn(clusterInfo).when(appContext).getClusterInfo();
@@ -892,6 +895,9 @@ public class TestDAGImpl {
         dispatcher.getEventHandler(), taskCommunicatorManagerInterface,
         fsTokens, clock, "user", thh,
         mrrAppContext);
+    if (mrrDag.entityUpdateTracker != null){
+      mrrDag.entityUpdateTracker.stop();
+    }
     mrrDag.entityUpdateTracker = new StateChangeNotifierForTest(mrrDag);
     doReturn(conf).when(mrrAppContext).getAMConf();
     doReturn(mrrDag).when(mrrAppContext).getCurrentDAG();
@@ -910,6 +916,9 @@ public class TestDAGImpl {
         dispatcher.getEventHandler(), taskCommunicatorManagerInterface,
         fsTokens, clock, "user", thh,
         groupAppContext);
+    if (groupDag.entityUpdateTracker != null){
+      groupDag.entityUpdateTracker.stop();
+    }
     groupDag.entityUpdateTracker = new StateChangeNotifierForTest(groupDag);
     doReturn(conf).when(groupAppContext).getAMConf();
     doReturn(groupDag).when(groupAppContext).getCurrentDAG();
@@ -944,15 +953,19 @@ public class TestDAGImpl {
     dagPlan = null;
     if (dag != null) {
       dag.entityUpdateTracker.stop();
+      dag.dagStatusHandler.stop();
     }
     if (mrrDag != null) {
       mrrDag.entityUpdateTracker.stop();
+      mrrDag.dagStatusHandler.stop();
     }
     if (groupDag != null) {
       groupDag.entityUpdateTracker.stop();
+      groupDag.dagStatusHandler.stop();
     }
     if (dagWithCustomEdge != null) {
       dagWithCustomEdge.entityUpdateTracker.stop();
+      dagWithCustomEdge.dagStatusHandler.stop();
     }
     dag = null;
     mrrDag = null;
@@ -980,6 +993,9 @@ public class TestDAGImpl {
     dagWithCustomEdge = new DAGImpl(dagWithCustomEdgeId, conf, dagPlanWithCustomEdge,
         dispatcher.getEventHandler(), taskCommunicatorManagerInterface,
         fsTokens, clock, "user", thh, dagWithCustomEdgeAppContext);
+    if (dagWithCustomEdge.entityUpdateTracker != null){
+      dagWithCustomEdge.entityUpdateTracker.stop();
+    }
     dagWithCustomEdge.entityUpdateTracker = new StateChangeNotifierForTest(dagWithCustomEdge);
     doReturn(conf).when(dagWithCustomEdgeAppContext).getAMConf();
     doReturn(execService).when(dagWithCustomEdgeAppContext).getExecService();
@@ -1074,6 +1090,9 @@ public class TestDAGImpl {
     dag = new DAGImpl(dagId, conf, dagPlan,
         dispatcher.getEventHandler(),  taskCommunicatorManagerInterface,
         fsTokens, clock, "user", thh, appContext);
+    if (dag.entityUpdateTracker != null){
+      dag.entityUpdateTracker.stop();
+    }
     dag.entityUpdateTracker = new StateChangeNotifierForTest(dag);
     doReturn(dag).when(appContext).getCurrentDAG();
 
@@ -1090,11 +1109,13 @@ public class TestDAGImpl {
     dag = new DAGImpl(dagId, conf, dagPlan,
         dispatcher.getEventHandler(),  taskCommunicatorManagerInterface,
         fsTokens, clock, "user", thh, appContext);
+    if (dag.entityUpdateTracker != null){
+      dag.entityUpdateTracker.stop();
+    }
     dag.entityUpdateTracker = new StateChangeNotifierForTest(dag);
     doReturn(dag).when(appContext).getCurrentDAG();
 
     dag.handle(new DAGEvent(dag.getID(), DAGEventType.DAG_INIT));
-    Assert.assertEquals(DAGState.FAILED, dag.getState());
     Assert.assertEquals(DAGState.FAILED, dag.getState());
     Assert.assertEquals(DAGTerminationCause.INIT_FAILURE, dag.getTerminationCause());
     Assert.assertTrue(StringUtils.join(dag.getDiagnostics(), "")
@@ -1852,7 +1873,7 @@ public class TestDAGImpl {
     long diff = statusCheckRunnable.dagStatusEndTime - statusCheckRunnable.dagStatusStartTime;
     Assert.assertNotNull(statusCheckRunnable.dagStatus);
     Assert.assertTrue(diff > 1000 && diff < 3500);
-    Assert.assertEquals(testState, statusCheckRunnable.dagStatus.getState());
+    Assert.assertEquals(testState, statusCheckRunnable.getDagStatusNow().getState());
     t1.join();
   }
 
@@ -1945,6 +1966,9 @@ public class TestDAGImpl {
         Mockito.spy(new StateMachineTez<DAGState, DAGEventType, DAGEvent, DAGImpl>(
             dag.stateMachineFactory.make(dag), dag));
     when(dag.getStateMachine()).thenReturn(spyStateMachine);
+    if (dag.entityUpdateTracker != null){
+      dag.entityUpdateTracker.stop();
+    }
     dag.entityUpdateTracker = new StateChangeNotifierForTest(dag);
     doReturn(dag).when(appContext).getCurrentDAG();
     DAGImpl.OutputKey outputKey = Mockito.mock(DAGImpl.OutputKey.class);
@@ -2313,6 +2337,10 @@ public class TestDAGImpl {
       } finally {
         lock.unlock();
       }
+    }
+
+    public DAGStatus getDagStatusNow() throws TezException {
+      return dag.dagStatusHandler.buildDAGStatus();
     }
   }
 
