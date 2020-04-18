@@ -936,7 +936,7 @@ public class TestDAGRecovery {
     assertEquals(v2StartedTime, v2.startedTime);
     assertEquals(v2NumTask, v2.getTotalTasks());
 
-    // v2 skip initialization
+    // v3 skip initialization
     assertEquals(VertexState.RUNNING, v3.getState());
     assertEquals(v3InitedTime, v3.initedTime);
     assertEquals(v3StartedTime, v3.startedTime);
