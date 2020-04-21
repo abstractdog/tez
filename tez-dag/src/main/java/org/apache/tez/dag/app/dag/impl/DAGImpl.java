@@ -206,8 +206,8 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
   @VisibleForTesting
   TezCounters fullCounters = null;
   private TezCounters cachedCounters = null;
-  private static final long COUNTER_CACHE_INTERVAL_THRESHOLD_SLOW_MS = 10000;
-  private static final long COUNTER_CACHE_INTERVAL_THRESHOLD_FAST_MS = 1000;
+  private final long counterCacheIntervalThresholdFastMs;
+  private final long counterCacheIntervalThresholdSlowMs;
   private long cachedCountersTimestamp = 0;
   private Set<TezVertexID> reRunningVertices = new HashSet<TezVertexID>();
 
@@ -575,6 +575,14 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
     augmentStateMachine();
     this.entityUpdateTracker = new StateChangeNotifier(this);
     this.dagStatusHandler = new DagStatusHandler().start();
+
+    this.counterCacheIntervalThresholdSlowMs =
+        dagConf.getLong(TezConfiguration.TEZ_AM_DAG_IMPL_CACHED_COUNTER_INTERVAL_THRESHOLD_SLOW_MS,
+            10000);
+
+    this.counterCacheIntervalThresholdFastMs =
+        dagConf.getLong(TezConfiguration.TEZ_AM_DAG_IMPL_CACHED_COUNTER_INTERVAL_THRESHOLD_FAST_MS,
+            1000);
   }
 
   private void augmentStateMachine() {
@@ -726,7 +734,7 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
 
   @Override
   public TezCounters getCachedCounters() {
-    return getCachedCounters(COUNTER_CACHE_INTERVAL_THRESHOLD_SLOW_MS);
+    return getCachedCounters(counterCacheIntervalThresholdSlowMs);
   }
 
   public TezCounters getCachedCounters(long cacheIntervalThreshold) {
@@ -2477,8 +2485,8 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
 
   @VisibleForTesting
   class DagStatusHandler {
-    private static final long DAG_STATUS_BUILD_INTERVAL_MS = 500;
-    private ScheduledExecutorService cachedDagStatusBuilderExecutor;
+    private final long dagStatusBuildIntervalMs;
+    private final ScheduledExecutorService cachedDagStatusBuilderExecutor;
 
     private DAGStatusBuilder cachedDagStatusBuilder = null;
 
@@ -2486,6 +2494,8 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
     private int countBuildDagStatus = 0;
 
     DagStatusHandler() {
+      dagStatusBuildIntervalMs =
+          dagConf.getLong(TezConfiguration.TEZ_AM_DAG_IMPL_STATUS_BUILD_INTERVAL_MS, 500);
       cachedDagStatusBuilderExecutor = Executors.newScheduledThreadPool(1);
     }
 
@@ -2497,7 +2507,7 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
         public void run() {
           buildDAGStatus();
         }
-      }, DAG_STATUS_BUILD_INTERVAL_MS, DAG_STATUS_BUILD_INTERVAL_MS, TimeUnit.MILLISECONDS);
+      }, dagStatusBuildIntervalMs, dagStatusBuildIntervalMs, TimeUnit.MILLISECONDS);
 
       return this;
     }
@@ -2552,7 +2562,7 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
       status.setDiagnostics(diagnostics);
       status.setDAGProgress(dagProgress);
 
-      status.setDAGCounters(getCachedCounters(COUNTER_CACHE_INTERVAL_THRESHOLD_FAST_MS));
+      status.setDAGCounters(getCachedCounters(counterCacheIntervalThresholdFastMs));
 
       writeLock.lock();
       try {
@@ -2565,8 +2575,8 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
   }
 
   private ReentrantReadWriteLock getReadWriteLock() {
-    boolean instrumentLocks = dagConf.getBoolean(TezConfiguration.TEZ_AM_DAG_IMPL_INSTRUMENT_LOCKS,
-        TezConfiguration.TEZ_AM_DAG_IMPL_INSTRUMENT_LOCKS_DEFAULT);
+    boolean instrumentLocks =
+        dagConf.getBoolean(TezConfiguration.TEZ_AM_DAG_IMPL_INSTRUMENT_LOCKS, false);
 
     return instrumentLocks ? new InstrumentedReentrantReadWriteLock()
       : new ReentrantReadWriteLock();

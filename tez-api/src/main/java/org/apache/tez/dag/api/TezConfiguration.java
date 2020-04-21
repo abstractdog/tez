@@ -2091,7 +2091,39 @@ public class TezConfiguration extends Configuration {
    */
   @Private
   @ConfigurationScope(Scope.AM)
+  @ConfigurationProperty
   public static final String TEZ_AM_DAG_IMPL_INSTRUMENT_LOCKS =
       TEZ_AM_PREFIX + "dag.impl.instrument.locks";
-  public static final boolean TEZ_AM_DAG_IMPL_INSTRUMENT_LOCKS_DEFAULT = false;
+
+  /**
+   * After TEZ-3967, in DagImpl, a cached dag status is built in every
+   * TEZ_AM_DAG_IMPL_STATUS_BUILD_INTERVAL_MS in order to reduce lock contention.
+   */
+  @Private
+  @ConfigurationScope(Scope.AM)
+  @ConfigurationProperty
+  public static final String TEZ_AM_DAG_IMPL_STATUS_BUILD_INTERVAL_MS =
+      TEZ_AM_PREFIX + "dag.impl.status.build.interval.ms";
+
+  /**
+   * Default (slow) cached counter refresh interval threshold, which is checked while fetching
+   * counters in DagImpl. If counters are older than this threshold, they are aggregated and
+   * refreshed.
+   */
+  @Private
+  @ConfigurationScope(Scope.AM)
+  @ConfigurationProperty
+  public static final String TEZ_AM_DAG_IMPL_CACHED_COUNTER_INTERVAL_THRESHOLD_SLOW_MS =
+      TEZ_AM_PREFIX + "dag.impl.cached.counter.interval.threshold.slow.ms";
+
+  /**
+   * Fast cached counter refresh interval threshold, which is checked while fetching counters in
+   * DagImpl in code paths which need more up-to-date dag counters, e.g. getDAGStatus calls. If
+   * counters are older than this threshold, they are aggregated and refreshed.
+   */
+  @Private
+  @ConfigurationScope(Scope.AM)
+  @ConfigurationProperty
+  public static final String TEZ_AM_DAG_IMPL_CACHED_COUNTER_INTERVAL_THRESHOLD_FAST_MS =
+      TEZ_AM_PREFIX + "dag.impl.cached.counter.interval.threshold.fast.ms";
 }

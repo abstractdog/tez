@@ -843,6 +843,7 @@ public class TestDAGImpl {
   public void setup() {
     conf = new Configuration();
     conf.setBoolean(TezConfiguration.TEZ_AM_CONTAINER_REUSE_ENABLED, false);
+    conf.setBoolean(TezConfiguration.TEZ_AM_DAG_IMPL_INSTRUMENT_LOCKS, true);
     appAttemptId = ApplicationAttemptId.newInstance(
         ApplicationId.newInstance(100, 1), 1);
     dagId = TezDAGID.getInstance(appAttemptId.getApplicationId(), 1);
