@@ -2085,4 +2085,13 @@ public class TezConfiguration extends Configuration {
   @ConfigurationProperty
   public static final String TEZ_JOB_FS_SERVERS_TOKEN_RENEWAL_EXCLUDE = "tez.job.fs-servers.token-renewal.exclude";
 
+  /**
+   * Whether to instrument/monitor lock contention in DagImpl by InstrumentedReentrantReadWriteLock,
+   * which is intercepts relevant lock methods.
+   */
+  @Private
+  @ConfigurationScope(Scope.AM)
+  public static final String TEZ_AM_DAG_IMPL_INSTRUMENT_LOCKS =
+      TEZ_AM_PREFIX + "dag.impl.instrument.locks";
+  public static final boolean TEZ_AM_DAG_IMPL_INSTRUMENT_LOCKS_DEFAULT = false;
 }

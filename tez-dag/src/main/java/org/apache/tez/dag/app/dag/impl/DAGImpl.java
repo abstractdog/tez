@@ -39,9 +39,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -136,6 +136,7 @@ import org.apache.tez.dag.records.TezTaskAttemptID;
 import org.apache.tez.dag.records.TezTaskID;
 import org.apache.tez.dag.records.TezVertexID;
 import org.apache.tez.dag.utils.TaskSpecificLaunchCmdOption;
+import org.apache.tez.dag.utils.InstrumentedReentrantReadWriteLock;
 import org.apache.tez.dag.utils.RelocalizationUtils;
 import org.apache.tez.dag.utils.TezBuilderUtils;
 import org.apache.tez.runtime.api.OutputCommitter;
@@ -169,6 +170,7 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
   private final Lock dagStatusLock = new ReentrantLock();
   private final Condition dagStateChangedCondition = dagStatusLock.newCondition();
   private final AtomicBoolean isFinalState = new AtomicBoolean(false);
+  private final ReentrantReadWriteLock readWriteLock;
   private final Lock readLock;
   private final Lock writeLock;
   private final String dagName;
@@ -535,7 +537,7 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
     this.taskCommunicatorManagerInterface = taskCommunicatorManagerInterface;
     this.taskHeartbeatHandler = thh;
     this.eventHandler = eventHandler;
-    ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+    this.readWriteLock = getReadWriteLock();
     this.readLock = readWriteLock.readLock();
     this.writeLock = readWriteLock.writeLock();
 
@@ -1434,6 +1436,7 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
     }
 
     LOG.info("DAG: " + getID() + " finished with state: " + finalState);
+    printLockStatistics();
 
     return finalState;
   }
@@ -2558,6 +2561,24 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
       } finally {
         writeLock.unlock();
       }
+    }
+  }
+
+  private ReentrantReadWriteLock getReadWriteLock() {
+    boolean instrumentLocks = dagConf.getBoolean(TezConfiguration.TEZ_AM_DAG_IMPL_INSTRUMENT_LOCKS,
+        TezConfiguration.TEZ_AM_DAG_IMPL_INSTRUMENT_LOCKS_DEFAULT);
+
+    return instrumentLocks ? new InstrumentedReentrantReadWriteLock()
+      : new ReentrantReadWriteLock();
+  }
+
+  private void printLockStatistics() {
+    if (this.readWriteLock instanceof InstrumentedReentrantReadWriteLock) {
+      InstrumentedReentrantReadWriteLock lock =
+          ((InstrumentedReentrantReadWriteLock) readWriteLock);
+      LOG.info("InstrumentedReentrantReadWriteLock statistics:" + lock.getStatistics().keySet()
+          .stream().sorted().map(key -> "\n" + key + ": " + lock.getStatistics().get(key))
+          .collect(Collectors.toList()));
     }
   }
 }
