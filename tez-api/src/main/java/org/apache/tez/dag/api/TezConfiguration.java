@@ -2087,7 +2087,7 @@ public class TezConfiguration extends Configuration {
 
   /**
    * Whether to instrument/monitor lock contention in DagImpl by InstrumentedReentrantReadWriteLock,
-   * which is intercepts relevant lock methods.
+   * which intercepts relevant lock methods.
    */
   @Private
   @ConfigurationScope(Scope.AM)
