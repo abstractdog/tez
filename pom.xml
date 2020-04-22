@@ -65,6 +65,7 @@
     <checkstyle.version>8.16</checkstyle.version>
     <dependency-check-maven.version>1.3.6</dependency-check-maven.version>
     <test.build.data>${project.build.directory}/tmp</test.build.data>
+    <tez.protobuf.package.original>com.google.protobuf</tez.protobuf.package.original>
     <tez.shaded.protobuf.package>org.apache.tez.protobuf</tez.shaded.protobuf.package>
     <maven.replacer.plugin.version>1.5.3</maven.replacer.plugin.version>
   </properties>
@@ -1120,7 +1121,7 @@
               </includes>
               <replacements>
                 <replacement>
-                  <token>([^\.])com.google.protobuf</token>
+                  <token>([^\.])${tez.protobuf.package.original}</token>
                   <value>$1${tez.shaded.protobuf.package}</value>
                 </replacement>
               </replacements>
@@ -1140,7 +1141,7 @@
               </includes>
               <replacements>
                 <replacement>
-                  <token>([^\.])com.google.protobuf</token>
+                  <token>([^\.])${tez.protobuf.package.original}</token>
                   <value>$1${tez.shaded.protobuf.package}</value>
                 </replacement>
               </replacements>
@@ -1160,7 +1161,7 @@
               </includes>
               <replacements>
                 <replacement>
-                  <token>([^\.])com.google.protobuf</token>
+                  <token>([^\.])${tez.protobuf.package.original}</token>
                   <value>$1${tez.shaded.protobuf.package}</value>
                 </replacement>
               </replacements>
@@ -1180,7 +1181,7 @@
               </includes>
               <replacements>
                 <replacement>
-                  <token>([^\.])com.google.protobuf</token>
+                  <token>([^\.])${tez.protobuf.package.original}</token>
                   <value>$1${tez.shaded.protobuf.package}</value>
                 </replacement>
               </replacements>
