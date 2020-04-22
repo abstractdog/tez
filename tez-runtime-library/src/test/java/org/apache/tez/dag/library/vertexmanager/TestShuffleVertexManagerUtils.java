@@ -19,7 +19,7 @@
 package org.apache.tez.dag.library.vertexmanager;
 
 
-import com.google.protobuf.ByteString;
+import org.apache.tez.protobuf.ByteString;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.tez.common.ReflectionUtils;

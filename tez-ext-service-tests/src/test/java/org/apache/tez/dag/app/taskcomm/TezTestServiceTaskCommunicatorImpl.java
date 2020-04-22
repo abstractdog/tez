@@ -21,8 +21,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.RejectedExecutionException;
 
-import com.google.protobuf.ByteString;
-import com.google.protobuf.ServiceException;
+import org.apache.tez.protobuf.ByteString;
+import org.apache.tez.protobuf.ServiceException;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.security.Credentials;

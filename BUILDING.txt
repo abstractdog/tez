@@ -17,6 +17,7 @@ Requirements:
 Maven main modules:
 
     tez................................(Main Tez project)
+        - tez-protobuf ................(Tez protobuf)
         - tez-api .....................(Tez api)
         - tez-common ..................(Tez common)
         - tez-runtime-internals .......(Tez runtime internals)

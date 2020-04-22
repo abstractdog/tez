@@ -156,7 +156,7 @@ import org.mockito.stubbing.Answer;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.protobuf.ByteString;
+import org.apache.tez.protobuf.ByteString;
 
 public class TestDAGImpl {
 

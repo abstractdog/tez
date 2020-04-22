@@ -42,7 +42,7 @@ import org.apache.tez.dag.api.client.rpc.DAGClientAMProtocolBlockingPBServerImpl
 import org.apache.tez.dag.api.client.rpc.DAGClientAMProtocolRPC.DAGClientAMProtocol;
 import org.apache.tez.dag.app.security.authorize.TezAMPolicyProvider;
 
-import com.google.protobuf.BlockingService;
+import org.apache.tez.protobuf.BlockingService;
 
 public class DAGClientServer extends AbstractService {
   static final Logger LOG = LoggerFactory.getLogger(DAGClientServer.class);

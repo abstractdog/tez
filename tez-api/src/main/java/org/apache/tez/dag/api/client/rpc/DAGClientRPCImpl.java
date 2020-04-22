@@ -50,7 +50,7 @@ import org.apache.tez.dag.api.client.rpc.DAGClientAMProtocolRPC.GetVertexStatusR
 import org.apache.tez.dag.api.client.rpc.DAGClientAMProtocolRPC.TryKillDAGRequestProto;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.protobuf.ServiceException;
+import org.apache.tez.protobuf.ServiceException;
 
 @Private
 public class DAGClientRPCImpl extends DAGClientInternal {

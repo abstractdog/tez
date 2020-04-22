@@ -1,7 +1,7 @@
 package org.apache.tez.runtime.library.common.shuffle;
 
 import com.google.common.collect.Lists;
-import com.google.protobuf.ByteString;
+import org.apache.tez.protobuf.ByteString;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;

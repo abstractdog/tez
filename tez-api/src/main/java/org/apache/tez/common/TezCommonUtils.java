@@ -52,7 +52,7 @@ import org.apache.tez.dag.api.TezConfiguration;
 import org.apache.tez.dag.api.TezConstants;
 import org.apache.tez.dag.api.TezUncheckedException;
 
-import com.google.protobuf.ByteString;
+import org.apache.tez.protobuf.ByteString;
 
 @Private
 public class TezCommonUtils {

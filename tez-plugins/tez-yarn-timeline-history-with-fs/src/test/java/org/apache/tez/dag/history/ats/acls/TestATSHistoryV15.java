@@ -20,8 +20,8 @@ package org.apache.tez.dag.history.ats.acls;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.protobuf.CodedInputStream;
-import com.google.protobuf.CodedOutputStream;
+import org.apache.tez.protobuf.CodedInputStream;
+import org.apache.tez.protobuf.CodedOutputStream;
 
 import java.io.IOException;
 import java.util.Random;

@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.Inflater;
 
-import com.google.protobuf.ByteString;
+import org.apache.tez.protobuf.ByteString;
 
 import org.apache.tez.runtime.api.events.CompositeRoutedDataMovementEvent;
 import org.apache.tez.runtime.library.common.CompositeInputAttemptIdentifier;
@@ -49,7 +49,7 @@ import org.apache.tez.runtime.library.shuffle.impl.ShuffleUserPayloads.DataMovem
 import org.apache.tez.runtime.library.common.shuffle.DiskFetchedInput;
 import org.apache.tez.runtime.library.common.shuffle.MemoryFetchedInput;
 
-import com.google.protobuf.InvalidProtocolBufferException;
+import org.apache.tez.protobuf.InvalidProtocolBufferException;
 
 /**
  * A base class for generic Event handling for Inputs which need to Shuffle data.

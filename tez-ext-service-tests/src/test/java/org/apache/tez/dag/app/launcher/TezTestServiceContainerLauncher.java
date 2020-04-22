@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 import org.apache.tez.common.Preconditions;
-import com.google.protobuf.ByteString;
+import org.apache.tez.protobuf.ByteString;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.yarn.api.ApplicationConstants;

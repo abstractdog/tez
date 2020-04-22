@@ -38,7 +38,7 @@ import org.codehaus.jettison.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.protobuf.ByteString;
+import org.apache.tez.protobuf.ByteString;
 
 public class TestTezUtils {
 

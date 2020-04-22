@@ -52,7 +52,7 @@ import org.apache.tez.runtime.api.events.InputConfigureVertexTasksEvent;
 import org.apache.tez.runtime.api.events.InputDataInformationEvent;
 import org.junit.Test;
 
-import com.google.protobuf.ByteString;
+import org.apache.tez.protobuf.ByteString;
 
 public class TestMRInputAMSplitGenerator {
 

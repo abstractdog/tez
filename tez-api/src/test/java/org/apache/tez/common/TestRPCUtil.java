@@ -28,7 +28,7 @@ import org.junit.Assert;
 import org.apache.hadoop.ipc.RemoteException;
 import org.junit.Test;
 
-import com.google.protobuf.ServiceException;
+import org.apache.tez.protobuf.ServiceException;
 
 public class TestRPCUtil {
 

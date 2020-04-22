@@ -18,8 +18,8 @@
 
 package org.apache.tez.dag.history;
 
-import com.google.protobuf.CodedInputStream;
-import com.google.protobuf.CodedOutputStream;
+import org.apache.tez.protobuf.CodedInputStream;
+import org.apache.tez.protobuf.CodedOutputStream;
 
 import java.io.IOException;
 

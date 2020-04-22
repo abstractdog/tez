@@ -18,7 +18,7 @@
 
 package org.apache.tez.common;
 
-import com.google.protobuf.ByteString;
+import org.apache.tez.protobuf.ByteString;
 
 import org.apache.tez.runtime.api.events.CompositeDataMovementEvent;
 import org.apache.tez.runtime.api.events.CustomProcessorEvent;

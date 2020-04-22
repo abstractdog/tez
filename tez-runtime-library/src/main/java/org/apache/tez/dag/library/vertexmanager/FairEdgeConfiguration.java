@@ -18,8 +18,8 @@
 
 package org.apache.tez.dag.library.vertexmanager;
 
-import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
+import org.apache.tez.protobuf.ByteString;
+import org.apache.tez.protobuf.InvalidProtocolBufferException;
 
 import org.apache.tez.dag.api.UserPayload;
 import org.apache.tez.dag.library.vertexmanager.FairShuffleUserPayloads.FairShuffleEdgeManagerConfigPayloadProto;
