@@ -65,6 +65,7 @@
     <checkstyle.version>8.16</checkstyle.version>
     <dependency-check-maven.version>1.3.6</dependency-check-maven.version>
     <test.build.data>${project.build.directory}/tmp</test.build.data>
+    <tez.shaded.protobuf.package>org.apache.tez.protobuf</tez.shaded.protobuf.package>
   </properties>
   <scm>
     <connection>${scm.url}</connection>
@@ -122,6 +123,11 @@
         <artifactId>hadoop-shim</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tez</groupId>
+        <artifactId>tez-protobuf</artifactId>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.tez</groupId>
@@ -328,6 +334,10 @@
             <groupId>commons-el</groupId>
             <artifactId>commons-el</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -436,6 +446,10 @@
             <groupId>io.netty</groupId>
             <artifactId>netty</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -465,6 +479,10 @@
           <exclusion>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -718,6 +736,7 @@
 
   <modules>
     <module>hadoop-shim</module>
+    <module>tez-protobuf</module>
     <module>tez-api</module>
     <module>tez-build-tools</module>
     <module>tez-common</module>
@@ -826,6 +845,28 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
           <version>${shade-maven-plugin.version}</version>
+          <executions>
+            <execution>
+              <phase>package</phase>
+              <goals>
+                <goal>shade</goal>
+              </goals>
+              <configuration>
+                <createDependencyReducedPom>false</createDependencyReducedPom>
+                <artifactSet>
+                <includes>
+                  <include>org.apache.tez:${project.artifactId}</include>
+                </includes>
+                </artifactSet>
+                <relocations>
+                  <relocation>
+                    <pattern>com.google.protobuf</pattern>
+                    <shadedPattern>${tez.shaded.protobuf.package}</shadedPattern>
+                  </relocation>
+                </relocations>
+              </configuration>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <groupId>org.apache.rat</groupId>
