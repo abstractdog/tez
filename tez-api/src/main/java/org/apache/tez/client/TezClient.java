@@ -19,6 +19,10 @@
 package org.apache.tez.client;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.NumberFormat;
@@ -28,6 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.TimeUnit;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -43,6 +48,8 @@ import org.apache.tez.common.TezCommonUtils;
 import org.apache.tez.common.counters.Limits;
 import org.apache.tez.dag.api.TezConfigurationConstants;
 import org.apache.tez.serviceplugins.api.ServicePluginsDescriptor;
+import net.sf.cglib.proxy.Enhancer;
+import net.sf.cglib.proxy.MethodInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -86,7 +93,18 @@ import com.google.common.annotations.VisibleForTesting;
 import org.apache.tez.common.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.CodedOutputStream;
+import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
+import com.google.protobuf.Parser;
 import com.google.protobuf.ServiceException;
+import com.google.protobuf.UnknownFieldSet;
+import com.google.protobuf.Descriptors.Descriptor;
+import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message.Builder;
+import com.google.protobuf.MessageLite;
 
 /**
  * TezClient is used to submit Tez DAGs for execution. DAG's are executed via a
@@ -695,6 +713,7 @@ public class TezClient {
     }
 
     try {
+      //SubmitDAGRequestProto proto = (SubmitDAGRequestProto) wrapProtoMessage(request);
       SubmitDAGResponseProto response = proxy.submitDAG(null, request);
       // the following check is only for testing since the final class
       // SubmitDAGResponseProto cannot be mocked
@@ -715,6 +734,57 @@ public class TezClient {
         amConfig.getYarnConfiguration(),
         frameworkClient);
   }
+
+//  private SubmitDAGRequestProto wrapProtoMessage(Object request) {
+//    Class clazz = request.getClass();
+//
+//    String a = null;
+//    SubmitDAGRequestProto proxyInstance = (SubmitDAGRequestProto)Proxy.newProxyInstance(
+//        request.getClass().getClassLoader(), 
+//        new Class[] {Message.class}, 
+//        new PassthroughInvocationHandler(request));
+//    a.concat(null);
+//    return proxyInstance;
+//  }
+  
+//  private Object wrapProtoMessage(final Message request) {
+//    Enhancer enhancer = new Enhancer();
+//    enhancer.setSuperclass(GeneratedMessage.class);
+//    enhancer.setCallback((MethodInterceptor) (obj, method, args, proxy) -> {
+//      return proxy.invokeSuper(request, args);
+//    });
+//    
+//    return enhancer.create();
+//  }
+  
+//    private static Message wrapProtoMessage(Object request) {
+//      //Class<T> beanClass = request.getClass();
+//      Enhancer e = new Enhancer();
+//      e.setSuperclass(request.getClass());
+//      e.setCallback((MethodInterceptor) (obj, method, args, proxy) -> {
+//        return proxy.invokeSuper(request, args);
+//      });
+//      e.setInterfaces(new Class[] { Message.class });
+//
+//      Message proxy = (Message) e.create();
+//      //interceptor.setTarget(bean);
+//      return proxy;
+//  }
+  
+  private <T extends Message> T wrapProtoMessage(final T request) {
+    return (T) new MessageWrap(request);
+  }
+
+//  public class PassthroughInvocationHandler implements InvocationHandler {
+//    private final Object target;
+//    public PassthroughInvocationHandler(Object target) {
+//      this.target = target;
+//    }
+//    @Override
+//    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+//      return method.invoke(target, args);
+//    }
+//  }
 
   @VisibleForTesting
   protected long getPrewarmWaitTimeMs() {
