@@ -754,8 +754,8 @@ public class ShuffleHandler extends AuxiliaryService {
       Token<JobTokenIdentifier> jobToken) throws IOException {
     if (stateDb != null) {
       TokenProto tokenProto = TokenProto.newBuilder()
-          .setIdentifier(ByteString.copyFrom(jobToken.getIdentifier()))
-          .setPassword(ByteString.copyFrom(jobToken.getPassword()))
+          .setIdentifier(org.apache.tez.protobuf.ByteString.copyFrom(jobToken.getIdentifier()))
+          .setPassword(org.apache.tez.protobuf.ByteString.copyFrom(jobToken.getPassword()))
           .setKind(jobToken.getKind().toString())
           .setService(jobToken.getService().toString())
           .build();
