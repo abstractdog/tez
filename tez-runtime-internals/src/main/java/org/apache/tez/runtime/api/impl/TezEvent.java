@@ -54,9 +54,9 @@ import org.apache.tez.runtime.internals.api.events.SystemEventProtos.TaskAttempt
 import org.apache.tez.runtime.internals.api.events.SystemEventProtos.TaskAttemptFailedEventProto;
 import org.apache.tez.runtime.internals.api.events.SystemEventProtos.TaskAttemptKilledEventProto;
 
-import org.apache.tez.protobuf.AbstractMessage;
-import org.apache.tez.protobuf.CodedInputStream;
-import org.apache.tez.protobuf.CodedOutputStream;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
 
 import static org.apache.tez.runtime.api.events.EventProtos.*;
 

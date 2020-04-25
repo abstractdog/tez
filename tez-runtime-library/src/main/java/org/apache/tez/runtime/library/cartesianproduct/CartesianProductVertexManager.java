@@ -19,7 +19,7 @@ package org.apache.tez.runtime.library.cartesianproduct;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.tez.common.Preconditions;
-import org.apache.tez.protobuf.ByteString;
+import com.google.protobuf.ByteString;
 import org.apache.tez.dag.api.EdgeManagerPluginDescriptor;
 import org.apache.tez.dag.api.EdgeProperty;
 import org.apache.tez.dag.api.InputDescriptor;

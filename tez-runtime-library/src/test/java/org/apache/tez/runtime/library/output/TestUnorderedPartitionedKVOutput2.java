@@ -21,7 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.BitSet;
 import java.util.List;
 
-import org.apache.tez.protobuf.ByteString;
+import com.google.protobuf.ByteString;
 import org.apache.tez.common.TezCommonUtils;
 import org.apache.tez.common.TezUtilsInternal;
 import org.apache.tez.runtime.api.Event;

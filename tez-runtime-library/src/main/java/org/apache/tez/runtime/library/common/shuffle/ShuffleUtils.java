@@ -37,7 +37,7 @@ import javax.crypto.SecretKey;
 
 import org.apache.tez.common.Preconditions;
 import com.google.common.primitives.Ints;
-import org.apache.tez.protobuf.ByteString;
+import com.google.protobuf.ByteString;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.DataOutputBuffer;

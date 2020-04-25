@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 
-import org.apache.tez.protobuf.CodedInputStream;
-import org.apache.tez.protobuf.CodedOutputStream;
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
 import org.apache.tez.dag.history.HistoryEvent;
 import org.apache.tez.dag.history.HistoryEventType;
 import org.apache.tez.dag.history.SummaryEvent;
@@ -32,7 +32,7 @@ import org.apache.tez.dag.recovery.records.RecoveryProtos;
 import org.apache.tez.dag.recovery.records.RecoveryProtos.SummaryEventProto;
 import org.apache.tez.dag.recovery.records.RecoveryProtos.VertexCommitStartedProto;
 
-import org.apache.tez.protobuf.ByteString;
+import com.google.protobuf.ByteString;
 
 public class VertexCommitStartedEvent implements HistoryEvent, SummaryEvent {
 

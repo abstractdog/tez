@@ -24,7 +24,7 @@ import java.nio.ByteBuffer;
 import java.util.BitSet;
 import java.util.List;
 
-import org.apache.tez.protobuf.ByteString;
+import com.google.protobuf.ByteString;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;

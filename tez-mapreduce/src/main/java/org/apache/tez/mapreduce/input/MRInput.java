@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.tez.protobuf.ByteString;
+import com.google.protobuf.ByteString;
 
 import org.apache.tez.runtime.api.ProgressFailedException;
 import org.slf4j.Logger;

@@ -19,7 +19,7 @@
 package org.apache.tez.test;
 
 import org.apache.tez.common.Preconditions;
-import org.apache.tez.protobuf.ByteString;
+import com.google.protobuf.ByteString;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.tez.common.TezUtils;

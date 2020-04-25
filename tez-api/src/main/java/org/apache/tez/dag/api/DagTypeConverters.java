@@ -85,8 +85,8 @@ import org.apache.tez.dag.api.records.DAGProtos.VertexExecutionContextProto;
 import org.apache.tez.dag.api.records.DAGProtos.VertexLocationHintProto;
 
 import com.google.common.collect.Lists;
-import org.apache.tez.protobuf.ByteString;
-import org.apache.tez.protobuf.ByteString.Output;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.ByteString.Output;
 import org.apache.tez.serviceplugins.api.ServicePluginsDescriptor;
 
 @Private

@@ -27,7 +27,7 @@ import org.apache.tez.dag.api.DAGNotRunningException;
 import org.apache.tez.dag.api.SessionNotRunning;
 import org.apache.tez.dag.api.TezException;
 
-import org.apache.tez.protobuf.ServiceException;
+import com.google.protobuf.ServiceException;
 
 public class RPCUtil {
 

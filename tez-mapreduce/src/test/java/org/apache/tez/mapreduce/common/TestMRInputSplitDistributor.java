@@ -47,7 +47,7 @@ import org.apache.tez.runtime.api.events.InputDataInformationEvent;
 import org.apache.tez.runtime.api.events.InputUpdatePayloadEvent;
 import org.junit.Test;
 
-import org.apache.tez.protobuf.ByteString;
+import com.google.protobuf.ByteString;
 
 public class TestMRInputSplitDistributor {
 

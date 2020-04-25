@@ -33,7 +33,7 @@ import com.google.common.base.Function;
 import org.apache.tez.common.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import org.apache.tez.protobuf.ByteString;
+import com.google.protobuf.ByteString;
 
 import org.apache.tez.runtime.api.InputContext;
 import org.slf4j.Logger;

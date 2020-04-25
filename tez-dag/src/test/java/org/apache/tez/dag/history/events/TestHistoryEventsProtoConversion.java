@@ -23,8 +23,8 @@ import static org.junit.Assert.fail;
 
 import java.nio.ByteBuffer;
 
-import org.apache.tez.protobuf.CodedInputStream;
-import org.apache.tez.protobuf.CodedOutputStream;
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
 import org.apache.tez.runtime.api.TaskFailureType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

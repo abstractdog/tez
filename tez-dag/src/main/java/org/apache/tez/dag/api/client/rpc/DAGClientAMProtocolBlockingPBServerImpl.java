@@ -23,7 +23,7 @@ import java.security.AccessControlException;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.tez.protobuf.CodedInputStream;
+import com.google.protobuf.CodedInputStream;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -53,8 +53,8 @@ import org.apache.tez.dag.api.client.rpc.DAGClientAMProtocolRPC.TryKillDAGReques
 import org.apache.tez.dag.api.client.rpc.DAGClientAMProtocolRPC.TryKillDAGResponseProto;
 import org.apache.tez.dag.api.records.DAGProtos.DAGPlan;
 
-import org.apache.tez.protobuf.RpcController;
-import org.apache.tez.protobuf.ServiceException;
+import com.google.protobuf.RpcController;
+import com.google.protobuf.ServiceException;
 
 public class DAGClientAMProtocolBlockingPBServerImpl implements DAGClientAMProtocolBlockingPB {
 

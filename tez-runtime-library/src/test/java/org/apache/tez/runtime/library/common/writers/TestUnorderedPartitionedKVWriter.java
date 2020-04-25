@@ -51,7 +51,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.tez.protobuf.ByteString;
+import com.google.protobuf.ByteString;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.tez.dag.api.TezConfiguration;
 import org.apache.tez.runtime.api.TaskFailureType;

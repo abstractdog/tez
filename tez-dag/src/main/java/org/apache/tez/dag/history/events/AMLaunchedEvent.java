@@ -20,8 +20,8 @@ package org.apache.tez.dag.history.events;
 
 import java.io.IOException;
 
-import org.apache.tez.protobuf.CodedInputStream;
-import org.apache.tez.protobuf.CodedOutputStream;
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.tez.dag.history.HistoryEvent;

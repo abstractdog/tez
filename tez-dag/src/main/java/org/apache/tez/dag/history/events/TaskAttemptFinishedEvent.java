@@ -22,8 +22,8 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.tez.protobuf.CodedInputStream;
-import org.apache.tez.protobuf.CodedOutputStream;
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
 import org.apache.tez.common.TezConverterUtils;
 import org.apache.tez.common.counters.CounterGroup;
 import org.apache.tez.common.counters.TezCounter;

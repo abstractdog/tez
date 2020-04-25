@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.tez.protobuf.ByteString;
+import com.google.protobuf.ByteString;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tez.dag.app.dag.impl.ImmediateStartVertexManager;
 import org.apache.tez.dag.app.dag.impl.OneToOneEdgeManagerOnDemand;

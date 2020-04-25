@@ -18,8 +18,8 @@
 package org.apache.tez.runtime.library.cartesianproduct;
 
 import com.google.common.primitives.Ints;
-import org.apache.tez.protobuf.ByteString;
-import org.apache.tez.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.tez.dag.api.EdgeManagerPluginDescriptor;
 import org.apache.tez.dag.api.EdgeProperty;
 import org.apache.tez.dag.api.VertexLocationHint;

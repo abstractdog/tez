@@ -20,8 +20,8 @@ package org.apache.tez.dag.library.vertexmanager;
 
 import org.apache.tez.common.Preconditions;
 import com.google.common.collect.Lists;
-import org.apache.tez.protobuf.ByteString;
-import org.apache.tez.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.apache.tez.common.TezUtils;
 import org.apache.tez.dag.api.EdgeManagerPluginContext;

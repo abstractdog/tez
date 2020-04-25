@@ -86,7 +86,7 @@ import com.google.common.annotations.VisibleForTesting;
 import org.apache.tez.common.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.apache.tez.protobuf.ServiceException;
+import com.google.protobuf.ServiceException;
 
 /**
  * TezClient is used to submit Tez DAGs for execution. DAG's are executed via a

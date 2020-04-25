@@ -49,7 +49,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.apache.tez.protobuf.ServiceException;
+import com.google.protobuf.ServiceException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
@@ -105,7 +105,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.google.common.collect.Maps;
-import org.apache.tez.protobuf.RpcController;
+import com.google.protobuf.RpcController;
 
 public class TestTezClient {
   static final long HARD_KILL_TIMEOUT = 1500L;

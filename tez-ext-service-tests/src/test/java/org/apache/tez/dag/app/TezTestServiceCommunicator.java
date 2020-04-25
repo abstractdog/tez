@@ -27,7 +27,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.apache.tez.protobuf.Message;
+import com.google.protobuf.Message;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.tez.common.GuavaShim;
 import org.apache.tez.service.TezTestServiceProtocolBlockingPB;
