@@ -1121,8 +1121,8 @@
               </includes>
               <replacements>
                 <replacement>
-                  <token>([^\.])${tez.protobuf.package.original}</token>
-                  <value>$1${tez.shaded.protobuf.package}</value>
+                  <token>([^\.])${tez.protobuf.package.original}\.(GeneratedMessage)</token>
+                  <value>$1${tez.shaded.protobuf.package}.$2</value>
                 </replacement>
               </replacements>
             </configuration>
@@ -1141,8 +1141,8 @@
               </includes>
               <replacements>
                 <replacement>
-                  <token>([^\.])${tez.protobuf.package.original}</token>
-                  <value>$1${tez.shaded.protobuf.package}</value>
+                  <token>([^\.])${tez.protobuf.package.original}\.(GeneratedMessage)</token>
+                  <value>$1${tez.shaded.protobuf.package}.$2</value>
                 </replacement>
               </replacements>
             </configuration>
@@ -1161,8 +1161,8 @@
               </includes>
               <replacements>
                 <replacement>
-                  <token>([^\.])${tez.protobuf.package.original}</token>
-                  <value>$1${tez.shaded.protobuf.package}</value>
+                  <token>([^\.])${tez.protobuf.package.original}\.(GeneratedMessage)</token>
+                  <value>$1${tez.shaded.protobuf.package}.$2</value>
                 </replacement>
               </replacements>
             </configuration>
@@ -1181,8 +1181,8 @@
               </includes>
               <replacements>
                 <replacement>
-                  <token>([^\.])${tez.protobuf.package.original}</token>
-                  <value>$1${tez.shaded.protobuf.package}</value>
+                  <token>([^\.])${tez.protobuf.package.original}\.(GeneratedMessage)</token>
+                  <value>$1${tez.shaded.protobuf.package}.$2</value>
                 </replacement>
               </replacements>
             </configuration>
