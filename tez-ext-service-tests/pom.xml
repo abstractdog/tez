@@ -193,20 +193,7 @@
         <artifactId>replacer</artifactId>
         <executions>
           <execution>
-            <id>replace-sources</id>
-            <configuration>
-              <basedir>${project.build.directory}/generated-test-sources/java</basedir>
-              <skip>false</skip>
-            </configuration>
-          </execution>
-          <execution>
             <id>replace-generated-test-sources</id>
-            <configuration>
-              <skip>false</skip>
-            </configuration>
-          </execution>
-          <execution>
-            <id>replace-test-sources</id>
             <configuration>
               <skip>false</skip>
             </configuration>

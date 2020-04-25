@@ -20,6 +20,9 @@ package org.apache.tez.protobuf;
 
 import com.google.protobuf.GeneratedMessage.Builder;
 
+/**
+ * Convenience class for single-point abstraction of GeneratedMessage in hadoop's protobuf.
+ */
 public abstract class GeneratedMessage extends com.google.protobuf.GeneratedMessage {
 
   protected GeneratedMessage() {

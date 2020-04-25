@@ -130,12 +130,6 @@
         <groupId>org.apache.tez</groupId>
         <artifactId>tez-protobuf</artifactId>
         <version>${project.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.tez</groupId>
@@ -1172,46 +1166,6 @@
             <configuration>
               <skip>true</skip>
               <basedir>${project.build.directory}/generated-test-sources</basedir>
-              <includes>
-                <include>**/*.java</include>
-              </includes>
-              <replacements>
-                <replacement>
-                  <token>([^\.])${tez.protobuf.package.original}\.(GeneratedMessage)</token>
-                  <value>$1${tez.overridden.protobuf.package}.$2</value>
-                </replacement>
-              </replacements>
-            </configuration>
-          </execution>
-          <execution>
-            <id>replace-sources</id>
-            <phase>process-sources</phase>
-            <goals>
-              <goal>replace</goal>
-            </goals>
-            <configuration>
-              <skip>true</skip>
-              <basedir>${basedir}/src/main/java</basedir>
-              <includes>
-                <include>**/*.java</include>
-              </includes>
-              <replacements>
-                <replacement>
-                  <token>([^\.])${tez.protobuf.package.original}\.(GeneratedMessage)</token>
-                  <value>$1${tez.overridden.protobuf.package}.$2</value>
-                </replacement>
-              </replacements>
-            </configuration>
-          </execution>
-          <execution>
-            <id>replace-test-sources</id>
-            <phase>process-test-sources</phase>
-            <goals>
-              <goal>replace</goal>
-            </goals>
-            <configuration>
-              <skip>true</skip>
-              <basedir>${basedir}/src/test/java</basedir>
               <includes>
                 <include>**/*.java</include>
               </includes>
