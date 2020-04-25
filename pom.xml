@@ -66,7 +66,7 @@
     <dependency-check-maven.version>1.3.6</dependency-check-maven.version>
     <test.build.data>${project.build.directory}/tmp</test.build.data>
     <tez.protobuf.package.original>com.google.protobuf</tez.protobuf.package.original>
-    <tez.shaded.protobuf.package>org.apache.tez.protobuf</tez.shaded.protobuf.package>
+    <tez.overridden.protobuf.package>org.apache.tez.protobuf</tez.overridden.protobuf.package>
     <maven.replacer.plugin.version>1.5.3</maven.replacer.plugin.version>
   </properties>
   <scm>
@@ -342,6 +342,10 @@
             <groupId>commons-el</groupId>
             <artifactId>commons-el</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -450,6 +454,10 @@
             <groupId>io.netty</groupId>
             <artifactId>netty</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -480,6 +488,10 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>*</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -504,6 +516,12 @@
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-yarn-server-timeline-pluginstorage</artifactId>
         <version>${hadoop.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
@@ -553,6 +571,10 @@
             <groupId>io.netty</groupId>
             <artifactId>netty</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -563,6 +585,10 @@
           <exclusion>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-yarn-server-common</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -586,6 +612,12 @@
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-yarn-server-common</artifactId>
         <version>${hadoop.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
@@ -650,6 +682,10 @@
           <exclusion>
             <groupId>tomcat</groupId>
             <artifactId>jasper-runtime</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1122,7 +1158,7 @@
               <replacements>
                 <replacement>
                   <token>([^\.])${tez.protobuf.package.original}\.(GeneratedMessage)</token>
-                  <value>$1${tez.shaded.protobuf.package}.$2</value>
+                  <value>$1${tez.overridden.protobuf.package}.$2</value>
                 </replacement>
               </replacements>
             </configuration>
@@ -1142,7 +1178,7 @@
               <replacements>
                 <replacement>
                   <token>([^\.])${tez.protobuf.package.original}\.(GeneratedMessage)</token>
-                  <value>$1${tez.shaded.protobuf.package}.$2</value>
+                  <value>$1${tez.overridden.protobuf.package}.$2</value>
                 </replacement>
               </replacements>
             </configuration>
@@ -1162,7 +1198,7 @@
               <replacements>
                 <replacement>
                   <token>([^\.])${tez.protobuf.package.original}\.(GeneratedMessage)</token>
-                  <value>$1${tez.shaded.protobuf.package}.$2</value>
+                  <value>$1${tez.overridden.protobuf.package}.$2</value>
                 </replacement>
               </replacements>
             </configuration>
@@ -1182,7 +1218,7 @@
               <replacements>
                 <replacement>
                   <token>([^\.])${tez.protobuf.package.original}\.(GeneratedMessage)</token>
-                  <value>$1${tez.shaded.protobuf.package}.$2</value>
+                  <value>$1${tez.overridden.protobuf.package}.$2</value>
                 </replacement>
               </replacements>
             </configuration>

@@ -52,6 +52,7 @@
               <artifactSet>
               <includes>
                 <include>com.google.protobuf:*</include>
+                <include>org.apache.tez.protobuf:*</include>
               </includes>
               </artifactSet>
             </configuration>
