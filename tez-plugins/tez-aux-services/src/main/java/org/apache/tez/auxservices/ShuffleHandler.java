@@ -150,7 +150,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.cache.Weigher;
-import com.google.protobuf.ByteString;
 
 public class ShuffleHandler extends AuxiliaryService {
 

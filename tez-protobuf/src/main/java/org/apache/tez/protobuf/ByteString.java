@@ -18,8 +18,6 @@
 
 package org.apache.tez.protobuf;
 
-import java.nio.ByteBuffer;
-
 /**
  * Convenience class for single-point abstraction of ByteString in hadoop's protobuf.
  */
