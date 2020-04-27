@@ -102,10 +102,6 @@ public class Limits {
     }
   }
 
-  public synchronized LimitExceededException violation() {
-    return firstViolation;
-  }
-
   @VisibleForTesting
   @InterfaceAudience.Private
   public synchronized static void reset() {
