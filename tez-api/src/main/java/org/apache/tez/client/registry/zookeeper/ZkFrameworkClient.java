@@ -18,6 +18,7 @@
 
 package org.apache.tez.client.registry.zookeeper;
 
+import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
@@ -33,9 +34,14 @@ import org.apache.tez.client.registry.AMRecord;
 import org.apache.tez.dag.api.TezConfiguration;
 import org.apache.tez.dag.api.TezException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 
 public class ZkFrameworkClient extends FrameworkClient {
+
+  private static final Logger LOG = LoggerFactory.getLogger(ZkFrameworkClient.class);
 
   private AMRecord amRecord;
   private TezConfiguration tezConf;
@@ -113,8 +119,18 @@ public class ZkFrameworkClient extends FrameworkClient {
       report.setHost(amRecord.getHost());
       report.setRpcPort(amRecord.getPort());
       report.setYarnApplicationState(YarnApplicationState.RUNNING);
+      report.setClientToAMToken(convertToProtoToken(amRecord.getClientToAMToken()));
     }
     return report;
+  }
+
+  private static org.apache.hadoop.yarn.api.records.Token convertToProtoToken(Token token) {
+    if (token == null) {
+      return null;
+    }
+    return org.apache.hadoop.yarn.api.records.Token.newInstance(
+            token.getIdentifier(), token.getKind().toString(), token.getPassword(),
+            token.getService().toString());
   }
 
   @Override

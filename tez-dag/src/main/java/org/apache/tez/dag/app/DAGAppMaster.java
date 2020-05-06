@@ -30,25 +30,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.security.PrivilegedExceptionAction;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -59,7 +45,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.Objects;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -75,6 +60,8 @@ import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.security.AMRMTokenIdentifier;
+import org.apache.hadoop.yarn.security.client.ClientToAMTokenIdentifier;
+import org.apache.hadoop.yarn.security.client.ClientToAMTokenSecretManager;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.SystemClock;
 import org.apache.tez.client.CallerContext;
@@ -331,6 +318,7 @@ public class DAGAppMaster extends AbstractService {
   // must be LinkedHashMap to preserve order of service addition
   Map<Service, ServiceWithDependency> services =
       new LinkedHashMap<Service, ServiceWithDependency>();
+  ClientToAMTokenSecretManager clientToAMTokenSecretManager;
 
   public DAGAppMaster(ApplicationAttemptId applicationAttemptId,
       ContainerId containerId, String nmHost, int nmPort, int nmHttpPort,
@@ -498,8 +486,8 @@ public class DAGAppMaster extends AbstractService {
       }
     recoveryEnabled = conf.getBoolean(TezConfiguration.DAG_RECOVERY_ENABLED,
         TezConfiguration.DAG_RECOVERY_ENABLED_DEFAULT);
-
-    clientRpcServer = new DAGClientServer(clientHandler, appAttemptID, recoveryFS);
+    this.clientToAMTokenSecretManager = new ClientToAMTokenSecretManager(appAttemptID, null);
+    clientRpcServer = new DAGClientServer(clientHandler, appAttemptID, recoveryFS, clientToAMTokenSecretManager);
     addIfService(clientRpcServer, true);
 
 
@@ -655,15 +643,26 @@ public class DAGAppMaster extends AbstractService {
   }
 
   @VisibleForTesting
-  public static void initAmRegistry(ApplicationId appId, AMRegistry amRegistry, DAGClientServer dagClientServer) throws Exception {
+  public void initAmRegistry(ApplicationId appId, AMRegistry amRegistry, DAGClientServer dagClientServer) throws Exception {
     dagClientServer.registerServiceListener((service) -> {
       if (service.isInState(STATE.STARTED)) {
+        Token<ClientToAMTokenIdentifier> clientToAMToken = null;
+        if (UserGroupInformation.isSecurityEnabled()) {
+          // With security enabled, TezClients require a ClientToAMToken to make requests on the Tez AM rpc port.
+          // External AMs cannot rely on YARN to generate the ClientToAMToken, so the AM will generate its own token.
+          // The token will be saved to the AM registry, so that clients can find and use the token.
+          dagClientServer.setClientAMSecretKey(ByteBuffer.wrap(UUID.randomUUID().toString().getBytes()));
+          clientToAMToken = new Token<ClientToAMTokenIdentifier>(
+                  new ClientToAMTokenIdentifier(this.getAttemptID(), this.appMasterUgi.getShortUserName()),
+                  this.clientToAMTokenSecretManager);
+        }
         final String computeName = System.getenv(ZkConfig.COMPUTE_GROUP_NAME_ENV);
         AMRecord amRecord = amRegistry.createAmRecord(computeName,
             appId, dagClientServer.getBindAddress().getHostName(),
           dagClientServer.getBindAddress().getAddress().getHostAddress(),
           dagClientServer.getBindAddress().getPort()
         );
+        amRecord.setClientToAMToken(clientToAMToken);
         try {
           amRegistry.add(amRecord);
           LOG.info("Added AMRecord: {} to registry..", amRecord);

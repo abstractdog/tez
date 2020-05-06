@@ -18,9 +18,11 @@
 
 package org.apache.tez.client.registry;
 
+import java.io.IOException;
 import com.google.common.base.Preconditions;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.registry.client.types.ServiceRecord;
+import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.tez.client.registry.zookeeper.ZkConfig;
 
@@ -35,15 +37,22 @@ public class AMRecord {
   private int port;
   private String externalId;
   private String computeName;
+  private Token clientToAMToken;
   private final static String APP_ID_RECORD_KEY = "appId";
   private final static String HOST_NAME_RECORD_KEY = "hostName";
   private final static String HOST_IP_RECORD_KEY = "hostIp";
   private final static String PORT_RECORD_KEY = "port";
   private final static String EXTERNAL_ID_KEY = "externalId";
   private final static String COMPUTE_GROUP_NAME_KEY = "computeName";
+  private final static String CLIENT_TO_AM_TOKEN_KEY = "clientToAMToken";
 
   public AMRecord(ApplicationId appId, String hostName, String hostIp, int port, final String externalId,
-    String computeName) {
+                  String computeName) {
+    this(appId, hostName, hostIp, port, externalId, computeName, null);
+  }
+
+  public AMRecord(ApplicationId appId, String hostName, String hostIp, int port, final String externalId,
+    String computeName, Token clientToAMToken) {
     Preconditions.checkNotNull(appId);
     Preconditions.checkNotNull(hostName);
     this.appId = appId;
@@ -53,6 +62,7 @@ public class AMRecord {
     //externalId is optional, if not provided, convert to empty string
     this.externalId = (externalId == null) ? "" : externalId;
     this.computeName = (computeName == null) ? ZkConfig.DEFAULT_COMPUTE_GROUP_NAME : computeName;
+    this.clientToAMToken = clientToAMToken;
   }
 
   public AMRecord(AMRecord other) {
@@ -63,6 +73,7 @@ public class AMRecord {
     this.port = other.getPort();
     this.externalId = other.getExternalId();
     this.computeName = other.getComputeName();
+    this.clientToAMToken = other.getClientToAMToken();
   }
 
   public AMRecord(ServiceRecord serviceRecord) {
@@ -83,6 +94,16 @@ public class AMRecord {
     String computeName = serviceRecord.get(COMPUTE_GROUP_NAME_KEY);
     Preconditions.checkNotNull(computeName);
     this.computeName = computeName;
+    String clientToAMTokenString = serviceRecord.get(CLIENT_TO_AM_TOKEN_KEY);
+    if (clientToAMTokenString != null) {
+      try {
+        Token clientToAMToken = new Token();
+        clientToAMToken.decodeFromUrlString(clientToAMTokenString);
+        this.clientToAMToken = clientToAMToken;
+      } catch (IOException err) {
+        throw new RuntimeException("Error decoding clientToAMToken", err);
+      }
+    }
   }
 
   public ApplicationId getApplicationId() {
@@ -111,6 +132,26 @@ public class AMRecord {
     return computeName;
   }
 
+  /**
+   * Token required by TezClients when communicating with the external AM, when security is enabled.
+   * @return ClientToAMToken
+   */
+  public Token getClientToAMToken() { return clientToAMToken; }
+
+  public void setClientToAMToken(Token clientToAMToken) {
+    this.clientToAMToken = clientToAMToken;
+  }
+
+  private static boolean tokenEquals(Token t1, Token t2) {
+    if (t1 == null && t2 == null) {
+      return true;
+    } else if (t1 != null && t2 != null) {
+      return t1.equals(t2);
+    } else {
+      return false;
+    }
+  }
+
   @Override
   public boolean equals(Object other) {
     if(other instanceof AMRecord) {
@@ -120,7 +161,8 @@ public class AMRecord {
           && hostIp.equals(otherRecord.hostIp)
           && port == otherRecord.port
           && externalId.equals(otherRecord.externalId)
-          && computeName.equals(otherRecord.computeName);
+          && computeName.equals(otherRecord.computeName)
+          && tokenEquals(clientToAMToken, ((AMRecord) other).clientToAMToken);
     } else {
       return false;
     }
@@ -133,7 +175,8 @@ public class AMRecord {
       31 * hostIp.hashCode() +
       31 * externalId.hashCode() +
       31 * computeName.hashCode() +
-      31 * port;
+      31 * port +
+      31 * (clientToAMToken == null ? 0 : clientToAMToken.hashCode());
   }
 
   public ServiceRecord toServiceRecord() {
@@ -144,6 +187,13 @@ public class AMRecord {
     serviceRecord.set(PORT_RECORD_KEY, port);
     serviceRecord.set(EXTERNAL_ID_KEY, externalId);
     serviceRecord.set(COMPUTE_GROUP_NAME_KEY, computeName);
+    if (clientToAMToken != null) {
+      try {
+        serviceRecord.set(CLIENT_TO_AM_TOKEN_KEY, clientToAMToken.encodeToUrlString());
+      } catch (IOException err) {
+        throw new RuntimeException("Error encoding clientToAMToken", err);
+      }
+    }
     return serviceRecord;
   }
 

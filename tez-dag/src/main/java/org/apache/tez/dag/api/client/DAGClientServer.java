@@ -55,10 +55,15 @@ public class DAGClientServer extends AbstractService {
   final FileSystem stagingFs;
 
   public DAGClientServer(DAGClientHandler realInstance,
-      ApplicationAttemptId attemptId, FileSystem stagingFs) {
+                         ApplicationAttemptId attemptId, FileSystem stagingFs) {
+    this(realInstance, attemptId, stagingFs, new ClientToAMTokenSecretManager(attemptId, null));
+  }
+
+  public DAGClientServer(DAGClientHandler realInstance,
+      ApplicationAttemptId attemptId, FileSystem stagingFs, ClientToAMTokenSecretManager secretmanager) {
     super("DAGClientRPCServer");
     this.realInstance = realInstance;
-    this.secretManager = new ClientToAMTokenSecretManager(attemptId, null);
+    this.secretManager = secretmanager;
     this.applicationAttemptId = attemptId;
     this.stagingFs = stagingFs;
   }
@@ -119,7 +124,7 @@ public class DAGClientServer extends AbstractService {
   public InetSocketAddress getBindAddress() {
     return bindAddress;
   }
-  
+
   public void setClientAMSecretKey(ByteBuffer key) {
     if (key != null && key.hasRemaining()) {
       // non-empty key. must be useful
