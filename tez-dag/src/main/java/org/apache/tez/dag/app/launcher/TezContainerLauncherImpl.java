@@ -272,9 +272,7 @@ public class TezContainerLauncherImpl extends DagContainerLauncher {
 
   @Override
   public void start() throws TezException {
-    // pass a copy of config to ContainerManagementProtocolProxy until YARN-3497 is fixed
-    cmProxy =
-        new ContainerManagementProtocolProxy(conf);
+    cmProxy = new ContainerManagementProtocolProxy(conf);
 
     ThreadFactory tf = new ThreadFactoryBuilder().setNameFormat(
         "ContainerLauncher #%d").setDaemon(true).build();
