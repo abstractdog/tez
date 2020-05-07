@@ -709,6 +709,16 @@ public class TezConfiguration extends Configuration {
   public static final int TEZ_AM_TASK_MAX_FAILED_ATTEMPTS_DEFAULT = 4;
 
   /**
+   * Int value. The maximum number of attempts that can run for a particular task before the task is
+   * failed. This count every attempts, including failed, killed attempts. Task failure results in
+   * DAG failure.
+   */
+  @ConfigurationScope(Scope.VERTEX)
+  @ConfigurationProperty(type = "integer")
+  public static final String TEZ_AM_TASK_MAX_ATTEMPTS = TEZ_AM_PREFIX + "task.max.attempts";
+  public static final int TEZ_AM_TASK_MAX_ATTEMPTS_DEFAULT = 10000;
+
+  /**
    * Boolean value. Specifies whether a re-scheduled attempt of a task, caused by previous
    * failures gets higher priority
    */
