@@ -216,6 +216,7 @@ message DAGPlan {
   optional VertexExecutionContextProto default_execution_context = 9;
   optional CallerContextProto caller_context = 10;
   optional ACLInfo aclInfo = 11;
+  optional ConfigurationProto dag_payload = 12;
 }
 
 // DAG monitoring messages

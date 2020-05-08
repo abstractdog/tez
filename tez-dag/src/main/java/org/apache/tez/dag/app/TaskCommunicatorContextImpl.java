@@ -22,6 +22,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.Objects;
 
 import com.google.common.base.Function;
+
+import org.apache.tez.client.DAGPayload;
 import org.apache.tez.common.Preconditions;
 import com.google.common.collect.Iterables;
 import org.apache.hadoop.classification.InterfaceAudience;
@@ -72,6 +74,12 @@ public class TaskCommunicatorContextImpl implements TaskCommunicatorContext, Ver
     ReentrantReadWriteLock dagChangedLock = new ReentrantReadWriteLock();
     dagChangedReadLock = dagChangedLock.readLock();
     dagChangedWriteLock = dagChangedLock.writeLock();
+  }
+
+
+  @Override
+  public DAGPayload getCurrentDAGPayload() {
+    return context.getCurrentDAG().getPayload();
   }
 
   @Override

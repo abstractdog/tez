@@ -41,6 +41,7 @@ import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.tez.client.CallerContext;
+import org.apache.tez.client.DAGPayload;
 import org.apache.tez.common.JavaOptsChecker;
 import org.apache.tez.common.TezUtils;
 import org.apache.tez.dag.api.Vertex.VertexExecutionContext;
@@ -60,7 +61,6 @@ import org.apache.tez.common.TezCommonUtils;
 import org.apache.tez.common.TezYARNUtils;
 import org.apache.tez.dag.api.EdgeProperty.DataMovementType;
 import org.apache.tez.dag.api.EdgeProperty.DataSourceType;
-import org.apache.tez.dag.api.EdgeProperty.SchedulingType;
 import org.apache.tez.dag.api.VertexGroup.GroupInfo;
 import org.apache.tez.dag.api.records.DAGProtos.ConfigurationProto;
 import org.apache.tez.dag.api.records.DAGProtos.DAGPlan;
@@ -106,6 +106,7 @@ public class DAG {
   CallerContext callerContext;
   private Map<String,String> dagConf = new HashMap<String, String>();
   private VertexExecutionContext defaultExecutionContext;
+  private DAGPayload dagPayload;
 
   private DAG(String name) {
     this.name = name;
@@ -163,6 +164,18 @@ public class DAG {
    */
   public synchronized DAG setCredentials(Credentials credentials) {
     this.credentials = credentials;
+    return this;
+  }
+
+  /**
+   * This is method is for providing a custom {@link DAGPayload} for the dag. All of the key-value
+   * pairs in DAGPayload.payload is serialized in protobuf and propagated to AM with the dag plan.
+   *
+   * @param payload {@link DAGPayload} for the DAG
+   * @return {@link DAG}
+   */
+  public synchronized DAG setDAGPayload(DAGPayload dagPayload) {
+    this.dagPayload = dagPayload;
     return this;
   }
 
@@ -855,6 +868,11 @@ public class DAG {
     }
     if (this.dagInfo != null && !this.dagInfo.isEmpty()) {
       dagBuilder.setDagInfo(this.dagInfo);
+    }
+    if (this.dagPayload != null && dagPayload.getPayload() != null) {
+      ConfigurationProto.Builder builder = ConfigurationProto.newBuilder();
+      TezUtils.populateConfProtoFromEntries(dagPayload.getPayload().entrySet(), builder);
+      dagBuilder.setDagPayload(builder.build());
     }
 
     // Setup default execution context.

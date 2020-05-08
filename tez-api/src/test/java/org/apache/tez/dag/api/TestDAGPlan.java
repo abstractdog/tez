@@ -26,7 +26,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.Credentials;
@@ -34,7 +36,9 @@ import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.Resource;
+import org.apache.tez.client.DAGPayload;
 import org.apache.tez.common.JavaOptsChecker;
+import org.apache.tez.common.TezUtils;
 import org.apache.tez.dag.api.EdgeProperty.DataMovementType;
 import org.apache.tez.dag.api.EdgeProperty.DataSourceType;
 import org.apache.tez.dag.api.EdgeProperty.SchedulingType;
@@ -54,6 +58,8 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+
+import com.google.common.collect.Maps;
 
 // based on TestDAGLocationHint
 public class TestDAGPlan {
@@ -103,6 +109,52 @@ public class TestDAGPlan {
    }
 
    Assert.assertEquals(job, inJob);
+  }
+
+  @Test
+  public void testDAGPayloadInDagPlan() {
+    DAG dag = getSimpleDag();
+
+    // set payload: this is typically done by upstream applications
+    dag.setDAGPayload(new DAGPayload(Collections.singletonMap("dagkey", "dagvalue")));
+
+    DAGPlan dagProto = dag.createDag(new TezConfiguration(), null, null, null, true);
+    Map<String, String> result = Maps.newHashMap();
+    TezUtils.readMapFromPB(dagProto.getDagPayload(), result);
+
+    // the payload is present in the DAGPlan
+    Assert.assertEquals("A dag payload item should be present in the DAGPlan", "dagvalue",
+        result.get("dagkey"));
+  }
+
+  @Test
+  public void testDAGPayloadEmpty() {
+    DAG dag = getSimpleDag();
+
+    Map<String, String> nullMap = null;
+    dag.setDAGPayload(new DAGPayload(nullMap)); // calling with null directly is ambigous
+
+    DAGPlan dagProto = dag.createDag(new TezConfiguration(), null, null, null, true);
+    Map<String, String> result = Maps.newHashMap();
+    TezUtils.readMapFromPB(dagProto.getDagPayload(), result);
+
+    Assert.assertEquals(
+        "A dag payload item should be queried successfully in case of empty original payload", null,
+        result.get("dagkey"));
+  }
+
+  @Test
+  public void testDAGPayloadNull() {
+    DAG dag = getSimpleDag();
+    dag.setDAGPayload(null); // just for clarity's sake, it's null by default
+
+    DAGPlan dagProto = dag.createDag(new TezConfiguration(), null, null, null, true);
+    Map<String, String> result = Maps.newHashMap();
+    TezUtils.readMapFromPB(dagProto.getDagPayload(), result);
+
+    Assert.assertEquals(
+        "A dag payload item should be queried successfully in case of null original payload", null,
+        result.get("dagkey"));
   }
 
   @Test(timeout = 5000)
@@ -516,7 +568,12 @@ public class TestDAGPlan {
     // Should not fail as no checker enabled
     conf.set(TezConfiguration.TEZ_TASK_LAUNCH_CMD_OPTS, "  -XX:+UseParallelGC ");
     dag.createDag(conf, null, null, null, true, null, null);
-
   }
 
+  private DAG getSimpleDag() {
+    DAG dag = DAG.create("testDag");
+    ProcessorDescriptor pd1 = ProcessorDescriptor.create("processor1");
+    Vertex v1 = Vertex.create("v1", pd1, 10, Resource.newInstance(1024, 1));
+    return dag.addVertex(v1);
+  }
 }

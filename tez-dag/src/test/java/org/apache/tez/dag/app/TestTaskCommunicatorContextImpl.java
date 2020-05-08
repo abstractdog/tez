@@ -23,12 +23,17 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.api.records.ContainerId;
+import org.apache.tez.client.DAGPayload;
 import org.apache.tez.common.ContainerSignatureMatcher;
 import org.apache.tez.serviceplugins.api.TaskCommunicatorContext;
+import org.apache.tez.dag.app.dag.DAG;
 import org.apache.tez.dag.app.rm.container.AMContainerMap;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TestTaskCommunicatorContextImpl {
@@ -83,6 +88,18 @@ public class TestTaskCommunicatorContextImpl {
     taskCommContext1.containerAlive(containerId01);
     verify(tal, never()).containerAlive(containerId01);
     reset(tal);
+  }
 
+  @Test
+  public void testTaskCommContextReachesDAGPayload() {
+    DAGPayload payload = new DAGPayload(Collections.singletonMap("dagkey", "dagvalue"));
+    AppContext appContext = mock(AppContext.class);
+    when(appContext.getCurrentDAG()).thenReturn(mock(DAG.class));
+    when(appContext.getCurrentDAG().getPayload()).thenReturn(payload);
+
+    TaskCommunicatorContext commContext =
+        new TaskCommunicatorContextImpl(appContext, null, null, 0);
+    Assert.assertEquals("DAG payload should be propagated to task communicator context", "dagvalue",
+        commContext.getCurrentDAGPayload().getPayload().get("dagkey"));
   }
 }

@@ -43,6 +43,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.tez.Utils;
+import org.apache.tez.client.DAGPayload;
 import org.apache.tez.common.GuavaShim;
 import org.apache.tez.common.ProgressHelper;
 import org.apache.tez.common.TezUtilsInternal;
@@ -159,6 +160,7 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
 
   //final fields
   private final TezDAGID dagId;
+  private final DAGPayload dagPayload;
   private final Clock clock;
 
   // TODO Recovery
@@ -508,6 +510,7 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
       TaskHeartbeatHandler thh,
       AppContext appContext) {
     this.dagId = dagId;
+    this.dagPayload = new DAGPayload(jobPlan.getDagPayload());
     this.jobPlan = jobPlan;
     this.dagConf = new Configuration(amConf);
     this.dagOnlyConf = new Configuration(false);
@@ -605,7 +608,12 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
   public TezDAGID getID() {
     return dagId;
   }
-  
+
+  @Override
+  public DAGPayload getPayload() {
+    return dagPayload;
+  }
+
   @Override
   public Map<String, LocalResource> getLocalResources() {
     return localResources;

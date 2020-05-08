@@ -148,6 +148,17 @@ public class TezUtils {
     }
   }
 
+  public static void readMapFromPB(DAGProtos.ConfigurationProto confProto,
+      Map<String, String> conf) {
+    if (conf == null){
+      return;
+    }
+    List<DAGProtos.PlanKeyValuePair> settingList = confProto.getConfKeyValuesList();
+    for (DAGProtos.PlanKeyValuePair setting : settingList) {
+      conf.put(setting.getKey(), setting.getValue());
+    }
+  }
+
   public static String convertToHistoryText(String description, Configuration conf) {
     // Add a version if this serialization is changed
     JSONObject jsonObject = new JSONObject();

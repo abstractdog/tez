@@ -23,10 +23,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.event.EventHandler;
+import org.apache.tez.client.DAGPayload;
 import org.apache.tez.common.counters.TezCounters;
 import org.apache.tez.dag.api.TezException;
 import org.apache.tez.dag.api.client.DAGStatusBuilder;
@@ -46,6 +46,7 @@ import javax.annotation.Nullable;
 public interface DAG extends DagInfo {
 
   TezDAGID getID();
+  DAGPayload getPayload();
   Map<String, LocalResource> getLocalResources();
   String getName();
   DAGState getState();
