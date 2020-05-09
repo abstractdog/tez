@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -52,7 +53,7 @@ import org.apache.tez.mapreduce.hadoop.MRJobConfig;
 public class ResourceMgrDelegate {
   private static final Logger LOG = LoggerFactory.getLogger(ResourceMgrDelegate.class);
       
-  private YarnConfiguration conf;
+  private Configuration conf;
   private GetNewApplicationResponse application;
   private ApplicationId applicationId;
   private YarnClient client;
@@ -62,7 +63,7 @@ public class ResourceMgrDelegate {
    * Delegate responsible for communicating with the Resource Manager's {@link ApplicationClientProtocol}.
    * @param conf the configuration object.
    */
-  public ResourceMgrDelegate(YarnConfiguration conf) {
+  public ResourceMgrDelegate(Configuration conf) {
     super();
     this.conf = conf;
     client = YarnClient.createYarnClient();

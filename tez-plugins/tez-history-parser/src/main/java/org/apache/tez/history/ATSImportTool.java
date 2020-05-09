@@ -402,8 +402,7 @@ public class ATSImportTool extends Configured implements Tool {
   }
 
   static boolean hasHttpsPolicy(Configuration conf) {
-    YarnConfiguration yarnConf = new YarnConfiguration(conf);
-    return (HttpConfig.Policy.HTTPS_ONLY == HttpConfig.Policy.fromString(yarnConf
+    return (HttpConfig.Policy.HTTPS_ONLY == HttpConfig.Policy.fromString(conf
         .get(YarnConfiguration.YARN_HTTP_POLICY_KEY, YarnConfiguration.YARN_HTTP_POLICY_DEFAULT)));
   }
 

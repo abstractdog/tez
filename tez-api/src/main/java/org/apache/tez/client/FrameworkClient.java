@@ -61,7 +61,7 @@ public abstract class FrameworkClient {
    * @param yarnConf the {@link org.apache.hadoop.yarn.conf.YarnConfiguration} instance being used
    *                 by the cluster
    */
-  public abstract void init(TezConfiguration tezConf, YarnConfiguration yarnConf);
+  public abstract void init(TezConfiguration tezConf);
 
   public abstract void start();
 

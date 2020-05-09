@@ -80,8 +80,7 @@ public class DAGClientImpl extends DAGClient {
   private boolean cleanupFrameworkClient;
 
   public DAGClientImpl(ApplicationId appId, String dagId, TezConfiguration conf,
-      YarnConfiguration yarnConf, @Nullable FrameworkClient frameworkClient,
-      UserGroupInformation ugi) {
+      @Nullable FrameworkClient frameworkClient, UserGroupInformation ugi) {
     this.appId = appId;
     this.dagId = dagId;
     this.conf = conf;
@@ -89,7 +88,7 @@ public class DAGClientImpl extends DAGClient {
       this.frameworkClient = frameworkClient;
     } else {
       this.frameworkClient = FrameworkClient.createFrameworkClient(conf);
-      this.frameworkClient.init(conf, yarnConf);
+      this.frameworkClient.init(conf);
       this.frameworkClient.start();
       cleanupFrameworkClient = true;
     }
