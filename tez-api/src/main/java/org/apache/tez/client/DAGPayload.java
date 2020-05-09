@@ -32,7 +32,7 @@ import org.apache.tez.dag.api.records.DAGProtos;
  */
 public class DAGPayload {
 
-  protected final Map<String, String> payload;
+  private final Map<String, String> payload;
 
   public DAGPayload() {
     this.payload = new HashMap<String, String>();

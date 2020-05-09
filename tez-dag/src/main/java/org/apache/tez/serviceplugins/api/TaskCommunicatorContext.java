@@ -45,7 +45,7 @@ public interface TaskCommunicatorContext extends ServicePluginContextBase {
   // - Handling of containres / tasks which no longer exist in the system (formalized interface instead of a shouldDie notification)
 
   /**
-   * Get the custom {@link DAGPayload} instance which was submitted with the DAG
+   * Get the custom {@link DAGPayload} instance which was submitted with the DAG.
    *
    * @return the current dag's custom payload
    */

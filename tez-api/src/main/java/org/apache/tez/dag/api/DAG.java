@@ -171,7 +171,7 @@ public class DAG {
    * This is method is for providing a custom {@link DAGPayload} for the dag. All of the key-value
    * pairs in DAGPayload.payload is serialized in protobuf and propagated to AM with the dag plan.
    *
-   * @param payload {@link DAGPayload} for the DAG
+   * @param dagPayload {@link DAGPayload} for the DAG
    * @return {@link DAG}
    */
   public synchronized DAG setDAGPayload(DAGPayload dagPayload) {
