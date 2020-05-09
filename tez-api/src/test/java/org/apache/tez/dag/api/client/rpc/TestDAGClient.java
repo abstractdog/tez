@@ -348,7 +348,6 @@ public class TestDAGClient {
 
     DAGStatus dagStatus;
 
-
     // Fetch from RM. AM not up yet.
     dagClientRpc.setAMProxy(null);
     DAGStatus rmDagStatus =
@@ -405,6 +404,7 @@ public class TestDAGClient {
     assertEquals(1, dagClientRpc.numGetStatusViaAmInvocations);
     assertEquals(DAGStatus.State.SUCCEEDED, dagStatus.getState());
 
+    dagClient.close();
   }
 
   @Test(timeout = 5000)
@@ -429,6 +429,7 @@ public class TestDAGClient {
 
     DAGClientImplForTest dagClient = new DAGClientImplForTest(appId, dagIdStr, tezConf, null);
     assertEquals(expected, dagClient.getIsATSEnabled());
+    dagClient.close();
   }
 
   private static class DAGClientRPCImplForTest extends DAGClientRPCImpl {
@@ -511,7 +512,7 @@ public class TestDAGClient {
       ServiceException {
     DAGClientAMProtocolBlockingPB mock = mock(DAGClientAMProtocolBlockingPB.class);
 
-    doAnswer(new Answer() {
+    doAnswer(new Answer<Object>() {
       @Override
       public Object answer(InvocationOnMock invocation) throws Throwable {
         GetDAGStatusRequestProto request = (GetDAGStatusRequestProto) invocation.getArguments()[1];
