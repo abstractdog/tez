@@ -131,8 +131,7 @@ public class TestDAGPlan {
   public void testDAGPayloadEmpty() {
     DAG dag = getSimpleDag();
 
-    Map<String, String> nullMap = null;
-    dag.setDAGPayload(new DAGPayload(nullMap)); // calling with null directly is ambigous
+    dag.setDAGPayload(new DAGPayload((Map<String, String>)null));
 
     DAGPlan dagProto = dag.createDag(new TezConfiguration(), null, null, null, true);
     Map<String, String> result = Maps.newHashMap();

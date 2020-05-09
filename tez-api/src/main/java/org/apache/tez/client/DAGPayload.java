@@ -26,8 +26,8 @@ import org.apache.tez.dag.api.records.DAGProtos;
 /**
  * DAGPayload is simple base class in tez-api for making tez users able to submit a simple key-value
  * pair based payload with the dag. This payload is supposed to be lightweight and propagated to
- * plugins within TezAM, e.g. classes extending TaskCommunicator interface. Users of this api are
- * free to extend DAGPayload and create convenience methods, while tez takes care of
+ * TaskCommunicatorContext, which is reachable from TaskCommunicator plugins. Clients of this api
+ * are free to extend DAGPayload and create convenience methods, while tez takes care of
  * serializating/deserializating the inner payload. For details, see: TEZ-2672
  */
 public class DAGPayload {
