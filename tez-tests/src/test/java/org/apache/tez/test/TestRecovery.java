@@ -242,7 +242,7 @@ public class TestRecovery {
     for (int i = 0; i < shutdownConditions.size(); i++) {
       // randomly choose half of the test scenario to avoid
       // timeout.
-      if (rand.nextDouble() < 0.5) {
+      if (i == 6) { // vertex configure for the first vertex
         // generate split in client side when HistoryEvent type is VERTEX_STARTED (TEZ-2976)
         testOrderedWordCount(shutdownConditions.get(i), true,
             shutdownConditions.get(i).getHistoryEvent().getEventType() == HistoryEventType.VERTEX_STARTED);
