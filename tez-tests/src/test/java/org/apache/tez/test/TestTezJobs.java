@@ -651,7 +651,7 @@ public class TestTezJobs {
       for (int i = 1; i <= 10; ++i) {
         final String word = prefix + "_" + i;
         for (int j = 10; j >= i; --j) {
-          LOG.info("Writing " + word + " to input files");
+          LOG.debug("Writing " + word + " to input files");
           f1.write(word.getBytes());
           f1.writeChars("\t");
           f2.write(word.getBytes());
