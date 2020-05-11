@@ -29,6 +29,7 @@ import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.NodeReport;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.tez.common.ContainerSignatureMatcher;
+import org.apache.tez.common.ServicePluginLifecycle;
 
 /**
  * Context for a {@link TaskScheduler}
@@ -221,4 +222,6 @@ public interface TaskSchedulerContext extends ServicePluginContextBase {
   AMState getAMState();
 
   int getVertexIndexForTask(Object task);
+
+  void notifyInitialized(ServicePluginLifecycle taskScheduler);
 }

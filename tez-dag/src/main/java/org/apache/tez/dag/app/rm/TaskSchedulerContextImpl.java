@@ -28,11 +28,13 @@ import org.apache.hadoop.yarn.api.records.ContainerStatus;
 import org.apache.hadoop.yarn.api.records.NodeReport;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.tez.common.ContainerSignatureMatcher;
+import org.apache.tez.common.ServicePluginLifecycle;
 import org.apache.tez.dag.api.TezUncheckedException;
 import org.apache.tez.dag.api.UserPayload;
 import org.apache.tez.dag.app.AppContext;
 import org.apache.tez.serviceplugins.api.DagInfo;
 import org.apache.tez.serviceplugins.api.ServicePluginError;
+import org.apache.tez.serviceplugins.api.TaskScheduler;
 import org.apache.tez.serviceplugins.api.TaskSchedulerContext;
 
 public class TaskSchedulerContextImpl implements TaskSchedulerContext {
@@ -192,5 +194,10 @@ public class TaskSchedulerContextImpl implements TaskSchedulerContext {
                           DagInfo dagInfo) {
     Objects.requireNonNull(servicePluginError, "ServicePluginError must be specified");
     taskSchedulerManager.reportError(schedulerId, servicePluginError, diagnostics, dagInfo);
+  }
+
+  @Override
+  public void notifyInitialized(ServicePluginLifecycle taskScheduler) {
+    appContext.notifyInitalized(taskScheduler);
   }
 }

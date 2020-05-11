@@ -152,6 +152,7 @@ public class LocalTaskSchedulerService extends TaskScheduler {
     asyncDelegateRequestThread = new Thread(taskRequestHandler);
     asyncDelegateRequestThread.setName(LocalTaskSchedulerService.class.getSimpleName() + "RequestHandler");
     asyncDelegateRequestThread.setDaemon(true);
+    getContext().notifyInitialized(this);
   }
 
   protected AsyncDelegateRequestHandler createRequestHandler(Configuration conf) {

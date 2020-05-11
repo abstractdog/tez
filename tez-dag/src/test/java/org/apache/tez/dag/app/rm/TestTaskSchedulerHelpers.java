@@ -63,6 +63,7 @@ import org.apache.hadoop.yarn.client.api.impl.AMRMClientImpl;
 import org.apache.hadoop.yarn.event.Event;
 import org.apache.hadoop.yarn.event.EventHandler;
 import org.apache.tez.common.ContainerSignatureMatcher;
+import org.apache.tez.common.ServicePluginLifecycle;
 import org.apache.tez.common.TezUtils;
 import org.apache.tez.dag.api.NamedEntityDescriptor;
 import org.apache.tez.dag.api.TezUncheckedException;
@@ -385,6 +386,11 @@ class TestTaskSchedulerHelpers {
           fail("Timed out while trying to drain queue");
         }
       }
+    }
+
+    @Override
+    public void notifyInitialized(ServicePluginLifecycle taskScheduler) {
+      real.notifyInitialized(taskScheduler);
     }
   }
 

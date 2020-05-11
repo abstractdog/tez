@@ -83,6 +83,10 @@ public abstract class TaskScheduler implements ServicePluginLifecycle {
   public void shutdown() throws Exception {
   }
 
+  @Override
+  public void allPluginsAreInitialized() throws Exception {
+  }
+
   /**
    * The first step of stopping the task scheduler service. This would typically be used to stop
    * allocating new resources. shutdown() will typically be used to unregister from external

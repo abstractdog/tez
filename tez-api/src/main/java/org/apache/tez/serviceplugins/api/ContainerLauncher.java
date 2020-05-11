@@ -63,6 +63,10 @@ public abstract class ContainerLauncher implements ServicePluginLifecycle {
   public void shutdown() throws Exception {
   }
 
+  @Override
+  public void allPluginsAreInitialized() throws Exception {
+  }
+
   /**
    * Get the {@link ContainerLauncherContext} associated with this instance of the container
    * launcher, which is used to communicate with the rest of the system

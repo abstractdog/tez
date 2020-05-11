@@ -99,6 +99,9 @@ public abstract class TaskCommunicator implements ServicePluginLifecycle {
   public void shutdown() throws Exception {
   }
 
+  @Override
+  public void allPluginsAreInitialized() throws Exception {
+  }
 
   /**
    * Register a new container.

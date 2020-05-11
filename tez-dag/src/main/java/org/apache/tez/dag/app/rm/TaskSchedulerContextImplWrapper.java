@@ -37,6 +37,7 @@ import org.apache.hadoop.yarn.api.records.ContainerStatus;
 import org.apache.hadoop.yarn.api.records.NodeReport;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.tez.common.ContainerSignatureMatcher;
+import org.apache.tez.common.ServicePluginLifecycle;
 import org.apache.tez.dag.api.TezUncheckedException;
 import org.apache.tez.dag.api.UserPayload;
 import org.apache.tez.serviceplugins.api.DagInfo;
@@ -190,6 +191,11 @@ class TaskSchedulerContextImplWrapper implements TaskSchedulerContext {
   @Override
   public int getVertexIndexForTask(Object task) {
     return real.getVertexIndexForTask(task);
+  }
+
+  @Override
+  public void notifyInitialized(ServicePluginLifecycle taskScheduler) {
+    real.notifyInitialized(taskScheduler);
   }
 
   // End of getters which do not need to go through a thread. Underlying implementation

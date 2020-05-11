@@ -356,6 +356,7 @@ public class YarnTaskSchedulerService extends TaskScheduler
             ", idleContainerMinTimeout: " + idleContainerTimeoutMin +
             ", idleContainerMaxTimeout: " + idleContainerTimeoutMax +
             ", sessionMinHeldContainers: " + sessionNumMinHeldContainers);
+    getContext().notifyInitialized(this);
   }
 
   @Override

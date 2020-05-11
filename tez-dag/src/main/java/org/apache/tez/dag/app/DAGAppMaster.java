@@ -193,6 +193,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import org.apache.tez.common.Preconditions;
+import org.apache.tez.common.ServicePluginLifecycle;
+
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -1727,6 +1729,12 @@ public class DAGAppMaster extends AbstractService {
     @Override
     public void setQueueName(String queueName) {
       this.queueName = queueName;
+    }
+
+    @Override
+    public void notifyInitalized(ServicePluginLifecycle servicePlugin) {
+      //FIXME IMPLEMENT
+      LOG.info("GOT INITIALIZED EVENT FROM PLUGIN: " + servicePlugin);
     }
   }
 

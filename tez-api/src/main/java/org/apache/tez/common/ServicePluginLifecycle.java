@@ -45,4 +45,8 @@ public interface ServicePluginLifecycle {
    */
   void shutdown() throws Exception;
 
+  /**
+   * This will be invoked when all plugins are initialized.
+   */
+  void allPluginsAreInitialized() throws Exception;
 }
