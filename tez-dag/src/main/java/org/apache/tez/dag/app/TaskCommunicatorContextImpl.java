@@ -21,10 +21,12 @@ import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.Objects;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import org.apache.tez.common.Preconditions;
 import com.google.common.collect.Iterables;
 import org.apache.hadoop.classification.InterfaceAudience;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
@@ -58,7 +60,8 @@ public class TaskCommunicatorContextImpl implements TaskCommunicatorContext, Ver
   private final ReentrantReadWriteLock.WriteLock dagChangedWriteLock;
   private final UserPayload userPayload;
 
-  private DAG dag;
+  @VisibleForTesting
+  DAG dag;
 
   public TaskCommunicatorContextImpl(AppContext appContext,
                                      TaskCommunicatorManager taskCommunicatorManager,
@@ -267,5 +270,10 @@ public class TaskCommunicatorContextImpl implements TaskCommunicatorContext, Ver
     } finally {
       dagChangedWriteLock.unlock();
     }
+  }
+
+  @Override
+  public Configuration getDAGConfig() {
+    return getDag().getConf();
   }
 }

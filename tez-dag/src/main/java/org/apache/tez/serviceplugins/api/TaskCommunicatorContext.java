@@ -18,6 +18,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Set;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
@@ -229,4 +230,10 @@ public interface TaskCommunicatorContext extends ServicePluginContextBase {
    */
   long getDagStartTime();
 
+  /**
+   * Get the configuration of the DAG.
+   *
+   * @return the Configuration object.
+   */
+  Configuration getDAGConfig();
 }
