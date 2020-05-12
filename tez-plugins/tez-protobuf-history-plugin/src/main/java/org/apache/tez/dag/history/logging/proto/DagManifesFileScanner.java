@@ -33,7 +33,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.tez.dag.api.TezConfiguration;
 import org.apache.tez.dag.history.logging.proto.HistoryLoggerProtos.ManifestEntryProto;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
