@@ -4,14 +4,20 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.tez.dag.api.TezConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A convenience class for unit tests, which wraps a dfs and mini tez cluster.
+ * A convenience class for unit tests, which wraps a dfs and mini tez cluster and takes care of
+ * overriding incoming conf properties with optimized ones (for tests). User can still override
+ * optimized conf by changing the Configuration object returned by getInitialConfig() before
+ * starting the cluster with start().
  */
 public class MiniClusterGroup {
   private static final Logger LOG = LoggerFactory.getLogger(MiniClusterGroup.class);
@@ -34,6 +40,15 @@ public class MiniClusterGroup {
     this.clusterName = name;
     this.initialConf = conf;
 
+    initialConf.setInt(CommonConfigurationKeysPublic.IPC_CLIENT_CONNECT_MAX_RETRIES_KEY, 0);
+    initialConf.setInt(
+        CommonConfigurationKeysPublic.IPC_CLIENT_CONNECT_MAX_RETRIES_ON_SOCKET_TIMEOUTS_KEY, 0);
+    initialConf.setInt(CommonConfigurationKeysPublic.IPC_CLIENT_CONNECT_TIMEOUT_KEY, 1000);
+    initialConf.setBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED, false);
+    initialConf.setLong(YarnConfiguration.DEBUG_NM_DELETE_DELAY_SEC, 0l);
+    initialConf.setLong(YarnConfiguration.NM_LOG_RETAIN_SECONDS, 0l);
+    initialConf.setLong(TezConfiguration.TEZ_AM_SLEEP_TIME_BEFORE_EXIT_MILLIS, 1);
+
     String testRootDir = "target" + Path.SEPARATOR + clusterName + "-tmpDir";
     initialConf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, testRootDir);
   }
@@ -54,6 +69,10 @@ public class MiniClusterGroup {
     miniTezCluster.start();
 
     return this;
+  }
+
+  public Configuration getInitialConfig() {
+    return initialConf;
   }
 
   public Configuration getConfig() {

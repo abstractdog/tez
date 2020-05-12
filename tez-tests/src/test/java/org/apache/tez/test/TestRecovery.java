@@ -96,19 +96,10 @@ public class TestRecovery {
   @BeforeClass
   public static void beforeClass() throws Exception {
     Configuration conf = new Configuration();
-    conf.setInt(CommonConfigurationKeysPublic.IPC_CLIENT_CONNECT_MAX_RETRIES_KEY, 0);
-    conf.setInt(CommonConfigurationKeysPublic.IPC_CLIENT_CONNECT_MAX_RETRIES_ON_SOCKET_TIMEOUTS_KEY,
-        0);
-    conf.setInt(CommonConfigurationKeysPublic.IPC_CLIENT_CONNECT_TIMEOUT_KEY, 1000);
+
     conf.setInt(YarnConfiguration.RM_AM_MAX_ATTEMPTS, 4);
-    conf.setBoolean(YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME, true);
-    conf.setBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED, false);
-    conf.setLong(YarnConfiguration.DEBUG_NM_DELETE_DELAY_SEC, 0l);
-    conf.setLong(YarnConfiguration.NM_LOG_RETAIN_SECONDS, 0l);
     conf.set(YarnConfiguration.RM_SCHEDULER,
         "org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler");
-
-    conf.setLong(TezConfiguration.TEZ_AM_SLEEP_TIME_BEFORE_EXIT_MILLIS, 1);
 
     cluster = new MiniClusterGroup(new Configuration(conf), TestRecovery.class.getName()).start();
   }
@@ -619,15 +610,22 @@ public class TestRecovery {
               @Override
               public void run() {
                 try {
-                  int nextSimpleConditionIndex =
-                      index + 1 + rand.nextInt(shutdownConditions.size() - index - 1);
-                  if (nextSimpleConditionIndex == shutdownConditions.size() - 1) {
+                  if (index < shutdownConditions.size() - 1) {
+                    int nextSimpleConditionIndex =
+                        index + 1 + rand.nextInt(shutdownConditions.size() - index - 1);
+                    LOG.info("Calling with multiple shutdown conditions: {}:{} and {}:{}",
+                        index, shutdownConditions.get(index).getEventType(),
+                        nextSimpleConditionIndex,
+                        shutdownConditions.get(nextSimpleConditionIndex).getEventType());
                     testOrderedWordCountMultipleRoundRecoverying(
                         new RecoveryServiceWithEventHandlingHook.MultipleRoundShutdownCondition(
                             Lists.newArrayList(shutdownConditions.get(index),
                                 shutdownConditions.get(nextSimpleConditionIndex))),
                         true, shutdownConditions.get(index).getHistoryEvent()
-                            .getEventType() == HistoryEventType.VERTEX_STARTED, index, waiter);
+                            .getEventType() == HistoryEventType.VERTEX_STARTED,
+                        index, waiter);
+                  } else {
+                    waiter.resume();
                   }
                 } catch (Exception e) {
                   waiter.rethrow(e);
