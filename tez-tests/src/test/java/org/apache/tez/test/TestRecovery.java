@@ -144,9 +144,9 @@ public class TestRecovery {
                 new VertexInitializedEvent(vertexId2, "Sorter", 0L, 0L, 0, "",
                     null, null, null)),
 
-//            new SimpleShutdownCondition(TIMING.POST,
-//                new VertexConfigurationDoneEvent(vertexId0, 0L, 2, null, null,
-//                    null, true)),
+            new SimpleShutdownCondition(TIMING.POST,
+                new VertexConfigurationDoneEvent(vertexId0, 0L, 2, null, null,
+                    null, true)),
                         
             new SimpleShutdownCondition(TIMING.POST,
                 new VertexConfigurationDoneEvent(vertexId1, 0L, 2, null, null,
