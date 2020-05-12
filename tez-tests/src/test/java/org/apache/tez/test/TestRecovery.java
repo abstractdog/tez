@@ -225,7 +225,7 @@ public class TestRecovery {
               testOrderedWordCount(shutdownConditions.get(index), true, shutdownConditions.get(index)
                   .getHistoryEvent().getEventType() == HistoryEventType.VERTEX_STARTED, index, waiter);
             } catch (Exception e) {
-              e.printStackTrace();
+              waiter.rethrow(e);
             }
           }
         };
@@ -445,7 +445,7 @@ public class TestRecovery {
                           .getHistoryEvent().getEventType() == HistoryEventType.VERTEX_STARTED,
                       index, waiter);
                 } catch (Exception e) {
-                  e.printStackTrace();
+                  waiter.rethrow(e);
                 }
               }
             };
@@ -630,7 +630,7 @@ public class TestRecovery {
                             .getEventType() == HistoryEventType.VERTEX_STARTED, index, waiter);
                   }
                 } catch (Exception e) {
-                  e.printStackTrace();
+                  waiter.rethrow(e);
                 }
               }
             };
