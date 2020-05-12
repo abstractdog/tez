@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A convenience class for unit tests, which wraps a dfs and mini tez cluster and takes care of
  * overriding incoming conf properties with optimized ones (for tests). User can still override
- * optimized conf by changing the Configuration object returned by getInitialConfig() before
+ * optimized conf by changing the Configuration object returned by getConfig() before
  * starting the cluster with start().
  */
 public class MiniClusterGroup {
@@ -27,6 +27,7 @@ public class MiniClusterGroup {
   private FileSystem remoteFs = null;
   private String clusterName;
   private Configuration initialConf;
+  private boolean started = false;
 
   public MiniClusterGroup() {
     this(new Configuration(), "MiniClusterGroup" + "_" + index.incrementAndGet());
@@ -68,15 +69,12 @@ public class MiniClusterGroup {
     miniTezCluster.init(miniTezconf);
     miniTezCluster.start();
 
+    started = true;
     return this;
   }
 
-  public Configuration getInitialConfig() {
-    return initialConf;
-  }
-
   public Configuration getConfig() {
-    return miniTezCluster.getConfig();
+    return started ? miniTezCluster.getConfig() : initialConf;
   }
 
   public FileSystem getFs() {
