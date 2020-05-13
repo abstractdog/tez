@@ -15,12 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.tez.protobuf;
 
-/**
- * Convenience class for single-point abstraction of ByteString in hadoop's protobuf.
- */
 public abstract class ByteString {
   public static com.google.protobuf.ByteString copyFrom(byte[] bytes) {
     return com.google.protobuf.ByteString.copyFrom(bytes, 0, bytes.length);

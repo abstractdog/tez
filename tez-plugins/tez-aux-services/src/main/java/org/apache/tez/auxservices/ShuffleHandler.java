@@ -69,6 +69,7 @@ import org.apache.hadoop.mapred.proto.ShuffleHandlerRecoveryProtos.JobShuffleInf
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.tez.common.security.JobTokenIdentifier;
 import org.apache.tez.common.security.JobTokenSecretManager;
+import org.apache.tez.protobuf.ProtobufHadoopShim;
 import org.apache.tez.runtime.library.common.Constants;
 import org.apache.tez.runtime.library.common.security.SecureShuffleUtils;
 import org.apache.tez.runtime.library.common.shuffle.orderedgrouped.ShuffleHeader;
@@ -752,12 +753,7 @@ public class ShuffleHandler extends AuxiliaryService {
   private void recordJobShuffleInfo(JobID jobId, String user,
       Token<JobTokenIdentifier> jobToken) throws IOException {
     if (stateDb != null) {
-      TokenProto tokenProto = TokenProto.newBuilder()
-          .setIdentifier(org.apache.tez.protobuf.ByteString.copyFrom(jobToken.getIdentifier()))
-          .setPassword(org.apache.tez.protobuf.ByteString.copyFrom(jobToken.getPassword()))
-          .setKind(jobToken.getKind().toString())
-          .setService(jobToken.getService().toString())
-          .build();
+      TokenProto tokenProto = ProtobufHadoopShim.protoFromToken(jobToken);
       JobShuffleInfoProto proto = JobShuffleInfoProto.newBuilder()
           .setUser(user).setJobToken(tokenProto).build();
       try {
