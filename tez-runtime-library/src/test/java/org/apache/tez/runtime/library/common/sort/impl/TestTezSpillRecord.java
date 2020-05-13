@@ -32,31 +32,56 @@ import org.junit.Test;
  */
 public class TestTezSpillRecord {
 
+  /*
+   * Typical usecase, restrictive umask found, so ensureSpillFilePermissions will take care of group
+   * readability.
+   */
   @Test
   public void testNonGroupReadableFileEnsuredUmask077() throws Exception {
     testPermission("077", true, (short) 00600, (short) 00640);
   }
 
+  /*
+   * This scenario doesn't seem to be valid. However 600 final permission might not be readable for
+   * shuffling because of lack of group readability, 600 initial permission is not supposed to
+   * happen in case of 022 umask.
+   */
   @Test
   public void testNonGroupReadableFileNotEnsuredUmask022() throws Exception {
     testPermission("022", false, (short) 00600, (short) 00600);
   }
 
+  /*
+   * Here ensureSpillFilePermissions is supposed to touch but not supposed to change already correct
+   * 640 permission.
+   */
   @Test
   public void testExpectedPermissionIsNotChangedUmask077() throws Exception {
     testPermission("077", true, (short) 00640, (short) 00640);
   }
 
+  /*
+   * In this case ensureSpillFilePermissions is not supposed to touch permission because of
+   * permissive umask (022).
+   */
   @Test
   public void testExpectedPermissionIsNotChangedUmask022() throws Exception {
     testPermission("022", false, (short) 00640, (short) 00640);
   }
 
+  /*
+   * Here ensureSpillFilePermissions will set the correct 640 permission because of restrictive
+   * umask (077).
+   */
   @Test
   public void testAllReadableFileAdjustedUmask077() throws Exception {
     testPermission("077", true, (short) 00666, (short) 00640);
   }
 
+  /*
+   * In this case ensureSpillFilePermissions is not supposed to touch permission because of
+   * permissive umask (022).
+   */
   @Test
   public void testAllReadableFileIsNotAdjustedUmask022() throws Exception {
     testPermission("022", false, (short) 00666, (short) 00666);
