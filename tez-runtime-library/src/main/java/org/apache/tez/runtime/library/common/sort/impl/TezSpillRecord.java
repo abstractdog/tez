@@ -147,10 +147,12 @@ public class TezSpillRecord {
     }
   }
 
-  public static void ensureSpillFilePermissions(Path file, Configuration conf, FileSystem rfs)
+  public static boolean ensureSpillFilePermissions(Path file, Configuration conf, FileSystem rfs)
       throws IOException {
     if (!SPILL_FILE_PERMS.equals(SPILL_FILE_PERMS.applyUMask(FsPermission.getUMask(conf)))) {
       rfs.setPermission(file, SPILL_FILE_PERMS);
+      return true;
     }
+    return false;
   }
 }

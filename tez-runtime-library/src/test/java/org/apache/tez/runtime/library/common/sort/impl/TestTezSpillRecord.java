@@ -31,36 +31,36 @@ public class TestTezSpillRecord {
 
   @Test
   public void testNonGroupReadableFileEnsuredUmask077() throws Exception {
-    testPermission("077", (short) 00600, (short) 00640);
+    testPermission("077", true, (short) 00600, (short) 00640);
   }
 
   @Test
   public void testNonGroupReadableFileNotEnsuredUmask022() throws Exception {
-    testPermission("022", (short) 00600, (short) 00600);
+    testPermission("022", false, (short) 00600, (short) 00600);
   }
 
   @Test
   public void testExpectedPermissionIsNotChangedUmask077() throws Exception {
-    testPermission("077", (short) 00640, (short) 00640);
+    testPermission("077", true, (short) 00640, (short) 00640);
   }
 
   @Test
   public void testExpectedPermissionIsNotChangedUmask022() throws Exception {
-    testPermission("022", (short) 00640, (short) 00640);
+    testPermission("022", false, (short) 00640, (short) 00640);
   }
 
   @Test
   public void testAllReadableFileAdjustedUmask077() throws Exception {
-    testPermission("077", (short) 00666, (short) 00640);
+    testPermission("077", true, (short) 00666, (short) 00640);
   }
 
   @Test
   public void testAllReadableFileIsNotAdjustedUmask022() throws Exception {
-    testPermission("022", (short) 00666, (short) 00666);
+    testPermission("022", false, (short) 00666, (short) 00666);
   }
 
-  private void testPermission(String umask, short originalPermission, short finalPermission)
-      throws Exception {
+  private void testPermission(String umask, boolean expectedAdjusted, short originalPermission,
+      short finalPermission) throws Exception {
     Configuration conf = new Configuration();
     conf.set(CommonConfigurationKeys.FS_PERMISSIONS_UMASK_KEY, umask);
 
@@ -72,8 +72,10 @@ public class TestTezSpillRecord {
     Assert.assertEquals(FsPermission.createImmutable(originalPermission),
         fs.getFileStatus(path).getPermission());
 
-    TezSpillRecord.ensureSpillFilePermissions(path, conf, path.getFileSystem(conf));
+    boolean adjusted =
+        TezSpillRecord.ensureSpillFilePermissions(path, conf, path.getFileSystem(conf));
 
+    Assert.assertEquals(expectedAdjusted, adjusted);
     Assert.assertEquals(FsPermission.createImmutable(finalPermission),
         fs.getFileStatus(path).getPermission());
   }
