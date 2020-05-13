@@ -308,9 +308,8 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
         finalOutPath = outputFileHandler.getOutputFileForWrite();
         writer = new IFile.Writer(conf, rfs, finalOutPath, keyClass, valClass,
             codec, outputRecordsCounter, outputRecordBytesCounter);
-        if (!SPILL_FILE_PERMS.equals(SPILL_FILE_PERMS.applyUMask(FsPermission.getUMask(conf)))) {
-          rfs.setPermission(finalOutPath, SPILL_FILE_PERMS);
-        }
+        TezSpillRecord.ensureSpillFilePermissions(finalOutPath, conf, rfs);
+
       }
     } else {
       skipBuffers = false;
@@ -628,9 +627,7 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
       }
       LOG.info("Writing spill " + spillNumber + " to " + spillPathDetails.outputFilePath.toString());
       FSDataOutputStream out = rfs.create(spillPathDetails.outputFilePath);
-      if (!SPILL_FILE_PERMS.equals(SPILL_FILE_PERMS.applyUMask(FsPermission.getUMask(conf)))) {
-        rfs.setPermission(spillPathDetails.outputFilePath, SPILL_FILE_PERMS);
-      }
+      TezSpillRecord.ensureSpillFilePermissions(spillPathDetails.outputFilePath, conf, rfs);
       TezSpillRecord spillRecord = new TezSpillRecord(numPartitions);
       DataInputBuffer key = new DataInputBuffer();
       DataInputBuffer val = new DataInputBuffer();
@@ -728,9 +725,7 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
       if (((IFile.FileBackedInMemIFileWriter) writer).isDataFlushedToDisk()) {
         this.finalOutPath =
             ((IFile.FileBackedInMemIFileWriter) writer).getOutputPath();
-        if (!SPILL_FILE_PERMS.equals(SPILL_FILE_PERMS.applyUMask(FsPermission.getUMask(conf)))) {
-          rfs.setPermission(finalOutPath, SPILL_FILE_PERMS);
-        }
+        TezSpillRecord.ensureSpillFilePermissions(finalOutPath, conf, rfs);
         additionalSpillBytesWritternCounter.increment(writer.getCompressedLength());
       }
     }
@@ -1080,9 +1075,7 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
     FSDataOutputStream out = null;
     try {
       out = rfs.create(finalOutPath);
-      if (!SPILL_FILE_PERMS.equals(SPILL_FILE_PERMS.applyUMask(FsPermission.getUMask(conf)))) {
-        rfs.setPermission(finalOutPath, SPILL_FILE_PERMS);
-      }
+      TezSpillRecord.ensureSpillFilePermissions(finalOutPath, conf, rfs);
       Writer writer = null;
 
       for (int i = 0; i < numPartitions; i++) {
@@ -1171,9 +1164,7 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
       final TezSpillRecord spillRecord = new TezSpillRecord(numPartitions);
       final Path outPath = spillPathDetails.outputFilePath;
       out = rfs.create(outPath);
-      if (!SPILL_FILE_PERMS.equals(SPILL_FILE_PERMS.applyUMask(FsPermission.getUMask(conf)))) {
-        rfs.setPermission(outPath, SPILL_FILE_PERMS);
-      }
+      TezSpillRecord.ensureSpillFilePermissions(outPath, conf, rfs);
       BitSet emptyPartitions = null;
       if (pipelinedShuffle || !isFinalMergeEnabled) {
         emptyPartitions = new BitSet(numPartitions);
