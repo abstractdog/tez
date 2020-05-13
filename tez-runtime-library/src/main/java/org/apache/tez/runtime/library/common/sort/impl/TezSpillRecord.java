@@ -149,6 +149,7 @@ public class TezSpillRecord {
 
   public static boolean ensureSpillFilePermissions(Path file, Configuration conf, FileSystem rfs)
       throws IOException {
+    // If necessary, make outputs permissive enough for shuffling.
     if (!SPILL_FILE_PERMS.equals(SPILL_FILE_PERMS.applyUMask(FsPermission.getUMask(conf)))) {
       rfs.setPermission(file, SPILL_FILE_PERMS);
       return true;

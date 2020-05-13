@@ -27,6 +27,9 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * Unit test class for TezSpillRecord.
+ */
 public class TestTezSpillRecord {
 
   @Test
@@ -72,6 +75,7 @@ public class TestTezSpillRecord {
     Assert.assertEquals(FsPermission.createImmutable(originalPermission),
         fs.getFileStatus(path).getPermission());
 
+    // if umask is restrictive (077), ensureSpillFilePermissions will adjust output file's permission
     boolean adjusted =
         TezSpillRecord.ensureSpillFilePermissions(path, conf, path.getFileSystem(conf));
 
