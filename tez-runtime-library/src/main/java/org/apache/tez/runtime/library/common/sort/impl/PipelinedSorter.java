@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.tez.common.TezUtilsInternal;
 import org.apache.tez.common.CallableWithNdc;
@@ -485,7 +486,7 @@ public class PipelinedSorter extends ExternalSorter {
             * MAP_OUTPUT_INDEX_RECORD_LENGTH);
     spillFilePaths.put(numSpills, filename);
     FSDataOutputStream out = rfs.create(filename, true, 4096);
-    TezSpillRecord.ensureSpillFilePermissions(filename, conf, rfs);
+    TezSpillRecord.ensureSpillFilePermissions(filename, FsPermission.getUMask(conf), rfs);
 
     try {
       LOG.info(outputContext.getDestinationVertexName() + ": Spilling to " + filename.toString() +
@@ -571,7 +572,7 @@ public class PipelinedSorter extends ExternalSorter {
         mapOutputFile.getSpillFileForWrite(numSpills, size);
       spillFilePaths.put(numSpills, filename);
       out = rfs.create(filename, true, 4096);
-      TezSpillRecord.ensureSpillFilePermissions(filename, conf, rfs);
+      TezSpillRecord.ensureSpillFilePermissions(filename, FsPermission.getUMask(conf), rfs);
 
       LOG.info(outputContext.getDestinationVertexName() + ": Spilling to " + filename.toString());
       for (int i = 0; i < partitions; ++i) {
@@ -755,7 +756,7 @@ public class PipelinedSorter extends ExternalSorter {
       }
       //The output stream for the final single output file
       FSDataOutputStream finalOut = rfs.create(finalOutputFile, true, 4096);
-      TezSpillRecord.ensureSpillFilePermissions(finalOutputFile, conf, rfs);
+      TezSpillRecord.ensureSpillFilePermissions(finalOutputFile, FsPermission.getUMask(conf), rfs);
 
       final TezSpillRecord spillRec = new TezSpillRecord(partitions);
 

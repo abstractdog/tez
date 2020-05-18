@@ -100,9 +100,10 @@ public class TestTezSpillRecord {
     Assert.assertEquals(FsPermission.createImmutable(originalPermission),
         fs.getFileStatus(path).getPermission());
 
-    // if umask is restrictive (077), ensureSpillFilePermissions will adjust output file's permission
-    boolean adjusted =
-        TezSpillRecord.ensureSpillFilePermissions(path, conf, path.getFileSystem(conf));
+    // if umask is restrictive (077), ensureSpillFilePermissions will adjust output file's
+    // permission
+    boolean adjusted = TezSpillRecord.ensureSpillFilePermissions(path, FsPermission.getUMask(conf),
+        path.getFileSystem(conf));
 
     Assert.assertEquals(expectedAdjusted, adjusted);
     Assert.assertEquals(FsPermission.createImmutable(finalPermission),

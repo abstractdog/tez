@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.util.IndexedSortable;
@@ -893,7 +894,7 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
           mapOutputFile.getSpillFileForWrite(numSpills, size);
       spillFilePaths.put(numSpills, filename);
       out = rfs.create(filename);
-      TezSpillRecord.ensureSpillFilePermissions(filename, conf, rfs);
+      TezSpillRecord.ensureSpillFilePermissions(filename, FsPermission.getUMask(conf), rfs);
 
       int spindex = mstart;
       final InMemValBytes value = createInMemValBytes();
@@ -1002,7 +1003,7 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
           mapOutputFile.getSpillFileForWrite(numSpills, size);
       spillFilePaths.put(numSpills, filename);
       out = rfs.create(filename);
-      TezSpillRecord.ensureSpillFilePermissions(filename, conf, rfs);
+      TezSpillRecord.ensureSpillFilePermissions(filename, FsPermission.getUMask(conf), rfs);
 
       // we don't run the combiner for a single record
       for (int i = 0; i < partitions; ++i) {
@@ -1276,7 +1277,7 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
 
     //The output stream for the final single output file
     FSDataOutputStream finalOut = rfs.create(finalOutputFile, true, 4096);
-    TezSpillRecord.ensureSpillFilePermissions(finalOutputFile, conf, rfs);
+    TezSpillRecord.ensureSpillFilePermissions(finalOutputFile, FsPermission.getUMask(conf), rfs);
 
     if (numSpills == 0) {
       // TODO Change event generation to say there is no data rather than generating a dummy file
