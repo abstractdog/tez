@@ -738,7 +738,7 @@ public class TestIFile {
     writer = writeTestFile(false, false, data, codec);
     readAndVerifyData(writer.getRawLength(), writer.getCompressedLength(), data, codec);
 
-    Assert.assertEquals(IFile.Reader.DEFAULT_BUFFER_SIZE,
+    Assert.assertEquals(128*1024,
         configurableCodec.getConf().getInt(TezRuntimeUtils.getBufferSizeProperty(codec), 0));
   }
 

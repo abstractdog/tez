@@ -683,7 +683,7 @@ public class IFile {
 
     public enum KeyState {NO_KEY, NEW_KEY, SAME_KEY}
 
-    public static final int DEFAULT_BUFFER_SIZE = 128*1024;
+    private static final int DEFAULT_BUFFER_SIZE = 128*1024;
     @VisibleForTesting
     // Not final for testing
     protected static int MAX_BUFFER_SIZE
