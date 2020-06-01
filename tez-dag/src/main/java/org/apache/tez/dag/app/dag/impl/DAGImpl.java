@@ -164,8 +164,9 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
   // TODO Recovery
   //private final List<AMInfo> amInfos;
   private final Lock dagStatusLock = new ReentrantLock();
-  private final Condition dagCompletionCondition = dagStatusLock.newCondition();
+  private final Condition dagStateChangedCondition = dagStatusLock.newCondition();
   private final AtomicBoolean isFinalState = new AtomicBoolean(false);
+  private final AtomicBoolean runningStatusYetToBeConsumed = new AtomicBoolean(false);
   private final Lock readLock;
   private final Lock writeLock;
   private final String dagName;
@@ -569,6 +570,8 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
 
   private void augmentStateMachine() {
     stateMachine
+        .registerStateEnteredCallback(DAGState.RUNNING,
+            STATE_CHANGED_CALLBACK)
         .registerStateEnteredCallback(DAGState.SUCCEEDED,
             STATE_CHANGED_CALLBACK)
         .registerStateEnteredCallback(DAGState.FAILED,
@@ -583,10 +586,22 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
       implements OnStateChangedCallback<DAGState, DAGImpl> {
     @Override
     public void onStateChanged(DAGImpl dag, DAGState dagState) {
-      dag.isFinalState.set(true);
+      switch(dagState) {
+      case RUNNING:
+        dag.runningStatusYetToBeConsumed.set(true);
+        break;
+      case SUCCEEDED:
+      case FAILED:
+      case KILLED:
+      case ERROR:
+        dag.isFinalState.set(true);
+        break;
+      default:
+        break;
+      }
       dag.dagStatusLock.lock();
       try {
-        dag.dagCompletionCondition.signal();
+        dag.dagStateChangedCondition.signal();
       } finally {
         dag.dagStatusLock.unlock();
       }
@@ -946,7 +961,11 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
         if (isFinalState.get()) {
           break;
         }
-        nanosLeft = dagCompletionCondition.awaitNanos(timeoutNanos);
+        if (runningStatusYetToBeConsumed.compareAndSet(true, false)) {
+          // No need to wait further, as state just got changed to RUNNING
+          break;
+        }
+        nanosLeft = dagStateChangedCondition.awaitNanos(timeoutNanos);
       } catch (InterruptedException e) {
         throw new TezException("Interrupted while waiting for dag to complete", e);
       } finally {
@@ -1644,7 +1663,10 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
 
     // This is going to override the previously generated file
     // which didn't have the priorities
-    Utils.generateDAGVizFile(this, jobPlan, dagScheduler);
+    if (getConf().getBoolean(TezConfiguration.TEZ_GENERATE_DEBUG_ARTIFACTS,
+        TezConfiguration.TEZ_GENERATE_DEBUG_ARTIFACTS_DEFAULT)) {
+      Utils.generateDAGVizFile(this, jobPlan, dagScheduler);
+    }
     return DAGState.INITED;
   }
 
