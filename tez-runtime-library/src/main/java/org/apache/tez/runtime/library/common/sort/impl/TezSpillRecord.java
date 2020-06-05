@@ -143,17 +143,13 @@ public class TezSpillRecord {
       } else {
         out.close();
       }
-      ensureSpillFilePermissions(loc, FsPermission.getUMask(job), rfs);
+      ensureSpillFilePermissions(loc, rfs);
     }
   }
 
-  public static boolean ensureSpillFilePermissions(Path file, FsPermission permission, FileSystem rfs)
-      throws IOException {
-    // If necessary, make outputs permissive enough for shuffling.
-    if (!SPILL_FILE_PERMS.equals(SPILL_FILE_PERMS.applyUMask(permission))) {
-      rfs.setPermission(file, SPILL_FILE_PERMS);
-      return true;
+  public static void ensureSpillFilePermissions(Path loc, FileSystem rfs) throws IOException {
+    if (!SPILL_FILE_PERMS.equals(SPILL_FILE_PERMS.applyUMask(FsPermission.getUMask(rfs.getConf())))) {
+      rfs.setPermission(loc, SPILL_FILE_PERMS);
     }
-    return false;
   }
 }

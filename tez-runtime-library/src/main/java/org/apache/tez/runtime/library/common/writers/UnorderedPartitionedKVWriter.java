@@ -87,6 +87,8 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.protobuf.ByteString;
 
+import static org.apache.tez.runtime.library.common.sort.impl.TezSpillRecord.ensureSpillFilePermissions;
+
 public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWriter {
 
   private static final Logger LOG = LoggerFactory.getLogger(UnorderedPartitionedKVWriter.class);
@@ -306,8 +308,7 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
         finalOutPath = outputFileHandler.getOutputFileForWrite();
         writer = new IFile.Writer(conf, rfs, finalOutPath, keyClass, valClass,
             codec, outputRecordsCounter, outputRecordBytesCounter);
-        TezSpillRecord.ensureSpillFilePermissions(finalOutPath, FsPermission.getUMask(conf), rfs);
-
+        ensureSpillFilePermissions(finalOutPath, rfs);
       }
     } else {
       skipBuffers = false;
@@ -625,8 +626,7 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
       }
       LOG.info("Writing spill " + spillNumber + " to " + spillPathDetails.outputFilePath.toString());
       FSDataOutputStream out = rfs.create(spillPathDetails.outputFilePath);
-      TezSpillRecord.ensureSpillFilePermissions(spillPathDetails.outputFilePath,
-          FsPermission.getUMask(conf), rfs);
+      ensureSpillFilePermissions(spillPathDetails.outputFilePath, rfs);
       TezSpillRecord spillRecord = new TezSpillRecord(numPartitions);
       DataInputBuffer key = new DataInputBuffer();
       DataInputBuffer val = new DataInputBuffer();
@@ -724,7 +724,7 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
       if (((IFile.FileBackedInMemIFileWriter) writer).isDataFlushedToDisk()) {
         this.finalOutPath =
             ((IFile.FileBackedInMemIFileWriter) writer).getOutputPath();
-        TezSpillRecord.ensureSpillFilePermissions(finalOutPath, FsPermission.getUMask(conf), rfs);
+        ensureSpillFilePermissions(finalOutPath, rfs);
         additionalSpillBytesWritternCounter.increment(writer.getCompressedLength());
       }
     }
@@ -1074,7 +1074,7 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
     FSDataOutputStream out = null;
     try {
       out = rfs.create(finalOutPath);
-      TezSpillRecord.ensureSpillFilePermissions(finalOutPath, FsPermission.getUMask(conf), rfs);
+      ensureSpillFilePermissions(finalOutPath, rfs);
       Writer writer = null;
 
       for (int i = 0; i < numPartitions; i++) {
@@ -1163,7 +1163,7 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
       final TezSpillRecord spillRecord = new TezSpillRecord(numPartitions);
       final Path outPath = spillPathDetails.outputFilePath;
       out = rfs.create(outPath);
-      TezSpillRecord.ensureSpillFilePermissions(outPath, FsPermission.getUMask(conf), rfs);
+      ensureSpillFilePermissions(outPath, rfs);
       BitSet emptyPartitions = null;
       if (pipelinedShuffle || !isFinalMergeEnabled) {
         emptyPartitions = new BitSet(numPartitions);

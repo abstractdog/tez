@@ -64,6 +64,8 @@ import org.apache.tez.runtime.library.common.sort.impl.TezMerger.Segment;
 
 import org.apache.tez.common.Preconditions;
 
+import static org.apache.tez.runtime.library.common.sort.impl.TezSpillRecord.ensureSpillFilePermissions;
+
 @SuppressWarnings({"unchecked", "rawtypes"})
 public final class DefaultSorter extends ExternalSorter implements IndexedSortable {
   
@@ -894,7 +896,7 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
           mapOutputFile.getSpillFileForWrite(numSpills, size);
       spillFilePaths.put(numSpills, filename);
       out = rfs.create(filename);
-      TezSpillRecord.ensureSpillFilePermissions(filename, FsPermission.getUMask(conf), rfs);
+      ensureSpillFilePermissions(filename, rfs);
 
       int spindex = mstart;
       final InMemValBytes value = createInMemValBytes();
@@ -1003,7 +1005,7 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
           mapOutputFile.getSpillFileForWrite(numSpills, size);
       spillFilePaths.put(numSpills, filename);
       out = rfs.create(filename);
-      TezSpillRecord.ensureSpillFilePermissions(filename, FsPermission.getUMask(conf), rfs);
+      ensureSpillFilePermissions(filename, rfs);
 
       // we don't run the combiner for a single record
       for (int i = 0; i < partitions; ++i) {
@@ -1277,7 +1279,7 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
 
     //The output stream for the final single output file
     FSDataOutputStream finalOut = rfs.create(finalOutputFile, true, 4096);
-    TezSpillRecord.ensureSpillFilePermissions(finalOutputFile, FsPermission.getUMask(conf), rfs);
+    ensureSpillFilePermissions(finalOutputFile, rfs);
 
     if (numSpills == 0) {
       // TODO Change event generation to say there is no data rather than generating a dummy file
