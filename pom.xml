@@ -44,6 +44,7 @@
     <jersey.version>1.19</jersey.version>
     <javac.version>1.8</javac.version>
     <slf4j.version>1.7.10</slf4j.version>
+    <jackson.codehaus.version.hadoop>1.9.2</jackson.codehaus.version.hadoop> <!-- transitive, used by hadoop in tests -->
     <jackson.version.hadoop>2.7.8</jackson.version.hadoop> <!-- transitive, used by hadoop in tests -->
     <jackson.core.version.tez>2.9.10</jackson.core.version.tez> <!-- core, used in tez -->
     <jackson.databind.version.tez>2.9.10.4</jackson.databind.version.tez> <!-- databind, used in tez -->
