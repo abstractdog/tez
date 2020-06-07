@@ -541,6 +541,18 @@ public class TezRuntimeConfiguration {
       TEZ_RUNTIME_PREFIX + "shuffle.batch.wait";
   public static final int TEZ_RUNTIME_SHUFFLE_BATCH_WAIT_DEFAULT = -1;
 
+  /**
+   * Expert level setting. Whether to use CheckedInputStream/CheckOutputStream for reading/writing
+   * spill files from/to local file system. Using an additional checksum in Java can be unnecessary
+   * if the the underlying file system provides its own checksum mechanism (e.g. Btrfs, ZFS). This
+   * config defaults to true, as in case of some file systems there is a chance that a read success
+   * is reported even if the underlying data is corrupted, but if handled with care, skipping
+   * checksum (config: false) may lead to some performance improvements.
+   */
+  @ConfigurationProperty(type = "boolean")
+  public static final String TEZ_RUNTIME_SHUFFLE_SPILLFILE_CHECKSUM =
+      TEZ_RUNTIME_PREFIX + "shuffle.spill.checksum";
+  public static final boolean TEZ_RUNTIME_SHUFFLE_SPILLFILE_CHECKSUM_DEFAULT = true;
 
   /**
    * Share data fetched between tasks running on the same host if applicable
@@ -626,6 +638,7 @@ public class TezRuntimeConfiguration {
     tezRuntimeKeys.add(TEZ_RUNTIME_SHUFFLE_MAX_ALLOWED_FAILED_FETCH_ATTEMPT_FRACTION);
     tezRuntimeKeys.add(TEZ_RUNTIME_SHUFFLE_MIN_REQUIRED_PROGRESS_FRACTION);
     tezRuntimeKeys.add(TEZ_RUNTIME_SHUFFLE_FAILED_CHECK_SINCE_LAST_COMPLETION);
+    tezRuntimeKeys.add(TEZ_RUNTIME_SHUFFLE_SPILLFILE_CHECKSUM);
     tezRuntimeKeys.add(TEZ_RUNTIME_REPORT_PARTITION_STATS);
     tezRuntimeKeys.add(TEZ_RUNTIME_INPUT_POST_MERGE_BUFFER_PERCENT);
     tezRuntimeKeys.add(TEZ_RUNTIME_GROUP_COMPARATOR_CLASS);
