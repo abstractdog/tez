@@ -1322,7 +1322,7 @@
       <dependencies>
         <dependency>
           <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-ozone-filesystem-lib-current</artifactId>
+          <artifactId>hadoop-ozone-filesystem-hadoop3</artifactId>
           <scope>runtime</scope>
           <version>${ozone.version}</version>
         </dependency>
