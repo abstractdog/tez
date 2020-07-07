@@ -23,6 +23,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.exceptions.ApplicationNotFoundException;
 import org.apache.tez.common.RPCUtil;
 import org.apache.tez.dag.api.SessionNotRunning;
@@ -68,13 +69,16 @@ public class DAGClientRPCImpl extends DAGClientInternal {
   @VisibleForTesting
   DAGClientAMProtocolBlockingPB proxy = null;
 
+  private UserGroupInformation ugi;
+
   public DAGClientRPCImpl(ApplicationId appId, String dagId,
-      TezConfiguration conf, @Nullable FrameworkClient frameworkClient) {
+      TezConfiguration conf, @Nullable FrameworkClient frameworkClient, UserGroupInformation ugi) {
     this.appId = appId;
     this.dagId = dagId;
     this.conf = conf;
     this.frameworkClient = frameworkClient;
     appReport = null;
+    this.ugi = ugi;
   }
 
   @Override
@@ -285,7 +289,7 @@ public class DAGClientRPCImpl extends DAGClientInternal {
       return false;
     }
     proxy = TezClientUtils.getAMProxy(conf, appReport.getHost(), appReport.getRpcPort(),
-        appReport.getClientToAMToken());
+        appReport.getClientToAMToken(), ugi);
     return true;
   }
 

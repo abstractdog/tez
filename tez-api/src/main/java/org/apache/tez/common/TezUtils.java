@@ -36,6 +36,7 @@ import org.apache.tez.client.TezClientUtils;
 import org.apache.tez.dag.api.TezUncheckedException;
 import org.apache.tez.dag.api.UserPayload;
 import org.apache.tez.dag.api.records.DAGProtos;
+import org.apache.tez.runtime.api.TaskContext;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.xerial.snappy.SnappyInputStream;
@@ -113,6 +114,27 @@ public class TezUtils {
       Configuration conf = new Configuration(false);
       readConfFromPB(confProto, conf);
       return conf;
+    }
+  }
+
+  public static Configuration createConfFromBaseConfAndPayload(TaskContext context)
+      throws IOException {
+    Configuration baseConf = context.getContainerConfiguration();
+    Configuration configuration = new Configuration(baseConf);
+    UserPayload payload = context.getUserPayload();
+    ByteString byteString = ByteString.copyFrom(payload.getPayload());
+    try(SnappyInputStream uncompressIs = new SnappyInputStream(byteString.newInput())) {
+      DAGProtos.ConfigurationProto confProto = DAGProtos.ConfigurationProto.parseFrom(uncompressIs);
+      readConfFromPB(confProto, configuration);
+      return configuration;
+    }
+  }
+
+  public static void addToConfFromByteString(Configuration configuration, ByteString byteString)
+      throws IOException {
+    try(SnappyInputStream uncompressIs = new SnappyInputStream(byteString.newInput())) {
+      DAGProtos.ConfigurationProto confProto = DAGProtos.ConfigurationProto.parseFrom(uncompressIs);
+      readConfFromPB(confProto, configuration);
     }
   }
 
