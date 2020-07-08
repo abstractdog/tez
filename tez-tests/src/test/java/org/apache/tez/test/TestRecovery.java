@@ -81,12 +81,14 @@ import org.apache.tez.test.RecoveryServiceWithEventHandlingHook.SimpleShutdownCo
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
+@Ignore(value = "CDPD-14891")
 public class TestRecovery {
 
   private static final Logger LOG = LoggerFactory.getLogger(TestRecovery.class);
