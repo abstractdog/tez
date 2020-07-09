@@ -60,7 +60,7 @@
     <findbugs-maven-plugin.version>3.0.1</findbugs-maven-plugin.version>
     <javadoc-maven-plugin.version>2.10.4</javadoc-maven-plugin.version>
     <shade-maven-plugin.version>3.2.1</shade-maven-plugin.version>
-    <gcs.version>1.9.10.7.2.1.0-SNAPSHOT</gcs.version>
+    <gcs.version>2.1.2.7.2.1.0-SNAPSHOT</gcs.version>
   </properties>
   <scm>
     <connection>${scm.url}</connection>
