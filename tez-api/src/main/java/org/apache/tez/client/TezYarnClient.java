@@ -27,6 +27,7 @@ import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.api.YarnClientApplication;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.ApplicationNotFoundException;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.tez.dag.api.TezConfiguration;
@@ -45,7 +46,7 @@ public class TezYarnClient extends FrameworkClient {
 
   @Override
   public void init(TezConfiguration tezConf) {
-    yarnClient.init(tezConf);
+    yarnClient.init(new YarnConfiguration(tezConf));
   }
 
   @Override
