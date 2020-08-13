@@ -529,7 +529,7 @@ public class ShuffleHandler extends AuxiliaryService {
     });
 
     selector = new NioServerSocketChannelFactory(bossPool, workerPool);
-    super.serviceInit(conf);
+    super.serviceInit(new YarnConfiguration(conf));
   }
 
   // TODO change AbstractService to throw InterruptedException
