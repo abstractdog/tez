@@ -70,6 +70,7 @@ import org.apache.tez.client.registry.AMRecord;
 import org.apache.tez.client.registry.AMRegistry;
 import org.apache.tez.client.registry.zookeeper.ZkConfig;
 import org.apache.tez.common.ReflectionUtils;
+import org.apache.tez.common.TezClassLoader;
 import org.apache.tez.common.TezUtils;
 import org.apache.tez.common.VersionInfo;
 import org.apache.tez.dag.api.NamedEntityDescriptor;
@@ -2409,6 +2410,8 @@ public class DAGAppMaster extends AbstractService {
 
   public static void main(String[] args) {
     try {
+      // Install the tez class loader, which can be used add new resources
+      TezClassLoader.setupTezClassLoader();
       Thread.setDefaultUncaughtExceptionHandler(new YarnUncaughtExceptionHandler());
       final String pid = System.getenv().get("JVM_PID");
 
