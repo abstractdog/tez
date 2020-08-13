@@ -53,7 +53,7 @@ import org.apache.tez.mapreduce.hadoop.MRJobConfig;
 public class ResourceMgrDelegate {
   private static final Logger LOG = LoggerFactory.getLogger(ResourceMgrDelegate.class);
       
-  private Configuration conf;
+  private YarnConfiguration conf;
   private GetNewApplicationResponse application;
   private ApplicationId applicationId;
   private YarnClient client;
@@ -63,7 +63,7 @@ public class ResourceMgrDelegate {
    * Delegate responsible for communicating with the Resource Manager's {@link ApplicationClientProtocol}.
    * @param conf the configuration object.
    */
-  public ResourceMgrDelegate(Configuration conf) {
+  public ResourceMgrDelegate(YarnConfiguration conf) {
     super();
     this.conf = conf;
     client = YarnClient.createYarnClient();
