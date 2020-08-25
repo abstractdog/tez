@@ -42,6 +42,7 @@ import org.apache.hadoop.util.Progressable;
 import org.apache.tez.common.TezRuntimeFrameworkConfigs;
 import org.apache.tez.runtime.library.api.TezRuntimeConfiguration;
 import org.apache.tez.runtime.library.common.ConfigUtils;
+import org.apache.tez.runtime.library.common.serializer.SerializationContext;
 import org.apache.tez.runtime.library.common.shuffle.orderedgrouped.InMemoryReader;
 import org.apache.tez.runtime.library.common.shuffle.orderedgrouped.InMemoryWriter;
 import org.apache.tez.runtime.library.common.shuffle.orderedgrouped.MergeManager;
@@ -569,11 +570,12 @@ public class TestTezMerger {
   private TezRawKeyValueIterator merge(List<Path> pathList, RawComparator rc)
       throws IOException, InterruptedException {
     TezMerger merger = new TezMerger();
-    TezRawKeyValueIterator records = merger.merge(defaultConf, localFs, IntWritable.class,
-        LongWritable.class, new WritableSerialization(), new WritableSerialization(), null, false, 0, 1024, pathList.toArray(new Path[pathList.size()]),
-        true, 4, new Path(workDir, "tmp_" + System.nanoTime()), ((rc == null) ? comparator : rc),
-        new Reporter(), null, null,
-        null, new Progress());
+    TezRawKeyValueIterator records = merger.merge(defaultConf, localFs,
+        new SerializationContext(IntWritable.class, LongWritable.class, new WritableSerialization(),
+            new WritableSerialization()),
+        null, false, 0, 1024, pathList.toArray(new Path[pathList.size()]), true, 4,
+        new Path(workDir, "tmp_" + System.nanoTime()), ((rc == null) ? comparator : rc),
+        new Reporter(), null, null, null, new Progress());
     return records;
   }
 
@@ -603,12 +605,12 @@ public class TestTezMerger {
   private void merge(List<Path> pathList, int mergeFactor, RawComparator rc) throws Exception {
     //Merge datasets
     TezMerger merger = new TezMerger();
-    TezRawKeyValueIterator records = merger.merge(defaultConf, localFs, IntWritable.class,
-        LongWritable.class, new WritableSerialization(), new WritableSerialization(), null, false, 0, 1024, pathList.toArray(new Path[pathList.size()]),
-        true, mergeFactor, new Path(workDir, "tmp_" + System.nanoTime()),
-        ((rc == null) ? comparator : rc), new Reporter(), null, null,
-        null,
-        new Progress());
+    TezRawKeyValueIterator records = merger.merge(defaultConf, localFs,
+        new SerializationContext(IntWritable.class, LongWritable.class, new WritableSerialization(),
+            new WritableSerialization()),
+        null, false, 0, 1024, pathList.toArray(new Path[pathList.size()]), true, mergeFactor,
+        new Path(workDir, "tmp_" + System.nanoTime()), ((rc == null) ? comparator : rc),
+        new Reporter(), null, null, null, new Progress());
 
     verifyData(records);
     verificationDataSet.clear();
@@ -702,9 +704,10 @@ public class TestTezMerger {
     TezMerger.MergeQueue mergeQueue = new TezMerger.MergeQueue(defaultConf, localFs, segmentList,
         comparator, new Reporter(), false, false);
 
-    TezRawKeyValueIterator records = mergeQueue.merge(IntWritable.class, LongWritable.class,
-        new WritableSerialization(), new WritableSerialization(), mergeFactor, new Path(workDir, "tmp_"
-        + System.nanoTime()), null, null, null, null);
+    TezRawKeyValueIterator records = mergeQueue.merge(
+        new SerializationContext(IntWritable.class, LongWritable.class, new WritableSerialization(),
+            new WritableSerialization()),
+        mergeFactor, new Path(workDir, "tmp_" + System.nanoTime()), null, null, null, null);
 
     //Verify the merged data is correct
     verifyData(records);

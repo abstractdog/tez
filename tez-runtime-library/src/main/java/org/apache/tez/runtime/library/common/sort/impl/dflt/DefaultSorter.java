@@ -250,14 +250,14 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
   synchronized void collect(Object key, Object value, final int partition
                                    ) throws IOException {
 
-    if (key.getClass() != keyClass) {
+    if (key.getClass() != serializationContext.getClass()) {
       throw new IOException("Type mismatch in key from map: expected "
-                            + keyClass.getName() + ", received "
+                            + serializationContext.getClass().getName() + ", received "
                             + key.getClass().getName());
     }
-    if (value.getClass() != valClass) {
+    if (value.getClass() != serializationContext.getValueClass()) {
       throw new IOException("Type mismatch in value from map: expected "
-                            + valClass.getName() + ", received "
+                            + serializationContext.getValueClass().getName() + ", received "
                             + value.getClass().getName());
     }
     if (partition < 0 || partition >= partitions) {
@@ -907,8 +907,9 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
           long segmentStart = out.getPos();
           if (spindex < mend && kvmeta.get(offsetFor(spindex) + PARTITION) == i
               || !sendEmptyPartitionDetails) {
-            writer = new Writer(keySerialization, valSerialization, out, keyClass, valClass, codec,
-                spilledRecordsCounter, null, rle);
+            writer = new Writer(serializationContext.getKeySerialization(),
+                serializationContext.getValSerialization(), out, serializationContext.getKeyClass(),
+                serializationContext.getValueClass(), codec, spilledRecordsCounter, null, rle);
           }
           if (combiner == null) {
             // spill directly
@@ -1014,8 +1015,9 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
           long segmentStart = out.getPos();
           // Create a new codec, don't care!
           if (!sendEmptyPartitionDetails || (i == partition)) {
-            writer = new Writer(keySerialization, valSerialization, out, keyClass, valClass, codec,
-                spilledRecordsCounter, null, false);
+            writer = new Writer(serializationContext.getKeySerialization(),
+                serializationContext.getValSerialization(), out, serializationContext.getKeyClass(),
+                serializationContext.getValueClass(), codec, spilledRecordsCounter, null, false);
           }
           if (i == partition) {
             final long recordStart = out.getPos();
@@ -1292,7 +1294,10 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
           long segmentStart = finalOut.getPos();
           if (!sendEmptyPartitionDetails) {
             Writer writer =
-                new Writer(keySerialization, valSerialization, finalOut, keyClass, valClass, codec, null, null);
+                new Writer(serializationContext.getKeySerialization(),
+                    serializationContext.getValSerialization(), finalOut,
+                    serializationContext.getKeyClass(), serializationContext.getValueClass(), codec,
+                    null, null);
             writer.close();
             rawLength = writer.getRawLength();
             partLength = writer.getCompressedLength();
@@ -1350,7 +1355,7 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
         boolean sortSegments = segmentList.size() > mergeFactor;
         //merge
         TezRawKeyValueIterator kvIter = TezMerger.merge(conf, rfs,
-                       keyClass, valClass, keySerialization, valSerialization, codec,
+                       serializationContext, codec,
                        segmentList, mergeFactor,
                        new Path(taskIdentifier),
                        (RawComparator)ConfigUtils.getIntermediateOutputKeyComparator(conf),
@@ -1363,9 +1368,10 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
         long rawLength = 0;
         long partLength = 0;
         if (shouldWrite) {
-        Writer writer =
-            new Writer(keySerialization, valSerialization, finalOut, keyClass, valClass, codec,
-                spilledRecordsCounter, null);
+          Writer writer = new Writer(serializationContext.getKeySerialization(),
+              serializationContext.getValSerialization(), finalOut,
+              serializationContext.getKeyClass(), serializationContext.getValueClass(), codec,
+              spilledRecordsCounter, null);
         if (combiner == null || numSpills < minSpillsForCombine) {
           TezMerger.writeFile(kvIter, writer,
               progressable, TezRuntimeConfiguration.TEZ_RUNTIME_RECORDS_BEFORE_PROGRESS_DEFAULT);

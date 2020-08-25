@@ -7,7 +7,6 @@ import com.google.common.collect.Lists;
 
 import java.nio.ByteBuffer;
 
-import org.apache.hadoop.io.serializer.Serialization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -38,6 +37,7 @@ import org.apache.tez.dag.api.UserPayload;
 import org.apache.tez.runtime.api.InputContext;
 import org.apache.tez.runtime.library.api.TezRuntimeConfiguration;
 import org.apache.tez.runtime.library.common.comparator.TezBytesComparator;
+import org.apache.tez.runtime.library.common.serializer.SerializationContext;
 import org.apache.tez.runtime.library.common.serializer.TezBytesWritableSerialization;
 import org.apache.tez.runtime.library.common.shuffle.orderedgrouped.InMemoryReader;
 import org.apache.tez.runtime.library.common.shuffle.orderedgrouped.InMemoryWriter;
@@ -104,10 +104,7 @@ public class TestValuesIterator {
   FileSystem fs;
   static final Random rnd = new Random();
 
-  final Class<?> keyClass;
-  final Class<?> valClass;
-  Serialization<?> keySerialization;
-  Serialization<?> valSerialization;
+  SerializationContext serializationContext;
   final RawComparator comparator;
   final RawComparator correctComparator;
   final boolean expectedTestResult;
@@ -136,17 +133,15 @@ public class TestValuesIterator {
   public TestValuesIterator(String serializationClassName, Class<?> key, Class<?> val,
       TestWithComparator comparator, TestWithComparator correctComparator, boolean testResult)
       throws IOException {
-    this.keyClass = key;
-    this.valClass = val;
     this.comparator = getComparator(comparator);
     this.correctComparator =
         (correctComparator == null) ? this.comparator : getComparator(correctComparator);
     this.expectedTestResult = testResult;
     originalData = LinkedListMultimap.create();
-    setupConf(serializationClassName);
+    setupConf(key, val, serializationClassName);
   }
 
-  private void setupConf(String serializationClassName) throws IOException {
+  private void setupConf(Class<?> key, Class<?> val, String serializationClassName) throws IOException {
     mergeFactor = 2;
     conf = new Configuration();
     conf.setInt(TezRuntimeConfiguration.TEZ_RUNTIME_IO_SORT_FACTOR, mergeFactor);
@@ -158,9 +153,11 @@ public class TestValuesIterator {
     String localDirs = baseDir.toString();
     conf.setStrings(TezRuntimeFrameworkConfigs.LOCAL_DIRS, localDirs);
     fs = FileSystem.getLocal(conf);
+
     SerializationFactory serializationFactory = new SerializationFactory(conf);
-    keySerialization = serializationFactory.getSerialization(keyClass);
-    valSerialization = serializationFactory.getSerialization(valClass);
+    serializationContext = new SerializationContext(key, val,
+        serializationFactory.getSerialization(key), serializationFactory.getSerialization(val));
+    serializationContext.applyToConf(conf);
   }
 
   @Before
@@ -238,20 +235,21 @@ public class TestValuesIterator {
       streamPaths = new Path[0];
       //This will return EmptyIterator
       rawKeyValueIterator =
-          TezMerger.merge(conf, fs, keyClass, valClass, keySerialization, valSerialization, null,
+          TezMerger.merge(conf, fs, serializationContext, null,
               false, -1, 1024, streamPaths, false, mergeFactor, tmpDir, comparator,
               new ProgressReporter(), null, null, null, null);
     } else {
       List<TezMerger.Segment> segments = Lists.newLinkedList();
       //This will return EmptyIterator
       rawKeyValueIterator =
-          TezMerger.merge(conf, fs, keyClass, valClass, keySerialization, valSerialization, segments, mergeFactor, tmpDir,
+          TezMerger.merge(conf, fs, serializationContext, segments, mergeFactor, tmpDir,
               comparator, new ProgressReporter(), new GenericCounter("readsCounter", "y"),
               new GenericCounter("writesCounter", "y1"),
               new GenericCounter("bytesReadCounter", "y2"), new Progress());
     }
     return new ValuesIterator(rawKeyValueIterator, comparator,
-        keyClass, valClass, conf, (TezCounter) new GenericCounter("inputKeyCounter", "y3"),
+        serializationContext.getKeyClass(), serializationContext.getValueClass(), conf,
+        (TezCounter) new GenericCounter("inputKeyCounter", "y3"),
         (TezCounter) new GenericCounter("inputValueCounter", "y4"));
   }
 
@@ -339,19 +337,20 @@ public class TestValuesIterator {
       streamPaths = createFiles();
       //Merge all files to get KeyValueIterator
       rawKeyValueIterator =
-          TezMerger.merge(conf, fs, keyClass, valClass, keySerialization, valSerialization, null,
+          TezMerger.merge(conf, fs, serializationContext, null,
               false, -1, 1024, streamPaths, false, mergeFactor, tmpDir, comparator,
               new ProgressReporter(), null, null, null, null);
     } else {
       List<TezMerger.Segment> segments = createInMemStreams();
       rawKeyValueIterator =
-          TezMerger.merge(conf, fs, keyClass, valClass, keySerialization, valSerialization, segments, mergeFactor, tmpDir,
+          TezMerger.merge(conf, fs, serializationContext, segments, mergeFactor, tmpDir,
               comparator, new ProgressReporter(), new GenericCounter("readsCounter", "y"),
               new GenericCounter("writesCounter", "y1"),
               new GenericCounter("bytesReadCounter", "y2"), new Progress());
     }
-    return new ValuesIterator(rawKeyValueIterator, comparator,
-        keyClass, valClass, conf, (TezCounter) new GenericCounter("inputKeyCounter", "y3"),
+    return new ValuesIterator(rawKeyValueIterator, comparator, serializationContext.getKeyClass(),
+        serializationContext.getValueClass(), conf,
+        (TezCounter) new GenericCounter("inputKeyCounter", "y3"),
         (TezCounter) new GenericCounter("inputValueCounter", "y4"));
   }
 
@@ -371,19 +370,19 @@ public class TestValuesIterator {
       streamPaths = createFiles();
       //Merge all files to get KeyValueIterator
       rawKeyValueIterator =
-          TezMerger.merge(conf, fs, keyClass, valClass, keySerialization, valSerialization, null,
+          TezMerger.merge(conf, fs, serializationContext, null,
               false, -1, 1024, streamPaths, false, mergeFactor, tmpDir, comparator,
               new ProgressReporter(), null, null, null, null);
     } else {
       List<TezMerger.Segment> segments = createInMemStreams();
       rawKeyValueIterator =
-          TezMerger.merge(conf, fs, keyClass, valClass, keySerialization, valSerialization, segments, mergeFactor, tmpDir,
+          TezMerger.merge(conf, fs, serializationContext, segments, mergeFactor, tmpDir,
               comparator, new ProgressReporter(), new GenericCounter("readsCounter", "y"),
               new GenericCounter("writesCounter", "y1"),
               new GenericCounter("bytesReadCounter", "y2"), new Progress());
     }
-    return new ValuesIterator(rawKeyValueIterator, comparator,
-        keyClass, valClass, conf, keyCounter, tupleCounter);
+    return new ValuesIterator(rawKeyValueIterator, comparator, serializationContext.getKeyClass(),
+        serializationContext.getValueClass(), conf, keyCounter, tupleCounter);
   }
 
   @Parameterized.Parameters(name = "test[{0}, {1}, {2}, {3} {4} {5} {6}]")
@@ -461,7 +460,9 @@ public class TestValuesIterator {
       paths[i] = new Path(baseDir, "ifile_" + i + ".out");
       FSDataOutputStream out = fs.create(paths[i]);
       //write data with RLE
-      IFile.Writer writer = new IFile.Writer(keySerialization, valSerialization, out, keyClass, valClass, null, null, null, true);
+      IFile.Writer writer = new IFile.Writer(serializationContext.getKeySerialization(),
+          serializationContext.getValSerialization(), out, serializationContext.getKeyClass(),
+          serializationContext.getValueClass(), null, null, null, true);
       Map<Writable, Writable> data = createData();
 
       for (Map.Entry<Writable, Writable> entry : data.entrySet()) {
@@ -494,9 +495,8 @@ public class TestValuesIterator {
     int numberOfStreams = Math.max(2, rnd.nextInt(10));
     LOG.info("No of streams : " + numberOfStreams);
 
-    SerializationFactory serializationFactory = new SerializationFactory(conf);
-    Serializer keySerializer = serializationFactory.getSerializer(keyClass);
-    Serializer valueSerializer = serializationFactory.getSerializer(valClass);
+    Serializer keySerializer = serializationContext.getKeySerializer();
+    Serializer valueSerializer = serializationContext.getValueSerializer();
 
     LocalDirAllocator localDirAllocator =
         new LocalDirAllocator(TezRuntimeFrameworkConfigs.LOCAL_DIRS);
@@ -556,8 +556,8 @@ public class TestValuesIterator {
   private Map<Writable, Writable> createData() {
     Map<Writable, Writable> map = new TreeMap<Writable, Writable>(comparator);
     for (int j = 0; j < Math.max(10, rnd.nextInt(50)); j++) {
-      Writable key = createData(keyClass);
-      Writable value = createData(valClass);
+      Writable key = createData(serializationContext.getKeyClass());
+      Writable value = createData(serializationContext.getValueClass());
       map.put(key, value);
       //sortedDataMap.put(key, value);
     }
