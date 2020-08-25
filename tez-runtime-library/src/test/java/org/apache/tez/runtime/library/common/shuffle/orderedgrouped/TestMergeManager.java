@@ -38,6 +38,7 @@ import java.util.UUID;
 import com.google.common.collect.Sets;
 
 import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.serializer.WritableSerialization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -631,7 +632,7 @@ public class TestMergeManager {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     FSDataOutputStream fsdos = new FSDataOutputStream(baos, null);
     IFile.Writer writer =
-        new IFile.Writer(conf, fsdos, IntWritable.class, IntWritable.class, null, null, null);
+        new IFile.Writer(new WritableSerialization(), new WritableSerialization(), fsdos, IntWritable.class, IntWritable.class, null, null, null);
     int i = 0;
     while(true) {
       writer.append(new IntWritable(i), new IntWritable(i));
@@ -654,7 +655,7 @@ public class TestMergeManager {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     FSDataOutputStream fsdos = new FSDataOutputStream(baos, null);
     IFile.Writer writer =
-            new IFile.Writer(conf, fsdos, IntWritable.class, IntWritable.class, null, null, null);
+            new IFile.Writer(new WritableSerialization(), new WritableSerialization(), fsdos, IntWritable.class, IntWritable.class, null, null, null);
     int i = 0;
     while(true) {
       writer.append(new IntWritable(i), new IntWritable(i));
@@ -677,7 +678,7 @@ public class TestMergeManager {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     FSDataOutputStream fsdos = new FSDataOutputStream(baos, null);
     IFile.Writer writer =
-        new IFile.Writer(conf, fsdos, IntWritable.class, IntWritable.class, null, null, null);
+        new IFile.Writer(new WritableSerialization(), new WritableSerialization(), fsdos, IntWritable.class, IntWritable.class, null, null, null);
     for (int i = 0; i < numEntries; ++i) {
       writer.append(new IntWritable(i), new IntWritable(i));
     }
@@ -1015,7 +1016,7 @@ public class TestMergeManager {
     for (int i = 0; i < numPartitions; i++) {
       long pos = outStream.getPos();
       IFile.Writer writer =
-          new IFile.Writer(conf, outStream, IntWritable.class, IntWritable.class, null, null, null);
+          new IFile.Writer(new WritableSerialization(), new WritableSerialization(), outStream, IntWritable.class, IntWritable.class, null, null, null);
       for (int j = 0; j < numKeysPerPartition; j++) {
         writer.append(new IntWritable(currentKey), new IntWritable(currentKey));
         currentKey++;

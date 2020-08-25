@@ -46,6 +46,7 @@ import org.apache.hadoop.io.compress.Compressor;
 import org.apache.hadoop.io.compress.DefaultCodec;
 import org.apache.hadoop.io.serializer.SerializationFactory;
 import org.apache.hadoop.io.serializer.Serializer;
+import org.apache.hadoop.io.serializer.Serialization;
 import org.apache.hadoop.util.IndexedSorter;
 import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.util.QuickSort;
@@ -110,6 +111,8 @@ public abstract class ExternalSorter {
   protected final Class valClass;
   protected final RawComparator comparator;
   protected final SerializationFactory serializationFactory;
+  protected final Serialization keySerialization;
+  protected final Serialization valSerialization;
   protected final Serializer keySerializer;
   protected final Serializer valSerializer;
   
@@ -204,8 +207,10 @@ public abstract class ExternalSorter {
     keyClass = ConfigUtils.getIntermediateOutputKeyClass(this.conf);
     valClass = ConfigUtils.getIntermediateOutputValueClass(this.conf);
     serializationFactory = new SerializationFactory(this.conf);
-    keySerializer = serializationFactory.getSerializer(keyClass);
-    valSerializer = serializationFactory.getSerializer(valClass);
+    keySerialization = serializationFactory.getSerialization(keyClass);
+    valSerialization = serializationFactory.getSerialization(valClass);
+    keySerializer = keySerialization.getSerializer(keyClass);
+    valSerializer = valSerialization.getSerializer(valClass);
     LOG.info(outputContext.getDestinationVertexName() + " using: "
         + "memoryMb=" + assignedMb
         + ", keySerializerClass=" + keyClass

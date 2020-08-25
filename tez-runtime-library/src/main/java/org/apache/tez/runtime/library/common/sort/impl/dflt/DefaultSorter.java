@@ -907,7 +907,7 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
           long segmentStart = out.getPos();
           if (spindex < mend && kvmeta.get(offsetFor(spindex) + PARTITION) == i
               || !sendEmptyPartitionDetails) {
-            writer = new Writer(conf, out, keyClass, valClass, codec,
+            writer = new Writer(keySerialization, valSerialization, out, keyClass, valClass, codec,
                 spilledRecordsCounter, null, rle);
           }
           if (combiner == null) {
@@ -1014,7 +1014,7 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
           long segmentStart = out.getPos();
           // Create a new codec, don't care!
           if (!sendEmptyPartitionDetails || (i == partition)) {
-            writer = new Writer(conf, out, keyClass, valClass, codec,
+            writer = new Writer(keySerialization, valSerialization, out, keyClass, valClass, codec,
                 spilledRecordsCounter, null, false);
           }
           if (i == partition) {
@@ -1292,7 +1292,7 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
           long segmentStart = finalOut.getPos();
           if (!sendEmptyPartitionDetails) {
             Writer writer =
-                new Writer(conf, finalOut, keyClass, valClass, codec, null, null);
+                new Writer(keySerialization, valSerialization, finalOut, keyClass, valClass, codec, null, null);
             writer.close();
             rawLength = writer.getRawLength();
             partLength = writer.getCompressedLength();
@@ -1350,7 +1350,7 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
         boolean sortSegments = segmentList.size() > mergeFactor;
         //merge
         TezRawKeyValueIterator kvIter = TezMerger.merge(conf, rfs,
-                       keyClass, valClass, codec,
+                       keyClass, valClass, keySerialization, valSerialization, codec,
                        segmentList, mergeFactor,
                        new Path(taskIdentifier),
                        (RawComparator)ConfigUtils.getIntermediateOutputKeyComparator(conf),
@@ -1364,7 +1364,7 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
         long partLength = 0;
         if (shouldWrite) {
         Writer writer =
-            new Writer(conf, finalOut, keyClass, valClass, codec,
+            new Writer(keySerialization, valSerialization, finalOut, keyClass, valClass, codec,
                 spilledRecordsCounter, null);
         if (combiner == null || numSpills < minSpillsForCombine) {
           TezMerger.writeFile(kvIter, writer,

@@ -301,12 +301,12 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
       //special case, where in only one partition is available.
       skipBuffers = true;
       if (this.useCachedStream) {
-        writer = new IFile.FileBackedInMemIFileWriter(conf, rfs, outputFileHandler, keyClass,
+        writer = new IFile.FileBackedInMemIFileWriter(keySerialization, valSerialization, rfs, outputFileHandler, keyClass,
             valClass, codec, outputRecordsCounter, outputRecordBytesCounter,
             dataViaEventsMaxSize);
       } else {
         finalOutPath = outputFileHandler.getOutputFileForWrite();
-        writer = new IFile.Writer(conf, rfs, finalOutPath, keyClass, valClass,
+        writer = new IFile.Writer(keySerialization, valSerialization, rfs, finalOutPath, keyClass, valClass,
             codec, outputRecordsCounter, outputRecordBytesCounter);
         ensureSpillFilePermissions(finalOutPath, rfs);
       }
@@ -643,7 +643,7 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
               continue;
             }
             if (writer == null) {
-              writer = new Writer(conf, out, keyClass, valClass, codec, null, null);
+              writer = new Writer(keySerialization, valSerialization, out, keyClass, valClass, codec, null, null);
             }
             numRecords += writePartition(buffer.partitionPositions[i], buffer, writer, key, val);
           }
@@ -1086,7 +1086,7 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
           LOG.info(destNameTrimmed + ": " + "Skipping partition: " + i + " in final merge since it has no records");
           continue;
         }
-        writer = new Writer(conf, out, keyClass, valClass, codec, null, null);
+        writer = new Writer(keySerialization, valSerialization, out, keyClass, valClass, codec, null, null);
         try {
           if (currentBuffer.nextPosition != 0
               && currentBuffer.partitionPositions[i] != WrappedBuffer.PARTITION_ABSENT_POSITION) {
@@ -1177,7 +1177,7 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
           spilledRecordsCounter.increment(1);
           Writer writer = null;
           try {
-            writer = new IFile.Writer(conf, out, keyClass, valClass, codec, null, null);
+            writer = new IFile.Writer(keySerialization, valSerialization, out, keyClass, valClass, codec, null, null);
             writer.append(key, value);
             outputLargeRecordsCounter.increment(1);
             numRecordsPerPartition[i]++;

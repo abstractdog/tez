@@ -506,7 +506,7 @@ public class PipelinedSorter extends ExternalSorter {
         try {
           long segmentStart = out.getPos();
           if (!sendEmptyPartitionDetails || (i == partition)) {
-            writer = new Writer(conf, out, keyClass, valClass, codec,
+            writer = new Writer(keySerialization, valSerialization, out, keyClass, valClass, codec,
                 spilledRecordsCounter, null, false);
           }
           // we need not check for combiner since its a single record
@@ -592,7 +592,7 @@ public class PipelinedSorter extends ExternalSorter {
         Writer writer = null;
         boolean hasNext = kvIter.hasNext();
         if (hasNext || !sendEmptyPartitionDetails) {
-          writer = new Writer(conf, out, keyClass, valClass, codec,
+          writer = new Writer(keySerialization, valSerialization, out, keyClass, valClass, codec,
               spilledRecordsCounter, null, merger.needsRLE());
         }
         if (combiner == null) {
@@ -791,7 +791,7 @@ public class PipelinedSorter extends ExternalSorter {
         boolean sortSegments = segmentList.size() > mergeFactor;
         //merge
         TezRawKeyValueIterator kvIter = TezMerger.merge(conf, rfs,
-            keyClass, valClass, codec,
+            keyClass, valClass, keySerialization, valSerialization, codec,
             segmentList, mergeFactor,
             new Path(uniqueIdentifier),
             (RawComparator) ConfigUtils.getIntermediateOutputKeyComparator(conf),
@@ -804,7 +804,7 @@ public class PipelinedSorter extends ExternalSorter {
         long partLength = 0;
         if (shouldWrite) {
           Writer writer =
-              new Writer(conf, finalOut, keyClass, valClass, codec,
+              new Writer(keySerialization, valSerialization, finalOut, keyClass, valClass, codec,
                   spilledRecordsCounter, null, merger.needsRLE());
           if (combiner == null || numSpills < minSpillsForCombine) {
             TezMerger.writeFile(kvIter, writer, progressable,

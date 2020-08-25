@@ -36,6 +36,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparator;
+import org.apache.hadoop.io.serializer.WritableSerialization;
 import org.apache.hadoop.util.Progress;
 import org.apache.hadoop.util.Progressable;
 import org.apache.tez.common.TezRuntimeFrameworkConfigs;
@@ -136,7 +137,7 @@ public class TestTezMerger {
   private Path createIFileWithTextData(List<String> data) throws IOException {
     Path path = new Path(workDir + "/src", "data_" + System.nanoTime() + ".out");
     FSDataOutputStream out = localFs.create(path);
-    IFile.Writer writer = new IFile.Writer(defaultConf, out, Text.class,
+    IFile.Writer writer = new IFile.Writer(new WritableSerialization(), new WritableSerialization(), out, Text.class,
         Text.class, null, null, null, true);
     for (String key : data) {
       writer.append(new Text(key), new Text(key + "_" + System.nanoTime()));
@@ -569,7 +570,7 @@ public class TestTezMerger {
       throws IOException, InterruptedException {
     TezMerger merger = new TezMerger();
     TezRawKeyValueIterator records = merger.merge(defaultConf, localFs, IntWritable.class,
-        LongWritable.class, null, false, 0, 1024, pathList.toArray(new Path[pathList.size()]),
+        LongWritable.class, new WritableSerialization(), new WritableSerialization(), null, false, 0, 1024, pathList.toArray(new Path[pathList.size()]),
         true, 4, new Path(workDir, "tmp_" + System.nanoTime()), ((rc == null) ? comparator : rc),
         new Reporter(), null, null,
         null, new Progress());
@@ -603,7 +604,7 @@ public class TestTezMerger {
     //Merge datasets
     TezMerger merger = new TezMerger();
     TezRawKeyValueIterator records = merger.merge(defaultConf, localFs, IntWritable.class,
-        LongWritable.class, null, false, 0, 1024, pathList.toArray(new Path[pathList.size()]),
+        LongWritable.class, new WritableSerialization(), new WritableSerialization(), null, false, 0, 1024, pathList.toArray(new Path[pathList.size()]),
         true, mergeFactor, new Path(workDir, "tmp_" + System.nanoTime()),
         ((rc == null) ? comparator : rc), new Reporter(), null, null,
         null,
@@ -702,7 +703,7 @@ public class TestTezMerger {
         comparator, new Reporter(), false, false);
 
     TezRawKeyValueIterator records = mergeQueue.merge(IntWritable.class, LongWritable.class,
-        mergeFactor, new Path(workDir, "tmp_"
+        new WritableSerialization(), new WritableSerialization(), mergeFactor, new Path(workDir, "tmp_"
         + System.nanoTime()), null, null, null, null);
 
     //Verify the merged data is correct
@@ -770,7 +771,7 @@ public class TestTezMerger {
     Path path = new Path(workDir + "/src", "data_" + System.nanoTime() + ".out");
     FSDataOutputStream out = localFs.create(path);
     //create IFile with RLE
-    IFile.Writer writer = new IFile.Writer(defaultConf, out, IntWritable.class
+    IFile.Writer writer = new IFile.Writer(new WritableSerialization(), new WritableSerialization(), out, IntWritable.class
         , LongWritable.class, null, null, null, true);
 
     for (Integer key : dataSet.keySet()) {

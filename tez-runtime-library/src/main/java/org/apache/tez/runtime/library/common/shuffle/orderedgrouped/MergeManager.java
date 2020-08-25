@@ -35,6 +35,8 @@ import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.FileChunk;
 import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.serializer.Serialization;
+import org.apache.hadoop.io.serializer.SerializationFactory;
 import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.util.Time;
 import org.apache.tez.common.TezUtilsInternal;
@@ -797,13 +799,20 @@ public class MergeManager implements FetchedInputAllocatorOrderedGrouped {
         return; // early exit
       }
 
+      Class<?> keyClass = ConfigUtils.getIntermediateInputKeyClass(conf);
+      Class<?> valueClass = ConfigUtils.getIntermediateInputValueClass(conf);
+      SerializationFactory serializationFactory = new SerializationFactory(conf);
+      Serialization<?> keySerialization = serializationFactory.getSerialization(keyClass);
+      Serialization<?> valSerialization = serializationFactory.getSerialization(valueClass);
       // Nothing will be materialized to disk because the sort factor is being
       // set to the number of in memory segments.
       // TODO Is this doing any combination ?
       TezRawKeyValueIterator rIter = 
         TezMerger.merge(conf, rfs,
-                       ConfigUtils.getIntermediateInputKeyClass(conf),
-                       ConfigUtils.getIntermediateInputValueClass(conf),
+                       keyClass,
+                       valueClass,
+                       keySerialization,
+                       valSerialization,
                        inMemorySegments, inMemorySegments.size(),
                        new Path(inputContext.getUniqueIdentifier()),
                        (RawComparator)ConfigUtils.getIntermediateInputKeyComparator(conf),
@@ -884,10 +893,15 @@ public class MergeManager implements FetchedInputAllocatorOrderedGrouped {
       Writer writer = null;
       long outFileLen = 0;
       try {
+        Class<?> keyClass = ConfigUtils.getIntermediateInputKeyClass(conf);
+        Class<?> valClass = ConfigUtils.getIntermediateInputValueClass(conf);
+        SerializationFactory serializationFactory = new SerializationFactory(conf);
+        Serialization<?> keySerialization = serializationFactory.getSerialization(keyClass);
+        Serialization<?> valSerialization = serializationFactory.getSerialization(valClass);
         writer =
-            new Writer(conf, rfs, outputPath,
-                (Class)ConfigUtils.getIntermediateInputKeyClass(conf),
-                (Class)ConfigUtils.getIntermediateInputValueClass(conf),
+            new Writer(keySerialization, valSerialization, rfs, outputPath,
+                keyClass,
+                valClass,
                 codec, null, null);
 
         TezRawKeyValueIterator rIter = null;
@@ -897,8 +911,10 @@ public class MergeManager implements FetchedInputAllocatorOrderedGrouped {
         tmpDir = new Path(inputContext.getUniqueIdentifier());
         // Nothing actually materialized to disk - controlled by setting sort-factor to #segments.
         rIter = TezMerger.merge(conf, rfs,
-            (Class)ConfigUtils.getIntermediateInputKeyClass(conf),
-            (Class)ConfigUtils.getIntermediateInputValueClass(conf),
+            keyClass,
+            valClass,
+            keySerialization,
+            valSerialization,
             inMemorySegments, inMemorySegments.size(),
             tmpDir, (RawComparator)ConfigUtils.getIntermediateInputKeyComparator(conf),
             progressable, spilledRecordsCounter, null, additionalBytesRead, null);
@@ -1027,16 +1043,23 @@ public class MergeManager implements FetchedInputAllocatorOrderedGrouped {
       outputPath = localDirAllocator.getLocalPathForWrite(namePart, approxOutputSize, conf);
       outputPath = outputPath.suffix(Constants.MERGED_OUTPUT_PREFIX + mergeFileSequenceId.getAndIncrement());
 
+      Class<?> keyClass = ConfigUtils.getIntermediateInputKeyClass(conf);
+      Class<?> valClass = ConfigUtils.getIntermediateInputValueClass(conf);
+      SerializationFactory serializationFactory = new SerializationFactory(conf);
+      Serialization<?> keySerialization = serializationFactory.getSerialization(keyClass);
+      Serialization<?> valSerialization = serializationFactory.getSerialization(valClass);
       Writer writer =
-        new Writer(conf, rfs, outputPath, 
-                        (Class)ConfigUtils.getIntermediateInputKeyClass(conf), 
-                        (Class)ConfigUtils.getIntermediateInputValueClass(conf),
+        new Writer(keySerialization, valSerialization, rfs, outputPath,
+                        keyClass,
+                        valClass,
                         codec, null, null);
       tmpDir = new Path(inputContext.getUniqueIdentifier());
       try {
         TezRawKeyValueIterator iter = TezMerger.merge(conf, rfs,
-            (Class)ConfigUtils.getIntermediateInputKeyClass(conf),
-            (Class)ConfigUtils.getIntermediateInputValueClass(conf),
+            keyClass,
+            valClass,
+            keySerialization,
+            valSerialization,
             inputSegments,
             ioSortFactor, tmpDir,
             (RawComparator)ConfigUtils.getIntermediateInputKeyComparator(conf),
@@ -1165,8 +1188,11 @@ public class MergeManager implements FetchedInputAllocatorOrderedGrouped {
     inputContext.notifyProgress();
 
     // merge config params
-    Class keyClass = (Class)ConfigUtils.getIntermediateInputKeyClass(job);
-    Class valueClass = (Class)ConfigUtils.getIntermediateInputValueClass(job);
+    Class<?> keyClass = ConfigUtils.getIntermediateInputKeyClass(job);
+    Class<?> valueClass = ConfigUtils.getIntermediateInputValueClass(job);
+    SerializationFactory serializationFactory = new SerializationFactory(job);
+    Serialization<?> keySerialization = serializationFactory.getSerialization(keyClass);
+    Serialization<?> valSerialization = serializationFactory.getSerialization(valueClass);
     final Path tmpDir = new Path(inputContext.getUniqueIdentifier());
     final RawComparator comparator =
       (RawComparator)ConfigUtils.getIntermediateInputKeyComparator(job);
@@ -1198,10 +1224,10 @@ public class MergeManager implements FetchedInputAllocatorOrderedGrouped {
         final Path outputPath = 
           mapOutputFile.getInputFileForWrite(srcTaskId, Integer.MAX_VALUE,
               inMemToDiskBytes).suffix(Constants.MERGED_OUTPUT_PREFIX);
-        final TezRawKeyValueIterator rIter = TezMerger.merge(job, fs, keyClass, valueClass,
+        final TezRawKeyValueIterator rIter = TezMerger.merge(job, fs, keyClass, valueClass, keySerialization, valSerialization,
             memDiskSegments, numMemDiskSegments, tmpDir, comparator, progressable,
             spilledRecordsCounter, null, additionalBytesRead, null);
-        final Writer writer = new Writer(job, fs, outputPath,
+        final Writer writer = new Writer(keySerialization, valSerialization, fs, outputPath,
             keyClass, valueClass, codec, null, null);
         try {
           TezMerger.writeFile(rIter, writer, progressable, TezRuntimeConfiguration.TEZ_RUNTIME_RECORDS_BEFORE_PROGRESS_DEFAULT);
@@ -1302,7 +1328,7 @@ public class MergeManager implements FetchedInputAllocatorOrderedGrouped {
       diskSegments.addAll(0, memDiskSegments);
       memDiskSegments.clear();
       TezRawKeyValueIterator diskMerge = TezMerger.merge(
-          job, fs, keyClass, valueClass, codec, diskSegments,
+          job, fs, keyClass, valueClass, keySerialization, valSerialization, codec, diskSegments,
           ioSortFactor, numInMemSegments, tmpDir, comparator,
           progressable, false, spilledRecordsCounter, null, additionalBytesRead, null);
       diskSegments.clear();
@@ -1316,7 +1342,7 @@ public class MergeManager implements FetchedInputAllocatorOrderedGrouped {
       LOG.info(finalMergeLog.toString());
     }
     // This is doing nothing but creating an iterator over the segments.
-    return TezMerger.merge(job, fs, keyClass, valueClass, codec,
+    return TezMerger.merge(job, fs, keyClass, valueClass, keySerialization, valSerialization, codec,
         finalSegments, finalSegments.size(), tmpDir,
         comparator, progressable, spilledRecordsCounter, null,
         additionalBytesRead, null);
