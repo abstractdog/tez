@@ -466,8 +466,8 @@ public class TestIFile {
   //Test appendValue feature
   public void testAppendValue() throws IOException {
     List<KVPair> data = KVDataGen.generateTestData(false, rnd.nextInt(100));
-    IFile.Writer writer = new IFile.Writer(new WritableSerialization(), new WritableSerialization(), localFs, outputPath,
-        Text.class, IntWritable.class, codec, null, null);
+    IFile.Writer writer = new IFile.Writer(new WritableSerialization(), new WritableSerialization(),
+        localFs, outputPath, Text.class, IntWritable.class, codec, null, null);
 
     Text previousKey = null;
     for (KVPair kvp : data) {
@@ -497,8 +497,8 @@ public class TestIFile {
       values.add(val);
     }
 
-    IFile.Writer writer = new IFile.Writer(new WritableSerialization(), new WritableSerialization(), localFs, outputPath,
-        Text.class, IntWritable.class, codec, null, null);
+    IFile.Writer writer = new IFile.Writer(new WritableSerialization(), new WritableSerialization(),
+        localFs, outputPath, Text.class, IntWritable.class, codec, null, null);
     writer.append(data.get(0).getKey(), data.get(0).getvalue()); //write first KV pair
     writer.appendValues(values.subList(1, values.size()).iterator()); //add the rest here
 
@@ -649,8 +649,8 @@ public class TestIFile {
       values.add(val);
     }
 
-    IFile.Writer writer = new IFile.Writer(new WritableSerialization(), new WritableSerialization(), localFs, outputPath,
-        Text.class, IntWritable.class, codec, null, null);
+    IFile.Writer writer = new IFile.Writer(new WritableSerialization(), new WritableSerialization(),
+        localFs, outputPath, Text.class, IntWritable.class, codec, null, null);
     writer.appendKeyValues(data.get(0).getKey(), values.iterator());
 
     Text lastKey = new Text("key3");
@@ -667,8 +667,8 @@ public class TestIFile {
   //Test appendValue with DataInputBuffer
   public void testAppendValueWithDataInputBuffer() throws IOException {
     List<KVPair> data = KVDataGen.generateTestData(false, rnd.nextInt(100));
-    IFile.Writer writer = new IFile.Writer(new WritableSerialization(), new WritableSerialization(), localFs, outputPath,
-        Text.class, IntWritable.class, codec, null, null);
+    IFile.Writer writer = new IFile.Writer(new WritableSerialization(), new WritableSerialization(),
+        localFs, outputPath, Text.class, IntWritable.class, codec, null, null);
 
     final DataInputBuffer previousKey = new DataInputBuffer();
     DataInputBuffer key = new DataInputBuffer();

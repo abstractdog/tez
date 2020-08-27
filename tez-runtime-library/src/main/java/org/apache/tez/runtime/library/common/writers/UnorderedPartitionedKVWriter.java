@@ -47,7 +47,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.compress.CompressionCodec;
@@ -301,9 +300,9 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
       //special case, where in only one partition is available.
       skipBuffers = true;
       if (this.useCachedStream) {
-        writer = new IFile.FileBackedInMemIFileWriter(keySerialization, valSerialization, rfs, outputFileHandler, keyClass,
-            valClass, codec, outputRecordsCounter, outputRecordBytesCounter,
-            dataViaEventsMaxSize);
+        writer = new IFile.FileBackedInMemIFileWriter(keySerialization, valSerialization, rfs,
+            outputFileHandler, keyClass, valClass, codec, outputRecordsCounter,
+            outputRecordBytesCounter, dataViaEventsMaxSize);
       } else {
         finalOutPath = outputFileHandler.getOutputFileForWrite();
         writer = new IFile.Writer(keySerialization, valSerialization, rfs, finalOutPath, keyClass, valClass,

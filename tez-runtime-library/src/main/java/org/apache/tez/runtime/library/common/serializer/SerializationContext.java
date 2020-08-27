@@ -21,7 +21,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.serializer.Serialization;
 import org.apache.hadoop.io.serializer.SerializationFactory;
 import org.apache.hadoop.io.serializer.Serializer;
-import org.apache.tez.dag.api.TezConfiguration;
 import org.apache.tez.runtime.library.api.TezRuntimeConfiguration;
 import org.apache.tez.runtime.library.common.ConfigUtils;
 
@@ -30,10 +29,10 @@ import org.apache.tez.runtime.library.common.ConfigUtils;
  */
 public class SerializationContext {
 
-  protected Class keyClass;
-  protected Class valueClass;
-  protected Serialization<?> keySerialization;
-  protected Serialization<?> valSerialization;
+  private final Class<?> keyClass;
+  private final Class<?> valueClass;
+  private final Serialization<?> keySerialization;
+  private final Serialization<?> valSerialization;
 
   public SerializationContext(Configuration conf) {
     this.keyClass = ConfigUtils.getIntermediateInputKeyClass(conf);
@@ -67,12 +66,14 @@ public class SerializationContext {
     return valSerialization;
   }
 
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   public Serializer<?> getKeySerializer() {
-    return keySerialization.getSerializer(keyClass);
+    return keySerialization.getSerializer((Class) keyClass);
   }
 
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   public Serializer<?> getValueSerializer() {
-    return valSerialization.getSerializer(valueClass);
+    return valSerialization.getSerializer((Class) valueClass);
   }
 
   public void applyToConf(Configuration conf) {

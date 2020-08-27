@@ -774,8 +774,8 @@ public class TestTezMerger {
     Path path = new Path(workDir + "/src", "data_" + System.nanoTime() + ".out");
     FSDataOutputStream out = localFs.create(path);
     //create IFile with RLE
-    IFile.Writer writer = new IFile.Writer(new WritableSerialization(), new WritableSerialization(), out, IntWritable.class
-        , LongWritable.class, null, null, null, true);
+    IFile.Writer writer = new IFile.Writer(new WritableSerialization(), new WritableSerialization(),
+        out, IntWritable.class, LongWritable.class, null, null, null, true);
 
     for (Integer key : dataSet.keySet()) {
       for (Long value : dataSet.get(key)) {

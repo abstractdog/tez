@@ -51,7 +51,6 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionOutputStream;
 import org.apache.hadoop.io.compress.Compressor;
 import org.apache.hadoop.io.compress.Decompressor;
-import org.apache.hadoop.io.serializer.SerializationFactory;
 import org.apache.hadoop.io.serializer.Serialization;
 import org.apache.hadoop.io.serializer.Serializer;
 import org.apache.tez.common.counters.TezCounter;
@@ -111,7 +110,8 @@ public class IFile {
      * Note that we do not allow compression in in-mem stream.
      * When spilled over to file, compression gets enabled.
      *
-     * @param conf
+     * @param keySerialization
+     * @param valSerialization
      * @param fs
      * @param taskOutput
      * @param keyClass
@@ -122,12 +122,10 @@ public class IFile {
      * @param cacheSize
      * @throws IOException
      */
-    public FileBackedInMemIFileWriter(Serialization keySerialization, Serialization valSerialization, FileSystem fs,
-        TezTaskOutput taskOutput, Class keyClass, Class valueClass,
-        CompressionCodec codec,
-        TezCounter writesCounter,
-        TezCounter serializedBytesCounter,
-        int cacheSize) throws IOException {
+    public FileBackedInMemIFileWriter(Serialization<?> keySerialization,
+        Serialization<?> valSerialization, FileSystem fs, TezTaskOutput taskOutput,
+        Class<?> keyClass, Class<?> valueClass, CompressionCodec codec, TezCounter writesCounter,
+        TezCounter serializedBytesCounter, int cacheSize) throws IOException {
       super(keySerialization, valSerialization, new FSDataOutputStream(createBoundedBuffer(cacheSize), null),
           keyClass, valueClass, null, writesCounter, serializedBytesCounter);
       this.fs = fs;

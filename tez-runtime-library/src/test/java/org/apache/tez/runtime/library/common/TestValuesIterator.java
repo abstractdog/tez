@@ -104,7 +104,7 @@ public class TestValuesIterator {
   FileSystem fs;
   static final Random rnd = new Random();
 
-  SerializationContext serializationContext;
+  private SerializationContext serializationContext;
   final RawComparator comparator;
   final RawComparator correctComparator;
   final boolean expectedTestResult;
