@@ -29,17 +29,21 @@ import org.apache.tez.runtime.library.common.ConfigUtils;
  */
 public class SerializationContext {
 
-  private final Class<?> keyClass;
-  private final Class<?> valueClass;
-  private final Serialization<?> keySerialization;
-  private final Serialization<?> valSerialization;
+  private Class<?> keyClass;
+  private Class<?> valueClass;
+  private Serialization<?> keySerialization;
+  private Serialization<?> valSerialization;
 
   public SerializationContext(Configuration conf) {
     this.keyClass = ConfigUtils.getIntermediateInputKeyClass(conf);
     this.valueClass = ConfigUtils.getIntermediateInputValueClass(conf);
     SerializationFactory serializationFactory = new SerializationFactory(conf);
-    this.keySerialization = serializationFactory.getSerialization(keyClass);
-    this.valSerialization = serializationFactory.getSerialization(valueClass);
+    if (keyClass != null) {
+      this.keySerialization = serializationFactory.getSerialization(keyClass);
+    }
+    if (valueClass != null) {
+      this.valSerialization = serializationFactory.getSerialization(valueClass);
+    }
   }
 
   public SerializationContext(Class<?> keyClass, Class<?> valueClass,

@@ -32,7 +32,6 @@ import java.util.zip.Deflater;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.tez.dag.api.TezConfiguration;
 import org.apache.tez.runtime.library.api.IOInterruptedException;
 import org.slf4j.Logger;
@@ -250,9 +249,9 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
   synchronized void collect(Object key, Object value, final int partition
                                    ) throws IOException {
 
-    if (key.getClass() != serializationContext.getClass()) {
+    if (key.getClass() != serializationContext.getKeyClass()) {
       throw new IOException("Type mismatch in key from map: expected "
-                            + serializationContext.getClass().getName() + ", received "
+                            + serializationContext.getKeyClass().getName() + ", received "
                             + key.getClass().getName());
     }
     if (value.getClass() != serializationContext.getValueClass()) {
