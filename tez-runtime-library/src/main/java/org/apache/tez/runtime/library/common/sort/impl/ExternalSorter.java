@@ -118,8 +118,6 @@ public abstract class ExternalSorter {
 
   protected final long availableMemoryMb;
 
-  protected final IndexedSorter sorter;
-
   // Compression for map-outputs
   protected final CompressionCodec codec;
 
@@ -191,11 +189,6 @@ public abstract class ExternalSorter {
     int assignedMb = (int) (initialMemoryAvailable >> 20);
     //Let the overflow checks happen in appropriate sorter impls
     this.availableMemoryMb = assignedMb;
-
-    // sorter
-    sorter = ReflectionUtils.newInstance(this.conf.getClass(
-        TezRuntimeConfiguration.TEZ_RUNTIME_INTERNAL_SORTER_CLASS, QuickSort.class,
-        IndexedSorter.class), this.conf);
 
     comparator = ConfigUtils.getIntermediateOutputKeyComparator(this.conf);
 

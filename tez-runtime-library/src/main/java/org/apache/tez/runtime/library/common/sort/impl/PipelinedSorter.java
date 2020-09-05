@@ -38,7 +38,6 @@ import org.apache.tez.common.Preconditions;
 import com.google.common.collect.Lists;
 
 import org.apache.hadoop.classification.InterfaceAudience;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.tez.dag.api.TezConfiguration;
 import org.apache.tez.runtime.library.api.IOInterruptedException;
 import org.slf4j.Logger;
@@ -56,6 +55,8 @@ import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.IndexedSorter;
 import org.apache.hadoop.util.Progress;
+import org.apache.hadoop.util.QuickSort;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.tez.common.TezCommonUtils;
 import org.apache.tez.runtime.api.OutputContext;
 import org.apache.tez.runtime.library.api.TezRuntimeConfiguration;
@@ -129,6 +130,8 @@ public class PipelinedSorter extends ExternalSorter {
    * Store the events to be send in close.
    */
   private final List<Event> finalEvents;
+
+  protected final IndexedSorter sorter;
 
   // TODO Set additional countesr - total bytes written, spills etc.
 
@@ -245,6 +248,11 @@ public class PipelinedSorter extends ExternalSorter {
     minSpillsForCombine = this.conf.getInt(TezRuntimeConfiguration.TEZ_RUNTIME_COMBINE_MIN_SPILLS, 3);
     deflater = TezCommonUtils.newBestCompressionDeflater();
     finalEvents = Lists.newLinkedList();
+
+    // sorter
+    sorter = ReflectionUtils.newInstance(this.conf.getClass(
+        TezRuntimeConfiguration.TEZ_RUNTIME_INTERNAL_SORTER_CLASS, TezSortSpanQuickSort.class,
+        IndexedSorter.class), this.conf);
   }
 
   ByteBuffer allocateSpace() {
@@ -919,7 +927,7 @@ public class PipelinedSorter extends ExternalSorter {
     }
   }
 
-  private final class SortSpan implements IndexedSortable {
+  final class SortSpan implements IndexedSortable {
     final IntBuffer kvmeta;
     final byte[] rawkvmeta;
     final int kvmetabase;

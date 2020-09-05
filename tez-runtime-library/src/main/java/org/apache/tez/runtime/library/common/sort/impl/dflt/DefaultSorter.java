@@ -42,7 +42,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.util.IndexedSortable;
+import org.apache.hadoop.util.IndexedSorter;
 import org.apache.hadoop.util.Progress;
+import org.apache.hadoop.util.QuickSort;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.tez.common.TezCommonUtils;
 import org.apache.tez.common.TezUtilsInternal;
 import org.apache.tez.common.io.NonSyncDataOutputStream;
@@ -130,6 +133,7 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
 
   public static final int MAX_IO_SORT_MB = 1800;
 
+  protected final IndexedSorter sorter;
 
   public DefaultSorter(OutputContext outputContext, Configuration conf, int numOutputs,
       long initialMemoryAvailable) throws IOException {
@@ -213,6 +217,11 @@ public final class DefaultSorter extends ExternalSorter implements IndexedSortab
       throw new IOException("Spill thread failed to initialize",
           sortSpillException);
     }
+
+    // sorter
+    sorter = ReflectionUtils.newInstance(this.conf.getClass(
+        TezRuntimeConfiguration.TEZ_RUNTIME_INTERNAL_SORTER_CLASS, QuickSort.class,
+        IndexedSorter.class), this.conf);
   }
 
   @VisibleForTesting
