@@ -302,7 +302,7 @@ public class LocalContainerLauncher extends DagContainerLauncher {
       LOG.info(
           "Stopping containerId: {}",
           event.getContainerId());
-      future.cancel(true);
+      future.cancel(false);
     }
     // Send this event to maintain regular control flow. This isn't of much use though.
     getContext().containerStopRequested(event.getContainerId());
