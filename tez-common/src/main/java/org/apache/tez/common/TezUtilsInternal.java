@@ -48,6 +48,7 @@ import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.log4j.Appender;
+import org.apache.log4j.PatternLayout;
 import org.apache.tez.client.TezClientUtils;
 import org.apache.tez.common.io.NonSyncByteArrayOutputStream;
 import org.apache.tez.dag.api.DagTypeConverters;
@@ -184,17 +185,25 @@ public class TezUtilsInternal {
     return res; // Number starts allowed rightnow
   }
 
-  public static void updateLoggers(String addend) throws FileNotFoundException {
+  public static void updateLoggers(Configuration configuration, String addend, String pattern)
+      throws FileNotFoundException {
 
     LOG.info("Redirecting log file based on addend: " + addend);
 
-    Appender appender = org.apache.log4j.Logger.getRootLogger().getAppender(
-        TezConstants.TEZ_CONTAINER_LOGGER_NAME);
+    Appender appender =
+        org.apache.log4j.Logger.getRootLogger().getAppender(TezConstants.TEZ_CONTAINER_LOGGER_NAME);
     if (appender != null) {
       if (appender instanceof TezContainerLogAppender) {
         TezContainerLogAppender claAppender = (TezContainerLogAppender) appender;
-        claAppender.setLogFileName(constructLogFileName(
-            TezConstants.TEZ_CONTAINER_LOG_FILE_NAME, addend));
+        claAppender
+            .setLogFileName(constructLogFileName(TezConstants.TEZ_CONTAINER_LOG_FILE_NAME, addend));
+
+        // there was a configured pattern
+        if (pattern != null) {
+          PatternLayout layout = (PatternLayout) claAppender.getLayout();
+          layout.setConversionPattern(pattern);
+        }
+
         claAppender.activateOptions();
       } else {
         LOG.warn("Appender is a " + appender.getClass() + "; require an instance of "

@@ -24,7 +24,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -54,27 +53,24 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.util.ShutdownHookManager;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
-import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.security.AMRMTokenIdentifier;
 import org.apache.hadoop.yarn.security.client.ClientToAMTokenIdentifier;
 import org.apache.hadoop.yarn.security.client.ClientToAMTokenSecretManager;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.SystemClock;
+import org.apache.log4j.helpers.ThreadLocalMap;
 import org.apache.tez.client.CallerContext;
 import org.apache.tez.client.TezClientUtils;
 import org.apache.tez.client.registry.AMRecord;
 import org.apache.tez.client.registry.AMRegistry;
 import org.apache.tez.client.registry.zookeeper.ZkConfig;
-import org.apache.tez.common.ReflectionUtils;
 import org.apache.tez.common.TezClassLoader;
 import org.apache.tez.common.TezUtils;
 import org.apache.tez.common.VersionInfo;
 import org.apache.tez.dag.api.NamedEntityDescriptor;
-import org.apache.tez.dag.api.TezReflectionException;
 import org.apache.tez.dag.api.SessionNotRunning;
 import org.apache.tez.dag.api.UserPayload;
 import org.apache.tez.dag.api.records.DAGProtos.AMPluginDescriptorProto;
@@ -157,6 +153,7 @@ import org.apache.tez.frameworkplugins.FrameworkUtils;
 import org.apache.tez.frameworkplugins.ServerFrameworkService;
 import org.apache.tez.hadoop.shim.HadoopShim;
 import org.apache.tez.hadoop.shim.HadoopShimsLoader;
+import org.apache.tez.util.LoggingUtils;
 import org.apache.tez.util.TezMxBeanResourceCalculator;
 import org.codehaus.jettison.json.JSONException;
 import org.slf4j.Logger;
@@ -320,6 +317,7 @@ public class DAGAppMaster extends AbstractService {
   Map<Service, ServiceWithDependency> services =
       new LinkedHashMap<Service, ServiceWithDependency>();
   ClientToAMTokenSecretManager clientToAMTokenSecretManager;
+  private ThreadLocalMap mdcContext;
 
   public DAGAppMaster(ApplicationAttemptId applicationAttemptId,
       ContainerId containerId, String nmHost, int nmPort, int nmHttpPort,
@@ -327,6 +325,7 @@ public class DAGAppMaster extends AbstractService {
       String [] localDirs, String[] logDirs, String clientVersion,
       Credentials credentials, String jobUserName, AMPluginDescriptorProto pluginDescriptorProto) {
     super(DAGAppMaster.class.getName());
+    this.mdcContext = LoggingUtils.setupLog4j();
     this.clock = clock;
     this.startTime = clock.getTime();
     this.appSubmitTime = appSubmitTime;
@@ -915,7 +914,8 @@ public class DAGAppMaster extends AbstractService {
 
   private void _updateLoggers(DAG dag, String appender) {
     try {
-      TezUtilsInternal.updateLoggers(dag.getID().toString() + appender);
+      TezUtilsInternal.updateLoggers(dag.getConf(), dag.getID().toString() + appender,
+          LoggingUtils.getPatternForAM(dag.getConf()));
     } catch (FileNotFoundException e) {
       LOG.warn("Unable to update the logger. Continue with the old logger", e );
     }
@@ -2570,6 +2570,8 @@ public class DAGAppMaster extends AbstractService {
 
     // /////////////////// Create the job itself.
     final DAG newDAG = createDAG(dagPlan);
+    LoggingUtils.initLoggingContext(mdcContext, newDAG.getConf(), newDAG.getID().toString(), null);
+
     _updateLoggers(newDAG, "");
     if (LOG.isDebugEnabled()) {
       LOG.debug("Running a DAG with " + dagPlan.getVertexCount()
