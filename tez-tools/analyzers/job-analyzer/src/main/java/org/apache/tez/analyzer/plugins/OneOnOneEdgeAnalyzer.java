@@ -55,12 +55,10 @@ public class OneOnOneEdgeAnalyzer extends TezAnalyzerBase implements Analyzer {
 
   // DataMovementType::ONE_TO_ONE
   private static final String ONE_TO_ONE = "ONE_TO_ONE";
-  private final Configuration config;
-
   private final CSVResult csvResult;
 
   public OneOnOneEdgeAnalyzer(Configuration config) {
-    this.config = config;
+    super(config);
     csvResult = new CSVResult(headers);
   }
 

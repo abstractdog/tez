@@ -114,10 +114,11 @@ public class CriticalPathAnalyzer extends TezAnalyzerBase implements Analyzer {
   ArrayList<TimeInfo> concurrencyByTime = Lists.newArrayList();
 
   public CriticalPathAnalyzer() {
+    super(new Configuration());
   }
 
   public CriticalPathAnalyzer(Configuration conf) {
-    setConf(conf);
+    super(conf);
   }
 
   @Override 

@@ -51,10 +51,8 @@ public class SlowTaskIdentifier extends TezAnalyzerBase implements Analyzer {
   private static final String NO_OF_TASKS = "tez.slow-task-analyzer.task.count";
   private static final int NO_OF_TASKS_DEFAULT = 100;
 
-  private final Configuration config;
-
   public SlowTaskIdentifier(Configuration config) {
-    this.config = config;
+    super(config);
     this.csvResult = new CSVResult(headers);
   }
 

@@ -59,10 +59,8 @@ public class SlowNodeAnalyzer extends TezAnalyzerBase implements Analyzer {
 
   private final CSVResult csvResult = new CSVResult(headers);
 
-  private final Configuration config;
-
   public SlowNodeAnalyzer(Configuration config) {
-    this.config = config;
+    super(config);
   }
 
   @Override

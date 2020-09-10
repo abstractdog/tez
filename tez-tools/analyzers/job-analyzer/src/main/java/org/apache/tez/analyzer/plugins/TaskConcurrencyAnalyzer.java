@@ -41,11 +41,10 @@ public class TaskConcurrencyAnalyzer extends TezAnalyzerBase implements Analyzer
   private static final String[] headers = { "time", "vertexName", "concurrentTasksRunning" };
 
   private final CSVResult csvResult;
-  private final Configuration config;
 
   public TaskConcurrencyAnalyzer(Configuration conf) {
+    super(conf);
     this.csvResult = new CSVResult(headers);
-    this.config = conf;
   }
 
   private enum EventType {START, FINISH}

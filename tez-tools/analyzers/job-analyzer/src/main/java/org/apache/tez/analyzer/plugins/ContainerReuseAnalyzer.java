@@ -39,15 +39,13 @@ import java.util.List;
  */
 public class ContainerReuseAnalyzer extends TezAnalyzerBase implements Analyzer {
 
-  private final Configuration config;
-
   private static final String[] headers =
       { "vertexName", "taskAttempts", "node", "containerId", "reuseCount" };
 
   private final CSVResult csvResult;
 
   public ContainerReuseAnalyzer(Configuration config) {
-    this.config = config;
+    super(config);
     this.csvResult = new CSVResult(headers);
   }
 

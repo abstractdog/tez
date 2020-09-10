@@ -52,12 +52,10 @@ public class LocalityAnalyzer extends TezAnalyzerBase implements Analyzer {
   private static final String DATA_LOCAL_RATIO = "tez.locality-analyzer.data.local.ratio";
   private static final float DATA_LOCAL_RATIO_DEFAULT = 0.5f;
 
-  private final Configuration config;
-
   private final CSVResult csvResult;
 
   public LocalityAnalyzer(Configuration config) {
-    this.config = config;
+    super(config);
     csvResult = new CSVResult(headers);
   }
 

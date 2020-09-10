@@ -66,14 +66,12 @@ public class ShuffleTimeAnalyzer extends TezAnalyzerBase implements Analyzer {
 
   private final CSVResult csvResult = new CSVResult(headers);
 
-  private final Configuration config;
-
   private final float realWorkDoneRatio;
   private final long minShuffleRecords;
 
 
   public ShuffleTimeAnalyzer(Configuration config) {
-    this.config = config;
+    super(config);
 
     realWorkDoneRatio = config.getFloat
         (REAL_WORK_DONE_RATIO, REAL_WORK_DONE_RATIO_DEFAULT);

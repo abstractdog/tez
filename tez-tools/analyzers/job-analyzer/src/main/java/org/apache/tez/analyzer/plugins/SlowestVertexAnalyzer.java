@@ -49,7 +49,6 @@ public class SlowestVertexAnalyzer extends TezAnalyzerBase implements Analyzer {
 
   private final CSVResult csvResult = new CSVResult(headers);
 
-  private final Configuration config;
   private final MetricRegistry metrics = new MetricRegistry();
   private Histogram taskAttemptRuntimeHistorgram;
 
@@ -59,7 +58,7 @@ public class SlowestVertexAnalyzer extends TezAnalyzerBase implements Analyzer {
   private final long vertexRuntimeThreshold;
 
   public SlowestVertexAnalyzer(Configuration config) {
-    this.config = config;
+    super(config);
     this.vertexRuntimeThreshold = Math.max(1, config.getLong(MAX_VERTEX_RUNTIME,
         MAX_VERTEX_RUNTIME_DEFAULT));
 
