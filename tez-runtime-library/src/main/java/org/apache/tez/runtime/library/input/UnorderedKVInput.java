@@ -35,8 +35,6 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.hadoop.io.compress.DefaultCodec;
-import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.tez.common.TezRuntimeFrameworkConfigs;
 import org.apache.tez.common.counters.TaskCounter;
 import org.apache.tez.common.counters.TezCounter;
@@ -53,7 +51,7 @@ import org.apache.tez.runtime.library.common.shuffle.ShuffleEventHandler;
 import org.apache.tez.runtime.library.common.shuffle.impl.ShuffleInputEventHandlerImpl;
 import org.apache.tez.runtime.library.common.shuffle.impl.ShuffleManager;
 import org.apache.tez.runtime.library.common.shuffle.impl.SimpleFetchedInputAllocator;
-
+import org.apache.tez.runtime.library.utils.CodecUtils;
 import org.apache.tez.common.Preconditions;
 
 /**
@@ -114,14 +112,7 @@ public class UnorderedKVInput extends AbstractLogicalInput {
     if (!isStarted.get()) {
       ////// Initial configuration
       memoryUpdateCallbackHandler.validateUpdateReceived();
-      CompressionCodec codec;
-      if (ConfigUtils.isIntermediateInputCompressed(conf)) {
-        Class<? extends CompressionCodec> codecClass = ConfigUtils
-            .getIntermediateInputCompressorClass(conf, DefaultCodec.class);
-        codec = ReflectionUtils.newInstance(codecClass, conf);
-      } else {
-        codec = null;
-      }
+      CompressionCodec codec = CodecUtils.getCodec(conf);
 
       boolean compositeFetch = ShuffleUtils.isTezShuffleHandler(conf);
       boolean ifileReadAhead = conf.getBoolean(TezRuntimeConfiguration.TEZ_RUNTIME_IFILE_READAHEAD,
