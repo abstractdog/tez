@@ -509,8 +509,7 @@ public class DAGAppMaster extends AbstractService {
     recoveryEnabled = conf.getBoolean(TezConfiguration.DAG_RECOVERY_ENABLED,
         TezConfiguration.DAG_RECOVERY_ENABLED_DEFAULT);
 
-    clientRpcServer = new DAGClientServer(clientHandler, appAttemptID, recoveryFS);
-    addIfService(clientRpcServer, true);
+    initClientRpcServer();
 
     taskHeartbeatHandler = createTaskHeartbeatHandler(context, conf);
     addIfService(taskHeartbeatHandler, true);
@@ -646,6 +645,11 @@ public class DAGAppMaster extends AbstractService {
     } else {
       this.state = DAGAppMasterState.ERROR;
     }
+  }
+
+  protected void initClientRpcServer() {
+    clientRpcServer = new DAGClientServer(clientHandler, appAttemptID, recoveryFS);
+    addIfService(clientRpcServer, true);
   }
 
   @VisibleForTesting
