@@ -1131,7 +1131,7 @@ public class TezClientUtils {
     InputStream is = null;
     try {
       is = FileSystem.getLocal(conf).open(path);
-      return DigestUtils.sha256(is);
+      return DigestUtils.sha384(is);
     } finally {
       if (is != null) {
         is.close();
@@ -1143,7 +1143,7 @@ public class TezClientUtils {
     InputStream is = null;
     try {
       is = FileSystem.get(uri, conf).open(new Path(uri));
-      return DigestUtils.sha256(is);
+      return DigestUtils.sha384(is);
     } finally {
       if (is != null) {
         is.close();
