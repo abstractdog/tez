@@ -102,7 +102,13 @@ test('endTime test', function(assert) {
 });
 
 test('containerLogs test', function(assert) {
-  let serializer = this.subject(),
+  let serializer = this.subject({
+    env: {
+      app: {
+        yarnProtocol: "ptcl"
+      }
+    }
+  }),
       mapper = serializer.maps.containerLogs;
 
   assert.deepEqual(mapper({
@@ -111,7 +117,7 @@ test('containerLogs test', function(assert) {
 
   assert.deepEqual(mapper({
     otherinfo: {inProgressLogsURL_1: "foo", inProgressLogsURL_2: "bar"},
-  }), [{text: "1", href: "http://foo"}, {text: "2", href: "http://bar"}], "2 logs");
+  }), [{text: "1", href: "ptcl://foo"}, {text: "2", href: "ptcl://bar"}], "2 logs");
 });
 
 test('vertexIdNameMap test', function(assert) {
