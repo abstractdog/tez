@@ -40,6 +40,8 @@ import com.google.common.primitives.Ints;
 import com.google.protobuf.ByteString;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.tez.dag.api.TezConfiguration;
 import org.apache.tez.http.BaseHttpConnection;
@@ -67,6 +69,7 @@ import org.apache.tez.runtime.library.common.InputAttemptIdentifier;
 import org.apache.tez.runtime.library.common.sort.impl.IFile;
 import org.apache.tez.runtime.library.common.sort.impl.TezIndexRecord;
 import org.apache.tez.runtime.library.common.sort.impl.TezSpillRecord;
+import org.apache.tez.runtime.library.common.task.local.output.TezTaskFsOutput;
 import org.apache.tez.runtime.library.shuffle.impl.ShuffleUserPayloads;
 import org.apache.tez.runtime.library.shuffle.impl.ShuffleUserPayloads.DataMovementEventPayloadProto;
 import org.apache.tez.runtime.library.shuffle.impl.ShuffleUserPayloads.DetailedPartitionStatsProto;
@@ -632,6 +635,36 @@ public class ShuffleUtils {
     return config.get(TezConfiguration.TEZ_AM_SHUFFLE_AUXILIARY_SERVICE_ID,
         TezConfiguration.TEZ_AM_SHUFFLE_AUXILIARY_SERVICE_ID_DEFAULT).
         contains("tez");
+  }
+
+  /**
+   * Get FileSystem from the path, if path is absolution and missing scheme,
+   * then we assume it is local path, for which we return the raw local file
+   * system, otherwise, we return file system matching the scheme.
+   * @param path
+   * @param conf
+   * @return Hadoop FileSystem object.
+   */
+  public static FileSystem getRawFileSystemForPath(Path path, Configuration conf)
+      throws IOException {
+    return path.isAbsoluteAndSchemeAuthorityNull() ?
+        FileSystem.getLocal(conf).getRaw() : path.getFileSystem(conf);
+  }
+
+  public static boolean isFsBasedShuffleEnabled(Configuration conf) {
+    return conf.getBoolean(
+        TezConfiguration.TEZ_FS_BASED_SHUFFLE_ENABLED,
+        TezConfiguration.TEZ_FS_BASED_SHUFFLE_ENABLED_DEFAULT);
+  }
+
+  public static String getPathComponentForDME(Configuration conf, OutputContext outputContext) {
+    String pathComponent = null;
+    if (isFsBasedShuffleEnabled(conf)) {
+      pathComponent = TezTaskFsOutput.getOutputPrefix(conf, outputContext).toString();
+    } else {
+      pathComponent = outputContext.getUniqueIdentifier();
+    }
+    return pathComponent;
   }
 }
 

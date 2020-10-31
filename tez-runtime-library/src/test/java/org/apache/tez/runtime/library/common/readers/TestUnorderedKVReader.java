@@ -33,7 +33,7 @@ import org.apache.tez.runtime.library.api.TezRuntimeConfiguration;
 import org.apache.tez.runtime.library.common.InputAttemptIdentifier;
 import org.apache.tez.runtime.library.common.shuffle.FetchedInput;
 import org.apache.tez.runtime.library.common.shuffle.FetchedInputCallback;
-import org.apache.tez.runtime.library.common.shuffle.LocalDiskFetchedInput;
+import org.apache.tez.runtime.library.common.shuffle.FileSystemFetchedInput;
 import org.apache.tez.runtime.library.common.shuffle.impl.ShuffleManager;
 import org.apache.tez.runtime.library.common.sort.impl.IFile;
 import org.junit.After;
@@ -96,8 +96,8 @@ public class TestUnorderedKVReader {
 
     createIFile(outputPath, 1);
 
-    final LinkedList<LocalDiskFetchedInput> inputs = new LinkedList<LocalDiskFetchedInput>();
-    LocalDiskFetchedInput realFetchedInput = new LocalDiskFetchedInput(0, compLen, new
+    final LinkedList<FileSystemFetchedInput> inputs = new LinkedList<FileSystemFetchedInput>();
+    FileSystemFetchedInput realFetchedInput = new FileSystemFetchedInput(0, rawLen, compLen, new
         InputAttemptIdentifier(0, 0), outputPath, defaultConf, new FetchedInputCallback() {
       @Override
       public void fetchComplete(FetchedInput fetchedInput) {
@@ -111,7 +111,7 @@ public class TestUnorderedKVReader {
       public void freeResources(FetchedInput fetchedInput) {
       }
     });
-    LocalDiskFetchedInput fetchedInput = spy(realFetchedInput);
+    FileSystemFetchedInput fetchedInput = spy(realFetchedInput);
     doNothing().when(fetchedInput).free();
 
     inputs.add(fetchedInput);

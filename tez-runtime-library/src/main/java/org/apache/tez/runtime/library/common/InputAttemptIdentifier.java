@@ -19,7 +19,6 @@
 package org.apache.tez.runtime.library.common;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
-import org.apache.tez.dag.api.TezUncheckedException;
 
 /**
  * Container for a task number and an attempt number for the task.
@@ -68,10 +67,8 @@ public class InputAttemptIdentifier {
     this.shared = shared;
     this.fetchTypeInfo = (byte)fetchTypeInfo.ordinal();
     this.spillEventId = spillEventId;
-    if (pathComponent != null && !pathComponent.startsWith(PATH_PREFIX)) {
-      throw new TezUncheckedException(
-          "Path component must start with: " + PATH_PREFIX + " " + this);
-    }
+    // No need to check if pathComponent starts with a certain prefix,
+    // because in FileSystem based shuffle it carries the fully qualified URL.
   }
 
   public int getInputIdentifier() {

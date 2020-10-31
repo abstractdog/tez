@@ -24,6 +24,7 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.tez.runtime.api.TaskContext;
 import org.apache.tez.runtime.library.common.Constants;
 
 /**
@@ -39,6 +40,10 @@ public abstract class TezTaskOutput {
   protected final Configuration conf;
   protected final String uniqueId;
   protected final String dagId;
+
+  public TezTaskOutput(Configuration conf, TaskContext context, int dagID) {
+    this(conf, context.getUniqueIdentifier(), dagID);
+  }
 
   /**
    * @param conf     the configuration from which local-dirs will be picked up

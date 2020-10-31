@@ -181,6 +181,7 @@ public class Fetcher extends CallableWithNdc<FetchResult> {
   private final LocalDirAllocator localDirAllocator;
   private final Path lockPath;
   private final RawLocalFileSystem localFs;
+  private final boolean fsBasedShuffleEnabled;
 
   // Initiative value is 0, which means it hasn't retried yet.
   private long retryStartTime = 0;
@@ -225,6 +226,7 @@ public class Fetcher extends CallableWithNdc<FetchResult> {
     this.localHostname = localHostname;
     this.shufflePort = shufflePort;
     this.compositeFetch = compositeFetch;
+    this.fsBasedShuffleEnabled = ShuffleUtils.isFsBasedShuffleEnabled(conf);
 
     try {
       if (this.sharedFetchEnabled) {
@@ -279,10 +281,12 @@ public class Fetcher extends CallableWithNdc<FetchResult> {
 
     boolean isLocalFetch = localDiskFetchEnabled && host.equals(localHostname) && port == shufflePort;
     if (isLocalFetch) {
-      hostFetchResult = setupLocalDiskFetch();
+      hostFetchResult = setupFileSystemFetch();
     } else if (multiplex) {
       hostFetchResult = doSharedFetch();
-    } else{
+    } else if (fsBasedShuffleEnabled) {
+      hostFetchResult = setupFileSystemFetch();
+    } else {
       hostFetchResult = doHttpFetch();
     }
 
@@ -434,7 +438,7 @@ public class Fetcher extends CallableWithNdc<FetchResult> {
       if (isDebugEnabled) {
         LOG.debug("Using the copies found locally");
       }
-      return doLocalDiskFetch(true);
+      return doFileSystemFetch(true);
     }
 
     if (inputs > 0) {
@@ -442,7 +446,7 @@ public class Fetcher extends CallableWithNdc<FetchResult> {
         LOG.debug("Found " + input
             + " local fetches right now, using them first");
       }
-      return doLocalDiskFetch(false);
+      return doFileSystemFetch(false);
     }
 
     FileLock lock = null;
@@ -457,7 +461,7 @@ public class Fetcher extends CallableWithNdc<FetchResult> {
           // double checked after lock
           releaseLock(lock);
           lock = null;
-          return doLocalDiskFetch(true);
+          return doFileSystemFetch(true);
         }
         // cache data if possible
         return doHttpFetch(new CachingCallBack());
@@ -630,12 +634,12 @@ public class Fetcher extends CallableWithNdc<FetchResult> {
   }
 
   @VisibleForTesting
-  protected HostFetchResult setupLocalDiskFetch() {
-    return doLocalDiskFetch(true);
+  protected HostFetchResult setupFileSystemFetch() {
+    return doFileSystemFetch(true);
   }
 
   @VisibleForTesting
-  private HostFetchResult doLocalDiskFetch(boolean failMissing) {
+  private HostFetchResult doFileSystemFetch(boolean failMissing) {
 
     Iterator<Entry<String, InputAttemptIdentifier>> iterator = srcAttemptsRemaining.entrySet().iterator();
     while (iterator.hasNext()) {
@@ -659,8 +663,8 @@ public class Fetcher extends CallableWithNdc<FetchResult> {
           // for missing files, this will throw an exception
           idxRecord = getTezIndexRecord(srcAttemptId, reduceId);
 
-          fetchedInput = new LocalDiskFetchedInput(idxRecord.getStartOffset(),
-              idxRecord.getPartLength(), srcAttemptId,
+          fetchedInput = new FileSystemFetchedInput(idxRecord.getStartOffset(),
+              idxRecord.getRawLength(), idxRecord.getPartLength(), srcAttemptId,
               getShuffleInputFileName(srcAttemptId.getPathComponent(), null),
               conf,
               new FetchedInputCallback() {
@@ -747,7 +751,7 @@ public class Fetcher extends CallableWithNdc<FetchResult> {
         pathComponent + Path.SEPARATOR +
         Constants.TEZ_RUNTIME_TASK_OUTPUT_FILENAME_STRING;
 
-    if(ShuffleUtils.isTezShuffleHandler(conf)) {
+    if (ShuffleUtils.isTezShuffleHandler(conf)) {
       return Constants.DAG_PREFIX + this.dagIdentifier + Path.SEPARATOR +
           outputPath;
     }
@@ -757,10 +761,17 @@ public class Fetcher extends CallableWithNdc<FetchResult> {
   @VisibleForTesting
   protected Path getShuffleInputFileName(String pathComponent, String suffix)
       throws IOException {
+    Path ret = null;
     suffix = suffix != null ? suffix : "";
 
-    String pathFromLocalDir = getMapOutputFile(pathComponent) + suffix;
-    return localDirAllocator.getLocalPathToRead(pathFromLocalDir, conf);
+    if (fsBasedShuffleEnabled) {
+      ret = new Path(pathComponent + Path.SEPARATOR +
+          Constants.TEZ_RUNTIME_TASK_OUTPUT_FILENAME_STRING + suffix);
+    } else {
+      String pathFromLocalDir = getMapOutputFile(pathComponent) + suffix;
+      ret = localDirAllocator.getLocalPathToRead(pathFromLocalDir, conf);
+    }
+    return ret;
   }
 
   @VisibleForTesting

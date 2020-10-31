@@ -47,6 +47,7 @@ import org.apache.tez.runtime.library.common.Constants;
 import org.apache.tez.runtime.library.common.InputAttemptIdentifier;
 import org.apache.tez.runtime.library.common.combine.Combiner;
 import org.apache.tez.runtime.library.common.serializer.SerializationContext;
+import org.apache.tez.runtime.library.common.shuffle.ShuffleUtils;
 import org.apache.tez.runtime.library.common.sort.impl.IFile;
 import org.apache.tez.runtime.library.common.sort.impl.IFile.Writer;
 import org.apache.tez.runtime.library.common.sort.impl.TezMerger;
@@ -1001,7 +1002,9 @@ public class MergeManager implements FetchedInputAllocatorOrderedGrouped {
         }
         final Path file = fileChunk.getPath();
         approxOutputSize += size;
-        DiskSegment segment = new DiskSegment(rfs, file, offset, size, codec, ifileReadAhead,
+        DiskSegment segment = new DiskSegment(
+            ShuffleUtils.getRawFileSystemForPath(file, conf),
+            file, offset, size, codec, ifileReadAhead,
             ifileReadAheadLength, ifileBufferSize, preserve);
         inputSegments.add(segment);
       }
@@ -1264,7 +1267,8 @@ public class MergeManager implements FetchedInputAllocatorOrderedGrouped {
 
       final long fileOffset = fileChunk.getOffset();
       final boolean preserve = fileChunk.isLocalFile();
-      diskSegments.add(new DiskSegment(fs, file, fileOffset, fileLength, codec, ifileReadAhead,
+      diskSegments.add(new DiskSegment(ShuffleUtils.getRawFileSystemForPath(file, conf),
+          file, fileOffset, fileLength, codec, ifileReadAhead,
                                    ifileReadAheadLength, ifileBufferSize, preserve, counter));
     }
     if (LOG.isInfoEnabled()) {

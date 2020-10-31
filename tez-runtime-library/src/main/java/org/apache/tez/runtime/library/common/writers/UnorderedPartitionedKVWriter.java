@@ -305,7 +305,8 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
             outputRecordBytesCounter, dataViaEventsMaxSize);
       } else {
         finalOutPath = outputFileHandler.getOutputFileForWrite();
-        writer = new IFile.Writer(keySerialization, valSerialization, rfs, finalOutPath, keyClass, valClass,
+        FileSystem fsShuffle = ShuffleUtils.getRawFileSystemForPath(finalOutPath, conf);
+        writer = new IFile.Writer(keySerialization, valSerialization, fsShuffle, finalOutPath, keyClass, valClass,
             codec, outputRecordsCounter, outputRecordBytesCounter);
         ensureSpillFilePermissions(finalOutPath, rfs);
       }
@@ -623,8 +624,9 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
         this.spillPathDetails = getSpillPathDetails(false, -1, spillNumber);
         this.spillIndex = spillPathDetails.spillIndex;
       }
+      FileSystem fsShuffle = ShuffleUtils.getRawFileSystemForPath(spillPathDetails.outputFilePath, conf);
+      FSDataOutputStream out = fsShuffle.create(spillPathDetails.outputFilePath);
       LOG.info("Writing spill " + spillNumber + " to " + spillPathDetails.outputFilePath.toString());
-      FSDataOutputStream out = rfs.create(spillPathDetails.outputFilePath);
       ensureSpillFilePermissions(spillPathDetails.outputFilePath, rfs);
       TezSpillRecord spillRecord = new TezSpillRecord(numPartitions);
       DataInputBuffer key = new DataInputBuffer();
@@ -808,8 +810,7 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
             finalIndexPath = outputFileHandler.getOutputIndexFileForWrite(indexFileSizeEstimate);
             sr.writeToFile(finalIndexPath, conf, localFs);
           }
-          eventList.add(generateDMEvent(false, -1, false, outputContext
-                  .getUniqueIdentifier(), emptyPartitions));
+          eventList.add(generateDMEvent(false, -1, false, ShuffleUtils.getPathComponentForDME(conf, outputContext), emptyPartitions));
 
           return eventList;
         }
@@ -891,7 +892,8 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
 
   private Event generateDMEvent() throws IOException {
     BitSet emptyPartitions = getEmptyPartitions(numRecordsPerPartition);
-    return generateDMEvent(false, -1, false, outputContext.getUniqueIdentifier(), emptyPartitions);
+    return generateDMEvent(false, -1, false,
+        ShuffleUtils.getPathComponentForDME(conf, outputContext), emptyPartitions);
   }
 
   private Event generateDMEvent(boolean addSpillDetails, int spillId,
@@ -1075,7 +1077,7 @@ public class UnorderedPartitionedKVWriter extends BaseUnorderedPartitionedKVWrit
 
     FSDataOutputStream out = null;
     try {
-      out = rfs.create(finalOutPath);
+      out = ShuffleUtils.getRawFileSystemForPath(finalOutPath, conf).create(finalOutPath);
       ensureSpillFilePermissions(finalOutPath, rfs);
       Writer writer = null;
 

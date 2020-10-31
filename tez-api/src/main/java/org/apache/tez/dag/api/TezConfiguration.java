@@ -1389,6 +1389,35 @@ public class TezConfiguration extends Configuration {
   public static final boolean TEZ_CLASSPATH_ADD_HADOOP_CONF_DEFAULT = false;
 
   /**
+   * Boolean value.
+   *
+   * Specify whether or not to use FileSystem based shuffle implementation.
+   */
+  @ConfigurationScope(Scope.AM)
+  public static final String TEZ_FS_BASED_SHUFFLE_ENABLED = TEZ_PREFIX + "fs.based.shuffle.enabled";
+  public static final boolean TEZ_FS_BASED_SHUFFLE_ENABLED_DEFAULT = false;
+
+  /**
+   * String value.
+   *
+   * Specify the root folder for intermediate shuffle data. Defaults to ".shuffle" sub dir of tez
+   * staging dir.
+   */
+  @ConfigurationScope(Scope.AM)
+  public static final String TEZ_FS_BASED_SHUFFLE_LOCATION =
+      TEZ_PREFIX + "fs.based.shuffle.location";
+
+  /**
+   * Boolean value.
+   *
+   * Specify whether or not to automatically clean shuffle data.
+   */
+  @ConfigurationScope(Scope.AM)
+  public static final String TEZ_FS_BASED_SHUFFLE_AUTOCLEAN =
+      TEZ_PREFIX + "fs.based.shuffle.autoclean";
+  public static final boolean TEZ_FS_BASED_SHUFFLE_AUTOCLEAN_DEFAULT = true;
+
+  /**
    * Session-related properties
    */
   @Private

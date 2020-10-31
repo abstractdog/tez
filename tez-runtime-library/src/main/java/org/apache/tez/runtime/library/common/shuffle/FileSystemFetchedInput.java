@@ -25,23 +25,19 @@ import java.io.OutputStream;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.tez.common.Preconditions;
 import org.apache.commons.io.input.BoundedInputStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.tez.runtime.library.common.InputAttemptIdentifier;
 
-public class LocalDiskFetchedInput extends FetchedInput {
-  private static final Logger LOG = LoggerFactory.getLogger(LocalDiskFetchedInput.class);
-
+public class FileSystemFetchedInput extends FetchedInput {
   private final Path inputFile;
-  private final FileSystem localFS;
+  private final FileSystem inputFS;
   private final long startOffset;
   private final long size;
 
-  public LocalDiskFetchedInput(long startOffset, long compressedSize,
+  public FileSystemFetchedInput(long startOffset, long actualSize, long compressedSize,
                                InputAttemptIdentifier inputAttemptIdentifier, Path inputFile,
                                Configuration conf, FetchedInputCallback callbackHandler)
       throws IOException {
@@ -49,7 +45,7 @@ public class LocalDiskFetchedInput extends FetchedInput {
     this.size = compressedSize;
     this.startOffset = startOffset;
     this.inputFile = inputFile;
-    localFS = FileSystem.getLocal(conf);
+    inputFS = ShuffleUtils.getRawFileSystemForPath(inputFile, conf);
   }
 
   @Override
@@ -69,7 +65,7 @@ public class LocalDiskFetchedInput extends FetchedInput {
 
   @Override
   public InputStream getInputStream() throws IOException {
-    FSDataInputStream inputStream = localFS.open(inputFile);
+    FSDataInputStream inputStream = inputFS.open(inputFile);
     inputStream.seek(startOffset);
     return new BoundedInputStream(inputStream, getSize());
   }
@@ -89,7 +85,7 @@ public class LocalDiskFetchedInput extends FetchedInput {
       notifyFetchFailure();
     }
   }
-  
+
   @Override
   public void free() {
     Preconditions.checkState(
@@ -103,7 +99,7 @@ public class LocalDiskFetchedInput extends FetchedInput {
 
   @Override
   public String toString() {
-    return "LocalDiskFetchedInput [inputFile path =" + inputFile +
+    return "FileSystemFetchedInput [inputFile path =" + inputFile +
         ", offset" + startOffset +
         ", compressedSize=" + getSize() +
         ", inputAttemptIdentifier=" + getInputAttemptIdentifier() +
@@ -123,8 +119,8 @@ public class LocalDiskFetchedInput extends FetchedInput {
   }
 
   @VisibleForTesting
-  protected FileSystem getLocalFS() {
-    return localFS;
+  protected FileSystem getInputFS() {
+    return inputFS;
   }
 
 }

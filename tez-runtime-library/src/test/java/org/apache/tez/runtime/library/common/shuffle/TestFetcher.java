@@ -34,6 +34,7 @@ import static org.mockito.Mockito.verify;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -46,11 +47,13 @@ import com.google.common.collect.Lists;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RawLocalFileSystem;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.tez.common.counters.TezCounters;
 import org.apache.tez.dag.api.TezConfiguration;
 import org.apache.tez.runtime.api.InputContext;
 import org.apache.tez.runtime.library.api.TezRuntimeConfiguration;
+import org.apache.tez.runtime.library.common.Constants;
 import org.apache.tez.runtime.library.common.InputAttemptIdentifier;
 import org.apache.tez.runtime.library.common.shuffle.api.ShuffleHandlerError;
 import org.apache.tez.runtime.library.common.shuffle.impl.ShuffleManager;
@@ -62,6 +65,18 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+
+// Use raw local file system to simulate TezTestFileSystem
+class TezTestFileSystem extends RawLocalFileSystem {
+  @Override
+  public String getScheme() {
+    return "teztest";
+  }
+  @Override
+  public URI getUri() {
+    return URI.create("teztest:///");
+  }
+}
 
 public class TestFetcher {
   private static final String SHUFFLE_INPUT_FILE_PREFIX = "shuffle_input_file_";
@@ -76,11 +91,9 @@ public class TestFetcher {
         new InputAttemptIdentifier(0, 1, InputAttemptIdentifier.PATH_PREFIX + "pathComponent_1")
     };
     FetcherCallback fetcherCallback = mock(FetcherCallback.class);
-    final boolean ENABLE_LOCAL_FETCH = true;
-    final boolean DISABLE_LOCAL_FETCH = false;
 
     Fetcher.FetcherBuilder builder = new Fetcher.FetcherBuilder(fetcherCallback, null, null,
-        ApplicationId.newInstance(0, 1), 1, null, "fetcherTest", conf, ENABLE_LOCAL_FETCH, HOST,
+        ApplicationId.newInstance(0, 1), 1, null, "fetcherTest", conf, /* local fetch */true, HOST,
         PORT, false, true, false);
     builder.assignWork(HOST, PORT, 0, 1, Arrays.asList(srcAttempts));
     Fetcher fetcher = spy(builder.build());
@@ -88,63 +101,114 @@ public class TestFetcher {
     FetchResult fr = new FetchResult(HOST, PORT, 0, 1, Arrays.asList(srcAttempts));
     Fetcher.HostFetchResult hfr =
         new Fetcher.HostFetchResult(fr, InputAttemptFetchFailure.fromAttempts(srcAttempts), false);
-    doReturn(hfr).when(fetcher).setupLocalDiskFetch();
+    doReturn(hfr).when(fetcher).setupFileSystemFetch();
     doReturn(null).when(fetcher).doHttpFetch();
     doNothing().when(fetcher).shutdown();
 
     fetcher.call();
 
-    verify(fetcher).setupLocalDiskFetch();
+    verify(fetcher).setupFileSystemFetch();
     verify(fetcher, never()).doHttpFetch();
 
     // when enabled and hostname does not match use http fetch.
     builder = new Fetcher.FetcherBuilder(fetcherCallback, null, null,
-        ApplicationId.newInstance(0, 1), -1, null, "fetcherTest", conf, ENABLE_LOCAL_FETCH, HOST,
+        ApplicationId.newInstance(0, 1), -1, null, "fetcherTest", conf, /* local fetch */true, HOST,
         PORT, false, true, false);
     builder.assignWork(HOST + "_OTHER", PORT, 0, 1, Arrays.asList(srcAttempts));
     fetcher = spy(builder.build());
 
-    doReturn(null).when(fetcher).setupLocalDiskFetch();
+    doReturn(null).when(fetcher).setupFileSystemFetch();
     doReturn(hfr).when(fetcher).doHttpFetch();
     doNothing().when(fetcher).shutdown();
 
     fetcher.call();
 
-    verify(fetcher, never()).setupLocalDiskFetch();
+    verify(fetcher, never()).setupFileSystemFetch();
     verify(fetcher).doHttpFetch();
 
     // when enabled and port does not match use http fetch.
     builder = new Fetcher.FetcherBuilder(fetcherCallback, null, null,
-        ApplicationId.newInstance(0, 1), -1, null, "fetcherTest", conf, ENABLE_LOCAL_FETCH, HOST,
+        ApplicationId.newInstance(0, 1), -1, null, "fetcherTest", conf, /* local fetch */true, HOST,
         PORT, false, true, false);
     builder.assignWork(HOST, PORT + 1, 0, 1, Arrays.asList(srcAttempts));
     fetcher = spy(builder.build());
 
-    doReturn(null).when(fetcher).setupLocalDiskFetch();
+    doReturn(null).when(fetcher).setupFileSystemFetch();
     doReturn(hfr).when(fetcher).doHttpFetch();
     doNothing().when(fetcher).shutdown();
 
     fetcher.call();
 
-    verify(fetcher, never()).setupLocalDiskFetch();
+    verify(fetcher, never()).setupFileSystemFetch();
     verify(fetcher).doHttpFetch();
 
     // When disabled use http fetch
     conf.setBoolean(TezRuntimeConfiguration.TEZ_RUNTIME_OPTIMIZE_LOCAL_FETCH, false);
     builder = new Fetcher.FetcherBuilder(fetcherCallback, null, null,
-        ApplicationId.newInstance(0, 1), 1, null, "fetcherTest", conf, DISABLE_LOCAL_FETCH, HOST,
+        ApplicationId.newInstance(0, 1), 1, null, "fetcherTest", conf, /* local fetch */false, HOST,
         PORT, false, true, false);
     builder.assignWork(HOST, PORT, 0, 1, Arrays.asList(srcAttempts));
     fetcher = spy(builder.build());
 
-    doReturn(null).when(fetcher).setupLocalDiskFetch();
+    doReturn(null).when(fetcher).setupFileSystemFetch();
     doReturn(hfr).when(fetcher).doHttpFetch();
     doNothing().when(fetcher).shutdown();
 
     fetcher.call();
 
-    verify(fetcher, never()).setupLocalDiskFetch();
+    verify(fetcher, never()).setupFileSystemFetch();
     verify(fetcher).doHttpFetch();
+  }
+
+  @Test(timeout = 3000)
+  public void testFsBasedShuffleFetch() throws Exception {
+    TezConfiguration conf = new TezConfiguration();
+    InputAttemptIdentifier[] srcAttempts = {
+        new InputAttemptIdentifier(0, 1, "teztest://machine:9000/pathComponent_0")
+    };
+    FetcherCallback fetcherCallback = mock(FetcherCallback.class);
+    final boolean ENABLE_LOCAL_FETCH = true;
+    final boolean DISABLE_LOCAL_FETCH = false;
+    Fetcher.FetcherBuilder builder = new Fetcher.FetcherBuilder(fetcherCallback, null, null,
+        ApplicationId.newInstance(0, 1), 1, null, "fetcherTest", conf, ENABLE_LOCAL_FETCH, HOST,
+        PORT, false, true, true);
+    builder.assignWork(HOST, PORT, 0, 1, Arrays.asList(srcAttempts));
+    Fetcher fetcher = spy(builder.build());
+    FetchResult fr = new FetchResult(HOST, PORT, 0, 1, Arrays.asList(srcAttempts));
+    Fetcher.HostFetchResult hfr =
+        new Fetcher.HostFetchResult(fr, new InputAttemptFetchFailure[]{}, false);
+    doReturn(hfr).when(fetcher).setupFileSystemFetch();
+
+    // When FileSystem based fetch is enabled
+    conf.setBoolean(TezConfiguration.TEZ_FS_BASED_SHUFFLE_ENABLED, true);
+    conf.setBoolean(TezRuntimeConfiguration.TEZ_RUNTIME_OPTIMIZE_LOCAL_FETCH, false);
+    conf.set("fs.teztest.impl", TezTestFileSystem.class.getName());
+    builder = new Fetcher.FetcherBuilder(fetcherCallback, null, null,
+        ApplicationId.newInstance(0, 1), 1, null, "fetcherTest", conf, DISABLE_LOCAL_FETCH, HOST,
+        PORT, false, true, true);
+    builder.assignWork(HOST, PORT, 0, 1, Arrays.asList(srcAttempts));
+    fetcher = spy(builder.build());
+
+    doAnswer(new Answer<TezIndexRecord>() {
+      @Override
+      public TezIndexRecord answer(InvocationOnMock invocation) throws Throwable {
+        Object[] args = invocation.getArguments();
+        InputAttemptIdentifier srcAttemptId = (InputAttemptIdentifier) args[0];
+        String pathComponent = srcAttemptId.getPathComponent();
+        int len = pathComponent.length();
+        long p = Long.valueOf(pathComponent.substring(len - 1, len));
+        return new TezIndexRecord(p * 10, p * 1000, p * 100);
+      }
+    }).when(fetcher).getTezIndexRecord(any(InputAttemptIdentifier.class), anyInt());
+
+    doReturn(null).when(fetcher).doHttpFetch();
+    doNothing().when(fetcher).shutdown();
+
+    fetcher.call();
+
+    verify(fetcher).setupFileSystemFetch();
+    verify(fetcher, never()).doHttpFetch();
+    verifyFsBasedFetchSucceeded(fetcherCallback, srcAttempts[0], conf);
   }
 
   @Test(timeout = 3000)
@@ -218,7 +282,7 @@ public class TestFetcher {
 
     FetchResult fetchResult = fetcher.call();
 
-    verify(fetcher).setupLocalDiskFetch();
+    verify(fetcher).setupFileSystemFetch();
 
     // expect 3 successes and 2 failures
     for (int i : successfulAttempts) {
@@ -250,19 +314,38 @@ public class TestFetcher {
     String pathComponent = srcAttempId.getPathComponent();
     int len = pathComponent.length();
     long p = Long.valueOf(pathComponent.substring(len - 1, len));
-    ArgumentCaptor<LocalDiskFetchedInput> capturedFetchedInput =
-        ArgumentCaptor.forClass(LocalDiskFetchedInput.class);
+    ArgumentCaptor<FileSystemFetchedInput> capturedFetchedInput =
+        ArgumentCaptor.forClass(FileSystemFetchedInput.class);
     verify(callback)
         .fetchSucceeded(eq(HOST), eq(srcAttempId.expand(0)), capturedFetchedInput.capture(), eq(p * 100),
             eq(p * 1000), anyLong());
-    LocalDiskFetchedInput f = capturedFetchedInput.getValue();
+    FileSystemFetchedInput f = capturedFetchedInput.getValue();
     Assert.assertEquals("success callback filename", f.getInputFile().toString(),
         SHUFFLE_INPUT_FILE_PREFIX + pathComponent);
-    Assert.assertTrue("success callback fs", f.getLocalFS() instanceof LocalFileSystem);
+    Assert.assertTrue("success callback fs", f.getInputFS() instanceof LocalFileSystem);
     Assert.assertEquals("success callback filesystem", f.getStartOffset(), p * 10);
     Assert.assertEquals("success callback compressed size", f.getSize(), p * 100);
     Assert.assertEquals("success callback input id", f.getInputAttemptIdentifier(), srcAttempId.expand(0));
     Assert.assertEquals("success callback type", f.getType(), FetchedInput.Type.DISK_DIRECT);
+  }
+
+  protected void verifyFsBasedFetchSucceeded(FetcherCallback callback,
+      InputAttemptIdentifier srcAttempId, Configuration conf) throws IOException {
+    String pathComponent = srcAttempId.getPathComponent();
+    int len = pathComponent.length();
+    long p = Long.valueOf(pathComponent.substring(len - 1, len));
+    ArgumentCaptor<FileSystemFetchedInput> capturedFetchedInput =
+        ArgumentCaptor.forClass(FileSystemFetchedInput.class);
+    verify(callback)
+        .fetchSucceeded(eq(HOST), eq(srcAttempId), capturedFetchedInput.capture(), eq(p * 100),
+            eq(p * 1000), anyLong());
+    FileSystemFetchedInput f = capturedFetchedInput.getValue();
+    Assert.assertEquals("success callback filename", f.getInputFile().toString(),
+        pathComponent + Path.SEPARATOR + Constants.TEZ_RUNTIME_TASK_OUTPUT_FILENAME_STRING);
+    Assert.assertTrue("success callback fs", f.getInputFS() instanceof TezTestFileSystem);
+    Assert.assertEquals("success callback filesystem", f.getStartOffset(), p * 10);
+    Assert.assertEquals("success callback raw size", f.getSize(), p * 1000);
+    Assert.assertEquals("success callback input id", f.getInputAttemptIdentifier(), srcAttempId);
   }
 
   @Test(timeout=5000)

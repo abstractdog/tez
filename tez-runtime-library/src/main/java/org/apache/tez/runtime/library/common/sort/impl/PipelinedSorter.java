@@ -43,8 +43,11 @@ import org.apache.tez.dag.api.TezConfiguration;
 import org.apache.tez.runtime.library.api.IOInterruptedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.tez.common.TezUtilsInternal;
@@ -556,6 +559,26 @@ public class PipelinedSorter extends ExternalSorter {
     }
   }
 
+  private void copyLocalFileToFileSystem(Path src, Path dest) throws IOException {
+    LOG.info("copy local to dfs: {}->{}", src, dest);
+    FSDataInputStream in = null;
+    FSDataOutputStream out = null;
+    try {
+      in = FileSystem.getLocal(conf).getRaw().open(src);
+      out = dest.getFileSystem(conf).create(dest);
+      IOUtils.copy(in, out);
+    } catch (IOException ie) {
+      throw ie;
+    } finally {
+      if (in != null) {
+        in.close();
+      }
+      if (out != null) {
+        out.close();
+      }
+    }
+  }
+
   public boolean spill(boolean ignoreEmptySpills) throws IOException {
     FSDataOutputStream out = null;
     try {
@@ -662,6 +685,7 @@ public class PipelinedSorter extends ExternalSorter {
   @Override
   public void flush() throws IOException {
     final String uniqueIdentifier = outputContext.getUniqueIdentifier();
+    FileSystem fsShuffle = null;
 
     outputContext.notifyProgress();
     /**
@@ -732,23 +756,31 @@ public class PipelinedSorter extends ExternalSorter {
         final Path indexFilename = spillFileIndexPaths.get(0);
         finalOutputFile = mapOutputFile.getOutputFileForWriteInVolume(filename);
         finalIndexFile = mapOutputFile.getOutputIndexFileForWriteInVolume(indexFilename);
+        fsShuffle = ShuffleUtils.getRawFileSystemForPath(finalIndexFile, conf);
 
-        sameVolRename(filename, finalOutputFile);
-        sameVolRename(indexFilename, finalIndexFile);
+        if (ShuffleUtils.isFsBasedShuffleEnabled(conf)) {
+          copyLocalFileToFileSystem(filename, finalOutputFile);
+          copyLocalFileToFileSystem(indexFilename, finalIndexFile);
+          ensureSpillFilePermissions(finalOutputFile, fsShuffle);
+          ensureSpillFilePermissions(finalIndexFile, fsShuffle);
+        } else {
+          sameVolRename(filename, finalOutputFile);
+          sameVolRename(indexFilename, finalIndexFile);
+        }
         if (LOG.isDebugEnabled()) {
           LOG.debug(outputContext.getDestinationVertexName() + ": numSpills=" + numSpills +
               ", finalOutputFile=" + finalOutputFile + ", "
               + "finalIndexFile=" + finalIndexFile + ", filename=" + filename + ", indexFilename=" +
               indexFilename);
         }
-        TezSpillRecord spillRecord = new TezSpillRecord(finalIndexFile, localFs);
+        TezSpillRecord spillRecord = new TezSpillRecord(finalIndexFile, fsShuffle);
         if (reportPartitionStats()) {
           for (int i = 0; i < spillRecord.size(); i++) {
             partitionStats[i] += spillRecord.getIndex(i).getPartLength();
           }
         }
         numShuffleChunks.setValue(numSpills);
-        fileOutputByteCounter.increment(rfs.getFileStatus(finalOutputFile).getLen());
+        fileOutputByteCounter.increment(fsShuffle.getFileStatus(finalOutputFile).getLen());
         // ??? why are events not being sent here?
         return;
       }
@@ -764,8 +796,9 @@ public class PipelinedSorter extends ExternalSorter {
                 + finalIndexFile);
       }
       //The output stream for the final single output file
-      FSDataOutputStream finalOut = rfs.create(finalOutputFile, true, 4096);
-      ensureSpillFilePermissions(finalOutputFile, rfs);
+      fsShuffle = ShuffleUtils.getRawFileSystemForPath(finalOutputFile, conf);
+      FSDataOutputStream finalOut = fsShuffle.create(finalOutputFile, true, 4096);
+      ensureSpillFilePermissions(finalOutputFile, fsShuffle);
 
       final TezSpillRecord spillRec = new TezSpillRecord(partitions);
 
@@ -834,9 +867,10 @@ public class PipelinedSorter extends ExternalSorter {
       }
 
       numShuffleChunks.setValue(1); //final merge has happened.
-      fileOutputByteCounter.increment(rfs.getFileStatus(finalOutputFile).getLen());
+      fsShuffle = ShuffleUtils.getRawFileSystemForPath(finalOutputFile, conf);
+      fileOutputByteCounter.increment(fsShuffle.getFileStatus(finalOutputFile).getLen());
 
-      spillRec.writeToFile(finalIndexFile, conf, localFs);
+      spillRec.writeToFile(finalIndexFile, conf, fsShuffle);
       finalOut.close();
       for (int i = 0; i < numSpills; i++) {
         Path indexFilename = spillFileIndexPaths.get(i);

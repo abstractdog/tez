@@ -105,7 +105,7 @@ class FetcherOrderedGrouped extends CallableWithNdc<Void> {
   volatile BaseHttpConnection httpConnection;
   private final boolean asyncHttp;
   private final boolean compositeFetch;
-
+  private final boolean fsBasedShuffleEnabled;
 
   // Initiative value is 0, which means it hasn't retried yet.
   private long retryStartTime = 0;
@@ -170,6 +170,7 @@ class FetcherOrderedGrouped extends CallableWithNdc<Void> {
     this.sslShuffle = sslShuffle;
     this.verifyDiskChecksum = verifyDiskChecksum;
     this.compositeFetch = compositeFetch;
+    this.fsBasedShuffleEnabled = ShuffleUtils.isFsBasedShuffleEnabled(conf);
 
     this.logIdentifier = "fetcher [" + srcNameTrimmed + "] #" + id;
   }
@@ -178,7 +179,9 @@ class FetcherOrderedGrouped extends CallableWithNdc<Void> {
   protected void fetchNext() throws InterruptedException, IOException {
     try {
       if (localDiskFetchEnabled && mapHost.getHost().equals(localShuffleHost) && mapHost.getPort() == localShufflePort) {
-        setupLocalDiskFetch(mapHost);
+        setupFileSystemFetch(mapHost);
+      } else if (fsBasedShuffleEnabled) {
+        setupFileSystemFetch(mapHost);
       } else {
         // Shuffle
         copyFromHost(mapHost);
@@ -702,7 +705,7 @@ class FetcherOrderedGrouped extends CallableWithNdc<Void> {
   }
 
   @VisibleForTesting
-  protected void setupLocalDiskFetch(MapHost host) throws InterruptedException {
+  protected void setupFileSystemFetch(MapHost host) throws InterruptedException {
     // Get completed maps on 'host'
     List<InputAttemptIdentifier> srcAttempts = scheduler.getMapsForHost(host);
 
@@ -783,14 +786,20 @@ class FetcherOrderedGrouped extends CallableWithNdc<Void> {
   //TODO: Refactor following to make use of methods from TezTaskOutputFiles to be consistent.
   protected Path getShuffleInputFileName(String pathComponent, String suffix)
       throws IOException {
-    LocalDirAllocator localDirAllocator = new LocalDirAllocator(TezRuntimeFrameworkConfigs.LOCAL_DIRS);
+    Path ret = null;
     suffix = suffix != null ? suffix : "";
-    String outputPath = Constants.TEZ_RUNTIME_TASK_OUTPUT_DIR + Path.SEPARATOR +
-        pathComponent + Path.SEPARATOR +
-        Constants.TEZ_RUNTIME_TASK_OUTPUT_FILENAME_STRING + suffix;
-    String pathFromLocalDir = getPathForLocalDir(outputPath);
+    if (fsBasedShuffleEnabled) {
+      ret = new Path(pathComponent + Path.SEPARATOR +
+          Constants.TEZ_RUNTIME_TASK_OUTPUT_FILENAME_STRING + suffix);
+    } else {
+      LocalDirAllocator localDirAllocator = new LocalDirAllocator(TezRuntimeFrameworkConfigs.LOCAL_DIRS);
 
-    return localDirAllocator.getLocalPathToRead(pathFromLocalDir.toString(), conf);
+      String pathFromLocalDir = Constants.TEZ_RUNTIME_TASK_OUTPUT_DIR + Path.SEPARATOR +
+          pathComponent + Path.SEPARATOR + Constants.TEZ_RUNTIME_TASK_OUTPUT_FILENAME_STRING + suffix;
+
+      ret = localDirAllocator.getLocalPathToRead(pathFromLocalDir.toString(), conf);
+    }
+    return ret;
   }
 
   @VisibleForTesting

@@ -207,11 +207,12 @@ public class OrderedPartitionedKVOutput extends AbstractLogicalOutput {
     List<Event> eventList = Lists.newLinkedList();
     if (finalMergeEnabled && !pipelinedShuffle) {
       boolean isLastEvent = true;
+      String pathComponent = ShuffleUtils.getPathComponentForDME(conf, getContext());
       String auxiliaryService = conf.get(TezConfiguration.TEZ_AM_SHUFFLE_AUXILIARY_SERVICE_ID,
           TezConfiguration.TEZ_AM_SHUFFLE_AUXILIARY_SERVICE_ID_DEFAULT);
       ShuffleUtils.generateEventOnSpill(eventList, finalMergeEnabled, isLastEvent,
           getContext(), 0, new TezSpillRecord(sorter.getFinalIndexFile(), localFs),
-          getNumPhysicalOutputs(), sendEmptyPartitionDetails, getContext().getUniqueIdentifier(),
+          getNumPhysicalOutputs(), sendEmptyPartitionDetails, pathComponent,
           sorter.getPartitionStats(), sorter.reportDetailedPartitionStats(), auxiliaryService, deflater);
     }
     return eventList;

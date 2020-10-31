@@ -37,6 +37,7 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.InputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -70,6 +71,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RawLocalFileSystem;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
@@ -90,6 +92,7 @@ import org.apache.tez.runtime.api.events.CompositeDataMovementEvent;
 import org.apache.tez.runtime.library.api.Partitioner;
 import org.apache.tez.runtime.library.api.TezRuntimeConfiguration;
 import org.apache.tez.runtime.library.api.TezRuntimeConfiguration.ReportPartitionStats;
+import org.apache.tez.runtime.library.common.shuffle.ShuffleUtils;
 import org.apache.tez.runtime.library.common.sort.impl.IFile;
 import org.apache.tez.runtime.library.common.sort.impl.TezIndexRecord;
 import org.apache.tez.runtime.library.common.sort.impl.TezSpillRecord;
@@ -106,9 +109,22 @@ import org.junit.runners.Parameterized;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+
+//Use raw local file system to simulate TezTestFileSystem
+class TezTestFileSystem extends RawLocalFileSystem {
+  @Override
+  public String getScheme() {
+    return "teztest";
+  }
+  @Override
+  public URI getUri() {
+    return URI.create("teztest:///");
+  }
+}
 
 @RunWith(value = Parameterized.class)
 public class TestUnorderedPartitionedKVWriter {
@@ -353,10 +369,21 @@ public class TestUnorderedPartitionedKVWriter {
     textTest(100, 10, 2048, 10, 10, 10, false, false);
   }
 
+  @Test(timeout = 10000)
+  public void testTextWithFsBasedShuffle() throws IOException, InterruptedException {
+    textTest(100, 10, 2048, 0, 0, 0, false, true);
+  }
+
   public void textTest(int numRegularRecords, int numPartitions, long availableMemory,
-      int numLargeKeys, int numLargevalues, int numLargeKvPairs,
-      boolean pipeliningEnabled, boolean isFinalMergeEnabled) throws IOException,
-      InterruptedException {
+      int numLargeKeys, int numLargevalues, int numLargeKvPairs, boolean pipeliningEnabled,
+      boolean isFinalMergeEnabled) throws IOException, InterruptedException {
+    textTest(numRegularRecords, numPartitions, availableMemory, numLargeKeys, numLargevalues,
+        numLargeKvPairs, pipeliningEnabled, isFinalMergeEnabled, false);
+  }
+
+  public void textTest(int numRegularRecords, int numPartitions, long availableMemory,
+      int numLargeKeys, int numLargevalues, int numLargeKvPairs, boolean pipeliningEnabled,
+      boolean isFinalMergeEnabled, boolean fsBasedShuffle) throws IOException, InterruptedException {
     Partitioner partitioner = new HashPartitioner();
     ApplicationId appId = ApplicationId.newInstance(10000000, 1);
     TezCounters counters = new TezCounters();
@@ -371,6 +398,12 @@ public class TestUnorderedPartitionedKVWriter {
         -1, HashPartitioner.class);
     conf.setBoolean(TezRuntimeConfiguration.TEZ_RUNTIME_PIPELINED_SHUFFLE_ENABLED, pipeliningEnabled);
     conf.setBoolean(TezRuntimeConfiguration.TEZ_RUNTIME_ENABLE_FINAL_MERGE_IN_OUTPUT, isFinalMergeEnabled);
+
+    if (fsBasedShuffle) {
+      conf.setBoolean(TezConfiguration.TEZ_FS_BASED_SHUFFLE_ENABLED, true);
+      conf.set(TezConfiguration.TEZ_FS_BASED_SHUFFLE_LOCATION, "teztest:///" + testTmpDir);
+      conf.set("fs.teztest.impl", TezTestFileSystem.class.getName());
+    }
 
     CompressionCodec codec = null;
     if (shouldCompress) {
@@ -512,11 +545,11 @@ public class TestUnorderedPartitionedKVWriter {
     }
     assertEquals(HOST_STRING, eventProto.getHost());
     assertEquals(SHUFFLE_PORT, eventProto.getPort());
-    assertEquals(uniqueId, eventProto.getPathComponent());
+    assertEquals(ShuffleUtils.getPathComponentForDME(conf, outputContext),
+        eventProto.getPathComponent());
 
     // Verify the data
     // Verify the actual data
-    TezTaskOutput taskOutput = new TezTaskOutputFiles(conf, uniqueId, dagId);
     Path outputFilePath = kvWriter.finalOutPath;
     Path spillFilePath = kvWriter.finalIndexPath;
     if (numRecordsWritten > 0) {
@@ -538,7 +571,8 @@ public class TestUnorderedPartitionedKVWriter {
         continue;
       }
       TezIndexRecord indexRecord = spillRecord.getIndex(i);
-      FSDataInputStream inStream = FileSystem.getLocal(conf).open(outputFilePath);
+      FSDataInputStream inStream = ShuffleUtils.getRawFileSystemForPath(spillFilePath, conf)
+          .open(outputFilePath);
       inStream.seek(indexRecord.getStartOffset());
       IFile.Reader reader = new IFile.Reader(inStream, indexRecord.getPartLength(), codec, null,
           null, false, 0, -1);

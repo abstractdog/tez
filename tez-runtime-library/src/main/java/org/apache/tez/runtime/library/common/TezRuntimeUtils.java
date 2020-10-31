@@ -44,6 +44,8 @@ import org.apache.tez.runtime.api.TaskContext;
 import org.apache.tez.runtime.library.api.Partitioner;
 import org.apache.tez.runtime.library.api.TezRuntimeConfiguration;
 import org.apache.tez.runtime.library.common.combine.Combiner;
+import org.apache.tez.runtime.library.common.shuffle.ShuffleUtils;
+import org.apache.tez.runtime.library.common.task.local.output.TezTaskFsOutput;
 import org.apache.tez.runtime.library.common.task.local.output.TezTaskOutput;
 import org.apache.tez.runtime.library.common.task.local.output.TezTaskOutputFiles;
 
@@ -157,14 +159,29 @@ public class TezRuntimeUtils {
   }
 
   public static TezTaskOutput instantiateTaskOutputManager(Configuration conf, OutputContext outputContext) {
+    Class<?> defaultClazz = null;
+    boolean fsBasedShuffleEnabled = ShuffleUtils.isFsBasedShuffleEnabled(conf);
+    if (fsBasedShuffleEnabled) {
+      defaultClazz = TezTaskFsOutput.class;
+    } else {
+      defaultClazz = TezTaskOutputFiles.class;
+    }
     Class<?> clazz = conf.getClass(Constants.TEZ_RUNTIME_TASK_OUTPUT_MANAGER,
-        TezTaskOutputFiles.class);
+        defaultClazz);
+
     try {
-      Constructor<?> ctor = clazz.getConstructor(Configuration.class, String.class, int.class);
-      ctor.setAccessible(true);
-      TezTaskOutput instance = (TezTaskOutput) ctor.newInstance(conf,
-          outputContext.getUniqueIdentifier(),
-          outputContext.getDagIdentifier());
+      TezTaskOutput instance = null;
+      if (fsBasedShuffleEnabled) {
+        Constructor<?> ctor = clazz.getConstructor(Configuration.class, TaskContext.class, int.class);
+        ctor.setAccessible(true);
+        instance = (TezTaskOutput) ctor.newInstance(conf, (TaskContext) outputContext,
+            ((TaskContext) outputContext).getDagIdentifier());
+      } else {
+        Constructor<?> ctor = clazz.getConstructor(Configuration.class, String.class, int.class);
+        ctor.setAccessible(true);
+        instance = (TezTaskOutput) ctor.newInstance(conf, outputContext.getUniqueIdentifier(),
+            outputContext.getDagIdentifier());
+      }
       return instance;
     } catch (Exception e) {
       throw new TezUncheckedException(

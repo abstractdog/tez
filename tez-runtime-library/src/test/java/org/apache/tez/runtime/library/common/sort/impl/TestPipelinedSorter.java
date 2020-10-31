@@ -19,12 +19,14 @@
 package org.apache.tez.runtime.library.common.sort.impl;
 
 import com.google.common.collect.Maps;
+
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocalDirAllocator;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RawLocalFileSystem;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.Text;
@@ -47,6 +49,7 @@ import org.apache.tez.runtime.library.api.TezRuntimeConfiguration;
 import org.apache.tez.runtime.library.api.TezRuntimeConfiguration.ReportPartitionStats;
 import org.apache.tez.runtime.library.common.Constants;
 import org.apache.tez.runtime.library.common.combine.Combiner;
+import org.apache.tez.runtime.library.common.shuffle.ShuffleUtils;
 import org.apache.tez.runtime.library.conf.OrderedPartitionedKVOutputConfig.SorterImpl;
 import org.apache.tez.runtime.library.partitioner.HashPartitioner;
 import org.apache.tez.runtime.library.testutils.RandomTextGenerator;
@@ -57,6 +60,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +76,18 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
+
+// Use raw local file system to simulate TezTestFileSystem
+class TezTestFileSystem extends RawLocalFileSystem {
+  @Override
+  public String getScheme() {
+    return "teztest";
+  }
+  @Override
+  public URI getUri() {
+    return URI.create("teztest:///");
+  }
+}
 
 public class TestPipelinedSorter {
   private static Configuration conf;
@@ -524,6 +541,30 @@ public class TestPipelinedSorter {
     conf.setBoolean(TezRuntimeConfiguration.TEZ_RUNTIME_PIPELINED_SORTER_LAZY_ALLOCATE_MEMORY, false);
   }
 
+  @Test
+  public void testFsBasedShuffleBasic() throws IOException {
+    Configuration localConf = getConf();
+    localConf.setBoolean(TezConfiguration.TEZ_FS_BASED_SHUFFLE_ENABLED, true);
+    localConf.set(TezConfiguration.TEZ_FS_BASED_SHUFFLE_LOCATION, "teztest:///" + workDir.toUri().getPath());
+    localConf.set("fs.teztest.impl", TezTestFileSystem.class.getName());
+
+    //1 MB key & 1 MB value, whereas block size is just 20 MB, no spill
+    //# partition, # of keys, size per key, InitialMem, blockSize, conf
+    basicTestWithConf(1, 3, 1 << 20, (20 * 1024 * 1024), 20 << 20, localConf);
+  }
+
+  @Test
+  public void testFsBasedShuffleSpill() throws IOException {
+    Configuration localConf = getConf();
+    localConf.setBoolean(TezConfiguration.TEZ_FS_BASED_SHUFFLE_ENABLED, true);
+    localConf.set(TezConfiguration.TEZ_FS_BASED_SHUFFLE_LOCATION, "teztest:///" + workDir.toUri().getPath());
+    localConf.set("fs.teztest.impl", TezTestFileSystem.class.getName());
+
+    //1 MB key & 1 MB value, block size is 3 MB, spill
+    //# partition, # of keys, size per key, InitialMem, blockSize, conf
+    basicTestWithConf(1, 3, 1 << 20, (20 * 1024 * 1024), 3 << 20, localConf);
+  }
+
   public void basicTest2(int partitions, int[] numkeys, int[] keysize,
       long initialAvailableMem, int  blockSize) throws IOException {
     this.numOutputs = partitions; // single output
@@ -555,17 +596,22 @@ public class TestPipelinedSorter {
 
   public void basicTest(int partitions, int numKeys, int keySize,
       long initialAvailableMem, int minBlockSize) throws IOException {
+    basicTestWithConf(partitions, numKeys, keySize, initialAvailableMem, minBlockSize, getConf());
+  }
+
+  public void basicTestWithConf(int partitions, int numKeys, int keySize,
+      long initialAvailableMem, int minBlockSize, Configuration localConf) throws IOException {
     this.numOutputs = partitions; // single output
-    conf.setInt(TezRuntimeConfiguration
+    localConf.setInt(TezRuntimeConfiguration
         .TEZ_RUNTIME_PIPELINED_SORTER_MIN_BLOCK_SIZE_IN_MB, minBlockSize >> 20);
-    PipelinedSorter sorter = new PipelinedSorter(this.outputContext, conf, numOutputs,
+    PipelinedSorter sorter = new PipelinedSorter(this.outputContext, localConf, numOutputs,
         initialAvailableMem);
 
     writeData(sorter, numKeys, keySize);
 
     //partition stats;
     ReportPartitionStats partitionStats =
-        ReportPartitionStats.fromString(conf.get(
+        ReportPartitionStats.fromString(localConf.get(
         TezRuntimeConfiguration.TEZ_RUNTIME_REPORT_PARTITION_STATS,
         TezRuntimeConfiguration.TEZ_RUNTIME_REPORT_PARTITION_STATS_DEFAULT));
     if (partitionStats.isEnabled()) {
@@ -573,9 +619,9 @@ public class TestPipelinedSorter {
     }
 
     verifyCounters(sorter, outputContext);
-    verifyOutputPermissions(outputContext.getUniqueIdentifier());
+    verifyOutputPermissions(outputContext, localConf);
     Path outputFile = sorter.finalOutputFile;
-    FileSystem fs = outputFile.getFileSystem(conf);
+    FileSystem fs = outputFile.getFileSystem(localConf);
     TezCounter finalOutputBytes =
         outputContext.getCounters().findCounter(TaskCounter.OUTPUT_BYTES_PHYSICAL);
     if (finalOutputBytes.getValue() > 0) {
@@ -866,6 +912,56 @@ public class TestPipelinedSorter {
         localFs.getFileStatus(outputPath).getPermission().toShort());
     Assert.assertEquals("Incorrect index permissions", (short)0640,
         localFs.getFileStatus(indexPath).getPermission().toShort());
+  }
+
+  private void verifyOutputPermissions(OutputContext localOutputContext, Configuration localConf)
+      throws IOException {
+    String subpath = ShuffleUtils.getPathComponentForDME(localConf, localOutputContext) + "/"
+        + Constants.TEZ_RUNTIME_TASK_OUTPUT_FILENAME_STRING;
+    Path outputPath = null;
+    Path indexPath = null;
+    FileSystem fs = null;
+
+    if (ShuffleUtils.isFsBasedShuffleEnabled(localConf)) {
+      outputPath = new Path(subpath);
+      indexPath = new Path(subpath + Constants.TEZ_RUNTIME_TASK_OUTPUT_INDEX_SUFFIX_STRING);
+
+      // this hack is needed because TezTestFileSystem is a RawLocalFileSystem, and during the
+      // permission check, there is a new File(URI) call, which fails because of this assumption:
+      // if ((scheme == null) || !scheme.equalsIgnoreCase("file"))
+      // throw new IllegalArgumentException("URI scheme is not \"file\"");
+      outputPath = fakeFileScheme(outputPath);
+      indexPath = fakeFileScheme(indexPath);
+
+      fs = ShuffleUtils.getRawFileSystemForPath(outputPath, localConf);
+    } else {
+      subpath = Constants.TEZ_RUNTIME_TASK_OUTPUT_DIR + "/" + subpath;
+      outputPath = dirAllocator.getLocalPathToRead(subpath, localConf);
+      indexPath = dirAllocator.getLocalPathToRead(
+          subpath + Constants.TEZ_RUNTIME_TASK_OUTPUT_INDEX_SUFFIX_STRING, localConf);
+      fs = localFs;
+    }
+
+    Assert.assertEquals("Incorrect output permissions", (short) 0640,
+        fs.getFileStatus(outputPath).getPermission().toShort());
+    Assert.assertEquals("Incorrect index permissions", (short) 0640,
+        fs.getFileStatus(indexPath).getPermission().toShort());
+  }
+
+  /**
+   * Changes path's scheme to file://.
+   *
+   * @param path
+   * @return
+   */
+  private Path fakeFileScheme(Path path) {
+    URI uri = path.toUri();
+    try {
+      return new Path(new URI("file", uri.getUserInfo(), uri.getHost(), uri.getPort(),
+          uri.getPath(), uri.getQuery(), uri.getFragment()));
+    } catch (URISyntaxException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private void writeData(ExternalSorter sorter, int numKeys, int keyLen) throws IOException {

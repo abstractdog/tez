@@ -65,7 +65,6 @@ public class TezSpillRecord {
   public TezSpillRecord(Path indexFileName, FileSystem rfs, Checksum crc,
                      String expectedIndexOwner)
       throws IOException {
-
     final FSDataInputStream in = rfs.open(indexFileName);
     try {
       final long length = rfs.getFileStatus(indexFileName).getLen();

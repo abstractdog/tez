@@ -29,6 +29,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.LocalDirAllocator;
 import org.apache.hadoop.fs.Path;
 import org.apache.tez.common.TezRuntimeFrameworkConfigs;
+import org.apache.tez.runtime.api.TaskContext;
 import org.apache.tez.runtime.library.common.Constants;
 import org.apache.tez.runtime.library.common.shuffle.ShuffleUtils;
 
@@ -41,6 +42,10 @@ import org.apache.tez.runtime.library.common.shuffle.ShuffleUtils;
 @InterfaceAudience.Private
 @InterfaceStability.Unstable
 public class TezTaskOutputFiles extends TezTaskOutput {
+
+  public TezTaskOutputFiles(Configuration conf, TaskContext context, int dagID) {
+    super(conf, context, dagID);
+  }
 
   public TezTaskOutputFiles(Configuration conf, String uniqueId, int dagID) {
     super(conf, uniqueId, dagID);

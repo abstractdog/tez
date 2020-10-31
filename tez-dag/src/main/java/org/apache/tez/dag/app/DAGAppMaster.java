@@ -600,6 +600,15 @@ public class DAGAppMaster extends AbstractService {
     historyEventHandler = createHistoryEventHandler(context);
     addIfService(historyEventHandler, true);
 
+    if(conf.getBoolean(TezConfiguration.TEZ_FS_BASED_SHUFFLE_ENABLED,
+        TezConfiguration.TEZ_FS_BASED_SHUFFLE_ENABLED_DEFAULT)
+        && conf.getBoolean(TezConfiguration.TEZ_FS_BASED_SHUFFLE_AUTOCLEAN,
+            TezConfiguration.TEZ_FS_BASED_SHUFFLE_AUTOCLEAN_DEFAULT)) {
+      FsBasedShuffleDataCleaner shuffleCleaner = new FsBasedShuffleDataCleaner(context);
+      addIfService(shuffleCleaner, true);
+      dispatcher.register(DAGAppMasterEventType.class, shuffleCleaner);
+    }
+
     this.sessionTimeoutInterval = TezCommonUtils.getDAGSessionTimeout(amConf);
     this.clientAMHeartbeatTimeoutIntervalMillis =
         TezCommonUtils.getAMClientHeartBeatTimeoutMillis(amConf);

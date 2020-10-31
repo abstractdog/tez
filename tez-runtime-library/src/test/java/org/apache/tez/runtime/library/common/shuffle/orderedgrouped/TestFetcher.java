@@ -63,12 +63,14 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RawLocalFileSystem;
+import org.apache.hadoop.io.FileChunk;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.tez.common.counters.TezCounters;
 import org.apache.tez.common.security.JobTokenSecretManager;
 import org.apache.tez.dag.api.TezConfiguration;
 import org.apache.tez.runtime.api.InputContext;
 import org.apache.tez.runtime.library.api.TezRuntimeConfiguration;
+import org.apache.tez.runtime.library.common.Constants;
 import org.apache.tez.runtime.library.common.InputAttemptIdentifier;
 import org.apache.tez.runtime.library.common.security.SecureShuffleUtils;
 import org.apache.tez.runtime.library.common.sort.impl.TezIndexRecord;
@@ -166,11 +168,11 @@ public class TestFetcher {
 
     // when local mode is enabled and host and port matches use local fetch
     FetcherOrderedGrouped spyFetcher = spy(fetcher);
-    doNothing().when(spyFetcher).setupLocalDiskFetch(mapHost);
+    doNothing().when(spyFetcher).setupFileSystemFetch(mapHost);
 
     spyFetcher.fetchNext();
 
-    verify(spyFetcher, times(1)).setupLocalDiskFetch(mapHost);
+    verify(spyFetcher, times(1)).setupFileSystemFetch(mapHost);
     verify(spyFetcher, never()).copyFromHost(any(MapHost.class));
 
     // if hostname does not match use http
@@ -181,11 +183,11 @@ public class TestFetcher {
             wrongLengthErrsCounter, badIdErrsCounter, wrongMapErrsCounter, connectionErrsCounter,
             wrongReduceErrsCounter, APP_ID, DAG_ID, false, false, true, false);
     spyFetcher = spy(fetcher);
-    doNothing().when(spyFetcher).setupLocalDiskFetch(mapHost);
+    doNothing().when(spyFetcher).setupFileSystemFetch(mapHost);
 
     spyFetcher.fetchNext();
 
-    verify(spyFetcher, never()).setupLocalDiskFetch(any(MapHost.class));
+    verify(spyFetcher, never()).setupFileSystemFetch(any(MapHost.class));
     verify(spyFetcher, times(1)).copyFromHost(mapHost);
 
     // if port does not match use http
@@ -196,11 +198,11 @@ public class TestFetcher {
             wrongLengthErrsCounter, badIdErrsCounter, wrongMapErrsCounter, connectionErrsCounter,
             wrongReduceErrsCounter, APP_ID, DAG_ID, false, false, true, false);
     spyFetcher = spy(fetcher);
-    doNothing().when(spyFetcher).setupLocalDiskFetch(mapHost);
+    doNothing().when(spyFetcher).setupFileSystemFetch(mapHost);
 
     spyFetcher.fetchNext();
 
-    verify(spyFetcher, never()).setupLocalDiskFetch(any(MapHost.class));
+    verify(spyFetcher, never()).setupFileSystemFetch(any(MapHost.class));
     verify(spyFetcher, times(1)).copyFromHost(mapHost);
 
     //if local fetch is not enabled
@@ -210,12 +212,56 @@ public class TestFetcher {
         wrongLengthErrsCounter, badIdErrsCounter, wrongMapErrsCounter, connectionErrsCounter,
         wrongReduceErrsCounter, APP_ID, DAG_ID, false, false, true, false);
     spyFetcher = spy(fetcher);
-    doNothing().when(spyFetcher).setupLocalDiskFetch(mapHost);
+    doNothing().when(spyFetcher).setupFileSystemFetch(mapHost);
 
     spyFetcher.fetchNext();
 
-    verify(spyFetcher, never()).setupLocalDiskFetch(any(MapHost.class));
+    verify(spyFetcher, never()).setupFileSystemFetch(any(MapHost.class));
     verify(spyFetcher, times(1)).copyFromHost(mapHost);
+  }
+
+  @Test(timeout = 5000)
+  public void testFsBasedShuffleFetch() throws Exception {
+    Configuration conf = new TezConfiguration();
+    // Enable FileSystem based fetch
+    conf.setBoolean(TezConfiguration.TEZ_FS_BASED_SHUFFLE_ENABLED, true);
+    ShuffleScheduler scheduler = mock(ShuffleScheduler.class);
+    MergeManager merger = mock(MergeManager.class);
+    Shuffle shuffle = mock(Shuffle.class);
+    List<InputAttemptIdentifier> srcAttempts =
+        Arrays.asList(new InputAttemptIdentifier(0, 1, "teztest://machine:9000/pathComponent_0"));
+
+    InputContext inputContext = mock(InputContext.class);
+    doReturn(new TezCounters()).when(inputContext).getCounters();
+    doReturn("src vertex").when(inputContext).getSourceVertexName();
+    MapHost mapHost = new MapHost(HOST, PORT, 0, 1);
+
+    FetcherOrderedGrouped fetcher = new FetcherOrderedGrouped(null, scheduler, merger, shuffle,
+        null, false, 0, null, conf, getRawFs(conf), /* local fetch */false, HOST, PORT,
+        "src vertex", mapHost, ioErrsCounter, wrongLengthErrsCounter, badIdErrsCounter,
+        wrongMapErrsCounter, connectionErrsCounter, wrongReduceErrsCounter, APP_ID, DAG_ID, false,
+        false, true, false);
+    FetcherOrderedGrouped spyFetcher = spy(fetcher);
+    doReturn(srcAttempts).when(scheduler).getMapsForHost(mapHost);
+
+    doAnswer(new Answer<TezIndexRecord>() {
+      @Override
+      public TezIndexRecord answer(InvocationOnMock invocation) throws Throwable {
+        return new TezIndexRecord(10, 1000, 100);
+      }
+    }).when(spyFetcher).getIndexRecord(anyString(), eq(mapHost.getPartitionId()));
+
+    doAnswer(new Answer<InputAttemptIdentifier>() {
+      @Override
+      public InputAttemptIdentifier answer(InvocationOnMock invocation) throws Throwable {
+        return srcAttempts.get(0);
+      }
+    }).when(scheduler).getIdentifierForFetchedOutput(any(String.class), any(int.class));
+
+    spyFetcher.fetchNext();
+
+    verify(spyFetcher).setupFileSystemFetch(eq(mapHost));
+    verifyFsBasedFetchCopySucceeded(scheduler, merger, mapHost, srcAttempts, 0);
   }
 
   @Test(timeout = 5000)
@@ -312,7 +358,7 @@ public class TestFetcher {
     doNothing().when(scheduler).putBackKnownMapOutput(host,
         srcAttempts.get(SECOND_FAILED_ATTEMPT_IDX));
 
-    spyFetcher.setupLocalDiskFetch(host);
+    spyFetcher.setupFileSystemFetch(host);
 
     // should have exactly 3 success and 1 failure.
     for (int i : successfulAttemptsIndexes) {
@@ -401,7 +447,7 @@ public class TestFetcher {
 
     doNothing().when(scheduler).copySucceeded(any(InputAttemptIdentifier.class), any(MapHost.class),
         anyLong(), anyLong(), anyLong(), any(MapOutput.class), anyBoolean());
-    spyFetcher.setupLocalDiskFetch(host);
+    spyFetcher.setupFileSystemFetch(host);
     verify(scheduler, times(0)).copySucceeded(any(InputAttemptIdentifier.class), any(MapHost.class),
         anyLong(), anyLong(), anyLong(), any(MapOutput.class), anyBoolean());
     verify(spyFetcher).putBackRemainingMapOutputs(host);
@@ -508,7 +554,7 @@ public class TestFetcher {
     doNothing().when(scheduler).putBackKnownMapOutput(host,
         srcAttempts.get(SECOND_FAILED_ATTEMPT_IDX).expand(1));
 
-    spyFetcher.setupLocalDiskFetch(host);
+    spyFetcher.setupFileSystemFetch(host);
 
     // should have exactly 3 success and 1 failure.
     for (int i : successfulAttemptsIndexes) {
@@ -550,6 +596,27 @@ public class TestFetcher {
     MapOutput m = captureMapOutput.getAllValues().get(0);
     Assert.assertTrue(m.getType().equals(MapOutput.Type.DISK_DIRECT) &&
         m.getAttemptIdentifier().equals(srcAttemptToMatch));
+  }
+
+  private void verifyFsBasedFetchCopySucceeded(ShuffleScheduler scheduler, MergeManager merger, MapHost host,
+      List<InputAttemptIdentifier> srcAttempts, long p) throws
+      IOException {
+    // need to verify filename, offsets, sizes wherever they are used.
+    InputAttemptIdentifier srcAttemptToMatch = srcAttempts.get((int) p);
+
+    ArgumentCaptor<MapOutput> captureMapOutput = ArgumentCaptor.forClass(MapOutput.class);
+    verify(scheduler).copySucceeded(eq(srcAttemptToMatch), eq(host), eq(100L),
+        eq(1000L), anyLong(), captureMapOutput.capture(), anyBoolean());
+
+    // cannot use the equals of MapOutput as it compares id which is private. so doing it manually
+    MapOutput m = captureMapOutput.getAllValues().get(0);
+    Assert.assertTrue(m.getType().equals(MapOutput.Type.DISK_DIRECT) &&
+        m.getAttemptIdentifier().equals(srcAttemptToMatch));
+
+    FileChunk fileChunk = m.getOutputPath();
+    Assert.assertEquals(srcAttemptToMatch.getPathComponent() +
+        Path.SEPARATOR + Constants.TEZ_RUNTIME_TASK_OUTPUT_FILENAME_STRING,
+        fileChunk.getPath().toString());
   }
 
   static class FakeHttpConnection extends HttpConnection {

@@ -63,6 +63,7 @@ public class TezCommonUtils {
   private static final Logger LOG = LoggerFactory.getLogger(TezClient.class);
 
   public static final String TEZ_SYSTEM_SUB_DIR = ".tez";
+  public static final String TEZ_FS_SHUFFLE_SUB_DIR = ".shuffle";
 
   /**
    * <p>
@@ -148,6 +149,24 @@ public class TezCommonUtils {
     tezStagingDir = new Path(baseStagingPath, TEZ_SYSTEM_SUB_DIR);
     tezStagingDir = new Path(tezStagingDir, strAppId);
     return tezStagingDir;
+  }
+
+  /**
+   * <p>
+   * This function returns the intermediate data directory for TEZ FileSystem based
+   * shuffle implementation.
+   * </p>
+   *
+   * @param conf
+   *          Tez configuration
+   * @return TEZ File System based shuffle intermediate data directory.
+   */
+  public static String getTezFSBasedShufflePath(Configuration conf) {
+    Path baseStagingPath = getTezBaseStagingPath(conf);
+    Path intDataDirDefault = new Path(baseStagingPath, TEZ_FS_SHUFFLE_SUB_DIR);
+    String intDataDirStr = conf.get(TezConfiguration.TEZ_FS_BASED_SHUFFLE_LOCATION,
+        intDataDirDefault.toString());
+    return intDataDirStr;
   }
 
   /**
