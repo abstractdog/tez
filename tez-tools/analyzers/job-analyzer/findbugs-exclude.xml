@@ -24,5 +24,16 @@
     <Bug pattern="EI_EXPOSE_REP"/>
   </Match>
 
+  <Match>
+    <Class name="org.apache.tez.analyzer.plugins.CriticalPathAnalyzer"/>
+    <Method name="createCriticalPath" />
+    <Bug pattern="NP_NULL_PARAM_DEREF" />
+  </Match>
+
+  <Match>
+    <Class name="org.apache.tez.analyzer.plugins.VertexLevelCriticalPathAnalyzer"/>
+    <Method name="sortByValues" />
+    <Bug pattern="NP_NONNULL_PARAM_VIOLATION" />
+  </Match>
 
 </FindBugsFilter>
