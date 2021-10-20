@@ -1823,13 +1823,18 @@ public class TaskAttemptImpl implements TaskAttempt,
         LOG.info("Host {} is blamed for fetch failure from {} for the first time", sHost, dHost);
         downstreamBlamingHosts.put(sHost, new HashSet<String>());
       }
-
       downstreamBlamingHosts.get(sHost).add(dHost);
+
       int currentNumberOfFailingDownstreamHosts = downstreamBlamingHosts.get(sHost).size();
-      if (currentNumberOfFailingDownstreamHosts > sourceAttempt.getVertex().getVertexConfig()
-          .getMaxAllowedDownstreamHostsReportingFetchFailure()) {
-        LOG.info("Host will be marked fail: {} because of {} distinct upstream hosts having fetch failures", sHost,
-            currentNumberOfFailingDownstreamHosts);
+      int numNodes = getNumNodes(sourceAttempt);
+      float hostFailureFraction = numNodes > 0 ? ((float) currentNumberOfFailingDownstreamHosts) / numNodes : 0;
+      double maxAllowedHostFailureFraction = sourceAttempt.getVertex().getVertexConfig()
+          .getMaxAllowedDownstreamHostFailuresFraction();
+      LOG.info("currentNumberOfFailingDownstreamHosts: {}, numNodes: {}, fraction: {}, max allowed: {}",
+          currentNumberOfFailingDownstreamHosts, numNodes, hostFailureFraction, maxAllowedHostFailureFraction);
+      if (hostFailureFraction > maxAllowedHostFailureFraction) {
+        LOG.info("Host will be marked fail: {} because of host failure fraction %.2f is beyond the limit %.2f", sHost,
+            hostFailureFraction, maxAllowedHostFailureFraction);
         tooManyDownstreamHostsBlamedTheSameUpstreamHost = true;
       }
 
@@ -1874,10 +1879,13 @@ public class TaskAttemptImpl implements TaskAttempt,
           + maxAllowedOutputFailuresFraction
           + ", uniquefailedOutputReports=" + sourceAttempt.uniquefailedOutputReports.size()
           + ", MAX_ALLOWED_OUTPUT_FAILURES=" + maxAllowedOutputFailures
+
+          + "hostFailureFraction=" + hostFailureFraction
+          + " ("+currentNumberOfFailingDownstreamHosts+" / "+numNodes+")"
+          + ", MAX_ALLOWED_DOWNSTREAM_HOST_FAILURES_FRACTION="
+          + maxAllowedHostFailureFraction
           + ", MAX_ALLOWED_TIME_FOR_TASK_READ_ERROR_SEC="
           + maxAllowedTimeForTaskReadErrorSec
-          + ", tooManyDownstreamHostsBlamedTheSameUpstreamHost: " + tooManyDownstreamHostsBlamedTheSameUpstreamHost
-          + " ("+currentNumberOfFailingDownstreamHosts+")"
           + ", readErrorTimespan=" + readErrorTimespanSec
           + ", isLocalFetch=" + readErrorEvent.isLocalFetch()
           + ", isDiskErrorAtSource=" + readErrorEvent.isDiskErrorAtSource();
@@ -1898,6 +1906,13 @@ public class TaskAttemptImpl implements TaskAttempt,
       }
       // TODO at some point. Nodes may be interested in FetchFailure info.
       // Can be used to blacklist nodes.
+    }
+
+    private int getNumNodes(TaskAttemptImpl sourceAttempt) {
+      Vertex vertex = sourceAttempt.getVertex();
+      String taskSchedulerName = vertex.getDAG().getDefaultExecutionContext().getTaskSchedulerName();
+      int sourceIndex = vertex.getAppContext().getTaskScheduerIdentifier(taskSchedulerName);
+      return vertex.getAppContext().getNodeTracker().getNumNodes(sourceIndex);
     }
   }
   
