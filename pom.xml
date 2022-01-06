@@ -1001,7 +1001,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <inherited>false</inherited>
         <executions>
           <execution>
             <id>clean</id>
@@ -1016,6 +1015,8 @@
                 <requireJavaVersion>
                   <version>[${maven.compiler.target},)</version>
                 </requireJavaVersion>
+                <banDuplicatePomDependencyVersions/>
+                <dependencyConvergence/>
               </rules>
             </configuration>
           </execution>
