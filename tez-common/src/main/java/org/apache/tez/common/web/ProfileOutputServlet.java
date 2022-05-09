@@ -12,6 +12,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class ProfileOutputServlet extends DefaultServlet {
     public static final String fileQueryParam = "file";
@@ -46,7 +48,7 @@ public class ProfileOutputServlet extends DefaultServlet {
             return;
         }
         response.setContentType(MimeType.HTML);
-        response.getOutputStream().write(new FileInputStream(outputFile).readAllBytes());
+        response.getOutputStream().write(Files.readAllBytes(Paths.get(outputFile.getPath())));
         response.getOutputStream().flush();
     }
 }
