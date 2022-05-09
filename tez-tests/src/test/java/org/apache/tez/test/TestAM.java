@@ -74,7 +74,7 @@ public class TestAM {
       Configuration tezClusterConf = new Configuration();
       tezClusterConf.set("fs.defaultFS", remoteFs.getUri().toString()); // use HDFS
       tezClusterConf.setInt("yarn.nodemanager.delete.debug-delay-sec", 20000);
-      tezClusterConf.setLong(TezConfiguration.TEZ_AM_SLEEP_TIME_BEFORE_EXIT_MILLIS, 1000);
+      tezClusterConf.setLong(TezConfiguration.TEZ_AM_SLEEP_TIME_BEFORE_EXIT_MILLIS, 1000 * 60 * 60); // TODO : temporarily changed to 1h
       tezClusterConf.set(YarnConfiguration.PROXY_ADDRESS, "localhost");
       tezCluster.init(tezClusterConf);
       tezCluster.start();
@@ -93,9 +93,10 @@ public class TestAM {
     }
   }
 
-  @Test(timeout = 60000)
+//  @Test(timeout = 60000) // TODO : temporarily removed timeout
+  @Test
   public void testAMWebUIService() throws TezException, IOException, InterruptedException {
-    SleepProcessorConfig spConf = new SleepProcessorConfig(1);
+    SleepProcessorConfig spConf = new SleepProcessorConfig(1000 * 60 * 60); // TODO : temporarily changed to 1h
 
     DAG dag = DAG.create("TezSleepProcessor");
     Vertex vertex = Vertex.create("SleepVertex",

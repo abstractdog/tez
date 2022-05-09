@@ -26,6 +26,8 @@ import org.apache.tez.common.Preconditions;
 import org.apache.tez.common.web.ServletToControllerAdapters.ConfServletController;
 import org.apache.tez.common.web.ServletToControllerAdapters.JMXJsonServletController;
 import org.apache.tez.common.web.ServletToControllerAdapters.StackServletController;
+import org.apache.tez.common.web.ServletToControllerAdapters.ProfileServletController;
+import org.apache.tez.common.web.ServletToControllerAdapters.ProfileOutputServletController;
 
 import com.google.inject.name.Names;
 import org.slf4j.Logger;
@@ -235,6 +237,8 @@ public class WebUIService extends AbstractService {
       route("/jmx", JMXJsonServletController.class);
       route("/conf", ConfServletController.class);
       route("/stacks", StackServletController.class);
+      route("/prof", ProfileServletController.class);
+      route("/prof-output", ProfileOutputServletController.class);
     }
   }
 }
