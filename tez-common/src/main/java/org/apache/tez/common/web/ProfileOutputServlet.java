@@ -34,7 +34,7 @@ public class ProfileOutputServlet extends DefaultServlet {
         if (!outputFile.exists()){
             response.setContentType(MimeType.TEXT);
             PrintWriter out = response.getWriter();
-            out.println("Requested file does not exist");
+            out.println("Requested file does not exist: " + fileLocation + ", file query param: " + queriedFile);
             out.close();
             return;
         }

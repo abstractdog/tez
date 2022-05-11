@@ -1,6 +1,8 @@
 package org.apache.tez.common.web;
 
 import com.google.common.base.Joiner;
+import com.google.common.io.Files;
+
 import org.apache.hadoop.http.HttpServer2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +16,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -28,12 +31,19 @@ public class ProfileServlet extends HttpServlet {
     private static final String CONTENT_TYPE_TEXT = "text/plain; charset=utf-8";
     private static final String ASYNC_PROFILER_HOME_ENV = "ASYNC_PROFILER_HOME";
     private static final String ASYNC_PROFILER_HOME_SYSTEM_PROPERTY = "async.profiler.home";
-    private static final String ASYNC_PROFILER_DEFAULT = "/Users/zheenbekakimzhanov/Downloads/async-profiler-1.4-macos-x64"; //temporarily TODO: find out
+    private static final String ASYNC_PROFILER_DEFAULT = "/Users/laszlobodor/Downloads/async-profiler-1.8.7-macos-x64"; //temporarily TODO: find out
     private static final String PROFILER_SCRIPT = "/profiler.sh";
     private static final int DEFAULT_DURATION_SECONDS = 10;
     private static final AtomicInteger ID_GEN = new AtomicInteger(0);
     static final String OUTPUT_DIR = System.getProperty("java.io.tmpdir") + "/prof-output"; //TODO : it is not pointing to the same tmp folder as the /prof-output context's real path
 //    static final String OUTPUT_DIR = "/Users/zheenbekakimzhanov/Desktop/work/tez/tez-tests/target/tmp/org.apache.tez.test.TestAM/yarn-385676069/org.apache.tez.test.TestAM-localDir-nm-0_0/usercache/zheenbekakimzhanov/appcache/application_1651662019985_0001/container_1651662019985_0001_01_000001/tmp/jetty-0_0_0_0-50004-hadoop-common-3_3_1-tests_jar-_-any-12605016871911039289/webapp/prof-output";
+
+    private static final byte[] ARRAY = new byte[100000];
+
+    static {
+      new Random().nextBytes(ARRAY);
+    }
+
     enum Event {
         CPU("cpu"),
         ALLOC("alloc"),
@@ -199,6 +209,7 @@ public class ProfileServlet extends HttpServlet {
                         }
                         cmd.add(pid.toString());
                         outputFile.getParentFile().mkdirs(); // create necessary parent (output) folder if it does not exist
+                        out.println("request.getPathInfo: " + request.getPathInfo());
                         out.println("Printing servlet path:");
                         out.println(getServletContext().getRealPath(request.getPathInfo()));
                         out.println();
@@ -219,6 +230,9 @@ public class ProfileServlet extends HttpServlet {
                         out.println("Refreshing to: " + relativeUrl);
                         out.println("Status :" + response.getStatus());
 //                        out.flush(); // errors are not displayed because flushing overrides them
+
+                        // write garbage to a file to the path of the expected svg output just to check folders correct
+                        Files.write(ARRAY, outputFile);
                     } finally {
                         profilerLock.unlock();
                     }
