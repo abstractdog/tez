@@ -2596,6 +2596,6 @@ public class DAGImpl implements org.apache.tez.dag.app.dag.DAG,
     setDagCounter(DAGCounter.TOTAL_CONTAINERS_USED, containersUsedByCurrentDAG.size());
     setDagCounter(DAGCounter.NODE_USED_COUNT, nodesUsedByCurrentDAG.size());
     setDagCounter(DAGCounter.NODE_HOSTS_USED_COUNT, nodeHostsUsedByCurrentDAG.size());
-    setDagCounter(DAGCounter.NODE_TOTAL_COUNT, appContext.getTaskScheduler().getNumClusterNodes());
+    setDagCounter(DAGCounter.NODE_TOTAL_COUNT, appContext.getTaskScheduler().getNumClusterNodes(true));
   }
 }

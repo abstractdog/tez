@@ -224,9 +224,36 @@ public class TaskSchedulerManager extends AbstractService implements
   }
 
   public int getNumClusterNodes() {
+    return getNumClusterNodes(false);
+  }
+
+  public int getNumClusterNodes(boolean tryUpdate){
+    if (cachedNodeCount == -1 && tryUpdate){
+      cachedNodeCount = countAllNodes();
+    }
     return cachedNodeCount;
   }
-  
+
+  private int countAllNodes() {
+    int nodeCount = 0;
+    int schedulerId = 0;
+    try {
+      for (schedulerId = 0; schedulerId < taskSchedulers.length; schedulerId++) {
+        nodeCount += taskSchedulers[schedulerId].getClusterNodeCount();
+      }
+    } catch (Exception e) {
+      String msg = "Error in TaskScheduler while getting node count"
+          + ", scheduler=" + Utils.getTaskSchedulerIdentifierString(schedulerId, appContext);
+      LOG.error(msg, e);
+      sendEvent(
+          new DAGAppMasterEventUserServiceFatalError(
+              DAGAppMasterEventType.TASK_SCHEDULER_SERVICE_FATAL_ERROR,
+              msg, e));
+      throw new RuntimeException(e);
+    }
+    return nodeCount;
+  }
+
   public Resource getAvailableResources(int schedulerId) {
     try {
       return taskSchedulers[schedulerId].getAvailableResources();
