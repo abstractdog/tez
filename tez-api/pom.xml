@@ -190,6 +190,8 @@
           <reportSet>
             <id>configgen</id>
             <configuration>
+              <author>false</author>
+              <useStandardDocletOptions>true</useStandardDocletOptions>
               <doclet>org.apache.tez.tools.javadoc.doclet.ConfigStandardDoclet</doclet>
               <docletArtifacts>
                 <docletArtifact>

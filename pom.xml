@@ -1390,25 +1390,12 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <reportSets>
-          <reportSet>
-            <id>aggregate</id>
-            <configuration>
-              <doclet>org.apache.hadoop.classification.tools.IncludePublicAnnotationsStandardDoclet</doclet>
-              <docletArtifacts>
-                <docletArtifact>
-                  <groupId>org.apache.hadoop</groupId>
-                  <artifactId>hadoop-annotations</artifactId>
-                  <version>${hadoop.version}</version>
-                </docletArtifact>
-              </docletArtifacts>
-              <useStandardDocletOptions>true</useStandardDocletOptions>
-            </configuration>
-            <reports>
-              <report>aggregate</report>
-            </reports>
-          </reportSet>
-        </reportSets>
+        <version>3.4.1</version> <!-- Use the latest compatible version -->
+        <configuration>
+          <destDir>${project.build.directory}/site/apidocs</destDir>
+          <useStandardDocletOptions>true</useStandardDocletOptions>
+          <source>${maven.compiler.source}</source>
+        </configuration>
       </plugin>
     </plugins>
   </reporting>
