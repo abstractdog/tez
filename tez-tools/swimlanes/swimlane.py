@@ -18,7 +18,7 @@
 #
 
 import sys,math,os.path
-import StringIO
+from io import StringIO
 from amlogparser import AMLog
 from getopt import getopt
 
@@ -61,7 +61,7 @@ class SVGHelper(object):
 		self.height = h
 		self.parent = parent
 		if(not parent):
-			self.lines = StringIO.StringIO()
+			self.lines = StringIO()
 			self.write("""<?xml version="1.0" standalone="no"?>
 		<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 		""")
@@ -124,6 +124,7 @@ def main(argv):
 	laneSize = 24
 	y = len(lanes)*laneSize
 	items = attempts(log)
+	print(type(items))
 	maxx = max([a[4] for a in items])
 	if ticks == -1:
 		ticks = min(1000, (maxx - log.zero)/2048)
@@ -132,7 +133,7 @@ def main(argv):
 	svg = SVGHelper(x+2*marginRight+256, y+2*marginTop)
 	a = marginTop
 	svg.text(x/2, 32, log.name, style="font-size: 32px; text-anchor: middle")	
-	containerMap = dict(zip(list(lanes), xrange(len(lanes))))
+	containerMap = dict(zip(list(lanes), range(len(lanes))))
 	svg.text(marginRight - 16, marginTop - 32, "Container ID", "text-anchor:end; font-size: 16px;")
 	# draw a grid
 	for l in lanes:

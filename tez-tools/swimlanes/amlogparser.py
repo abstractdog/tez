@@ -34,12 +34,14 @@ class AMRawEvent(object):
 		self.args = args
 	def __repr__(self):
 		return "%s->%s (%s)" % (self.dag, self.event, self.args)
+	def __lt__(self, other):
+		return self.ts < other.ts
 
 def first(l):
 	return (l[:1] or [None])[0]
 
 def kv_add(d, k, v):
-	if(d.has_key(k)):
+	if(k in d):
 		oldv = d[k]
 		if(type(oldv) is list):
 			oldv.append(v)
@@ -160,10 +162,8 @@ class Task(object):
 
 class Attempt(object):
 	def __init__(self, pair):
-		start = first(filter(lambda a: a.event == "TASK_ATTEMPT_STARTED", pair))
-		finish = first(filter(lambda a: a.event == "TASK_ATTEMPT_FINISHED", pair))
-		if start is None or finish is None:
-			print [start, finish];
+		start = first(list(filter(lambda a: a.event == "TASK_ATTEMPT_STARTED", pair)))
+		finish = first(list(filter(lambda a: a.event == "TASK_ATTEMPT_FINISHED", pair)))
 		self.raw = finish
 		self.kvs = csv_kv(start.args)
 		if finish is not None:
@@ -180,6 +180,7 @@ class Attempt(object):
 		self.start = (int)(self.kvs["startTime"])
 		self.container = self.kvs["containerId"]
 		self.node = self.kvs["nodeId"]
+		self.dag = dagid
 	def __repr__(self):
 		return "%s (%d+%d)" % (self.name, self.start, self.duration)
 		
@@ -205,7 +206,7 @@ class AMLog(object):
 	def __init__(self, f):
 		fp = open_file(f)
 		self.init()
-		self.events = filter(lambda a:a, [self.parse(l.strip()) for l in fp])
+		self.events = list(filter(lambda a:a, [self.parse(l.strip()) for l in fp]))
 	
 	def structure(self):
 		am = self.appmaster() # this is a copy
@@ -221,20 +222,20 @@ class AMLog(object):
 		for d in dags:
 			d.structure(vertexes)
 		for a in attempts:
-			if containers.has_key(a.container):
+			if a.container in containers:
 				c = containers[a.container]
 				c.node = a.node
 			else:
 				c = DummyContainer(a)
 				containers[a.container] = c
 		if not am:
-			am = DummyAppMaster(first(dags))
+			am = DummyAppMaster(first(list(filter(None, dags))))
 		am.containers = containers
 		am.dags = dags
 		return am
 
 	def appmaster(self):
-		return first([AppMaster(ev) for ev in self.events if ev.event == "AM_STARTED"])
+		return first(list([AppMaster(ev) for ev in self.events if ev.event == "AM_STARTED"]))
 	
 	def containers(self):
 		containers = [Container(ev) for ev in self.events if ev.event == "CONTAINER_LAUNCHED"]
@@ -242,7 +243,7 @@ class AMLog(object):
 		for ev in self.events:
 			if ev.event == "CONTAINER_STOPPED":
 				kvs = csv_kv(ev.args)
-				if containermap.has_key(kvs["containerId"]):
+				if kvs["containerId"] in containermap:
 					containermap[kvs["containerId"]].stop = int(kvs["stoppedTime"])
 					containermap[kvs["containerId"]].status = int(kvs["exitStatus"])
 		return containers
@@ -266,7 +267,7 @@ class AMLog(object):
 		value = lambda a:a[1]
 		raw = [(csv_kv(ev.args)["taskAttemptId"], ev) for ev in self.events if ev.event == "TASK_ATTEMPT_STARTED" or ev.event == "TASK_ATTEMPT_FINISHED"]
 		pairs = groupby(sorted(raw), key = key)
-		attempts = [Attempt(map(value,p)) for (k,p) in pairs]
+		attempts = [Attempt(list(map(value,p))) for (k,p) in pairs]
 		return attempts
 	
 	def parse(self, l):		
