@@ -40,9 +40,7 @@ class ColourManager(object):
 		return self.colours[self.i % len(self.colours)]
 
 def attempts(tree):
-	for d in tree.dags:
-		for a in d.attempts():
-			yield (a.vertex, a.name, a.container, a.start, a.finish)
+	return tree.dags[0].attempts()
 
 def attrs(args):
 	s = ""
@@ -124,12 +122,12 @@ def main(argv):
 	laneSize = 24
 	y = len(lanes)*laneSize
 	items = attempts(log)
-	print(type(items))
-	maxx = max([a[4] for a in items])
+	#maxx = max([a[4] for a in items])
+	maxx = 1739309643622 # FIXME
 	if ticks == -1:
 		ticks = min(1000, (maxx - log.zero)/2048)
 	xdomain = lambda t : (t - log.zero)/ticks 
-	x = xdomain(maxx)
+	x = round(xdomain(maxx))
 	svg = SVGHelper(x+2*marginRight+256, y+2*marginTop)
 	a = marginTop
 	svg.text(x/2, 32, log.name, style="font-size: 32px; text-anchor: middle")	
@@ -140,7 +138,7 @@ def main(argv):
 		a += laneSize
 		svg.text(marginRight - 4, a, l, "text-anchor:end; font-size: 16px;")
 		svg.line(marginRight, a, marginRight+x, a, "stroke: #ccc")
-	for x1 in set(range(0, x, 10*ticks)) | set([x]):
+	for x1 in set(range(0, x, 10*round(ticks))) | set([x]):
 		svg.text(marginRight+x1, marginTop-laneSize/2, "%0.2f s" % ((x1 *  ticks)/1000), "text-anchor: middle; font-size: 12px")
 		svg.line(marginRight+x1, marginTop-laneSize/2, marginRight+x1, marginTop+y, "stroke: #ddd")
 	svg.line(marginRight, marginTop, marginRight+x, marginTop)
