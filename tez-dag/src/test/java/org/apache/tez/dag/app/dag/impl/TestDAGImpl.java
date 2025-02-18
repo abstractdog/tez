@@ -2428,6 +2428,7 @@ public class TestDAGImpl {
 
     // needed when onFinish() method is called on a DAGImpl
     when(mrrAppContext.getTaskScheduler()).thenReturn(taskSchedulerManager);
+    when(taskSchedulerManager.getCounters()).thenReturn(new TezCounters());
 
     return spy(mrrDag);
   }
