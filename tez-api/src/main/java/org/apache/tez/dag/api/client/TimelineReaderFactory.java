@@ -44,7 +44,6 @@ import org.apache.tez.dag.api.TezException;
 import com.google.common.annotations.VisibleForTesting;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jackson.JacksonFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,7 +159,7 @@ public final class TimelineReaderFactory {
       UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
       UserGroupInformation realUgi = ugi.getRealUser();
       String doAsUser;
-      ClientConfig clientConfig = new ClientConfig().register(JacksonFeature.class);
+      ClientConfig clientConfig = new ClientConfig();
       ConnectionConfigurator connectionConfigurator = getNewConnectionConf(useHttps,
               connTimeout, sslFactory);
 
@@ -218,7 +217,7 @@ public final class TimelineReaderFactory {
 
     @Override
     public Client getHttpClient() {
-      ClientConfig config = new ClientConfig().register(JacksonFeature.class);
+      ClientConfig config = new ClientConfig();
       return ClientBuilder.newClient(config);
     }
 
