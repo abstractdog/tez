@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -44,8 +45,10 @@ import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineDomain;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineEntity;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineEvent;
+import org.apache.hadoop.yarn.client.api.TimelineClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.tez.client.TezClient;
+import org.apache.tez.common.ATSConstants;
 import org.apache.tez.common.ReflectionUtils;
 import org.apache.tez.common.security.DAGAccessControls;
 import org.apache.tez.dag.api.DAG;
@@ -59,6 +62,7 @@ import org.apache.tez.dag.app.AppContext;
 import org.apache.tez.dag.history.DAGHistoryEvent;
 import org.apache.tez.dag.history.HistoryEventType;
 import org.apache.tez.dag.history.events.DAGSubmittedEvent;
+import org.apache.tez.dag.history.logging.EntityTypes;
 import org.apache.tez.dag.history.logging.ats.ATSHistoryLoggingService;
 import org.apache.tez.dag.records.TezDAGID;
 import org.apache.tez.runtime.library.processor.SleepProcessor;
@@ -287,6 +291,39 @@ public class TestATSHistoryWithACLs {
         Collections.singleton("nobody"), Collections.singleton("nobody_group"));
 
     verifyEntityDomains(applicationId, true);
+  }
+
+  @Test
+  public void testSimpleTimelineQuery() throws Exception {
+    String applicationId = "application_1_2";
+
+    try (TimelineClient timelineClient = TimelineClient.createTimelineClient();) {
+      timelineClient.init(mrrTezCluster.getConfig());
+      timelineClient.start();
+
+      TimelineEntity atsEntity = new TimelineEntity();
+      atsEntity.setEntityId("tez_" + applicationId);
+      atsEntity.setEntityType(EntityTypes.TEZ_APPLICATION.name());
+      atsEntity.addPrimaryFilter(ATSConstants.USER, "tez");
+      atsEntity.addOtherInfo(ATSConstants.CONFIG, new HashMap<String, String>());
+      atsEntity.addOtherInfo(ATSConstants.APPLICATION_ID, applicationId);
+      atsEntity.addOtherInfo(ATSConstants.USER, "tez");
+
+      atsEntity.setStartTime(System.currentTimeMillis());
+      timelineClient.putEntities(atsEntity);
+    }
+
+    String appUrl = "http://" + timelineAddress + "/ws/v1/timeline/TEZ_APPLICATION/" + "tez_" + applicationId;
+    LOG.info("Getting timeline entity for tez application: " + appUrl);
+
+    Client client = new Client();
+    WebResource resource = client.resource(appUrl);
+    ClientResponse response = resource.accept(MediaType.APPLICATION_JSON)
+        .get(ClientResponse.class);
+    assertEquals(200, response.getStatus());
+
+    JSONObject entityJson = response.getEntity(JSONObject.class);
+    LOG.info("Got entity from ATS: {}", entityJson);
   }
 
   @Test (timeout=50000)
