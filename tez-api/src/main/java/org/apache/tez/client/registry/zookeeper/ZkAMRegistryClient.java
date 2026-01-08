@@ -133,6 +133,7 @@ public final class ZkAMRegistryClient extends AMRegistryClient {
 
   @Override
   public void close() {
+    LOG.info("ZK_CLOSURE_DEBUG - Closing ZkAMRegistryClient");
     IOUtils.closeQuietly(cache);
     IOUtils.closeQuietly(client);
   }

@@ -73,6 +73,7 @@ public class ZkFrameworkClient extends FrameworkClient {
 
   @Override
   public void close() {
+    LOG.info("ZK_CLOSURE_DEBUG - Closing ZkFrameworkClient, about to close amRegistryClient instance: {}", amRegistryClient);
     if (amRegistryClient != null) {
       amRegistryClient.close();
     }

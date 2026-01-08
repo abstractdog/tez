@@ -790,6 +790,7 @@ public class TezClient {
         }
       }
     } finally {
+      LOG.info("ZK_CLOSURE_DEBUG - Shutting down Tez Client, about to close frameworkClient instance: {}", frameworkClient);
       if (frameworkClient != null) {
         frameworkClient.close();
       }
